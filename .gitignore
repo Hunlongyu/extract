@@ -1,0 +1,14 @@
+/out/
+/build/
+/build-*/
+/.vs/
+/.idea/
+/CMakeUserPresets.json
+*.user
+*.suo
+*.VC.db
+*.VC.opendb
+*.log
+.env
+.env.*
+/samples/local/

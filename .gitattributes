@@ -1,0 +1,18 @@
+* text=auto eol=lf
+*.c text eol=lf
+*.cpp text eol=lf
+*.h text eol=lf
+*.in text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.cmake text eol=lf
+*.txt text eol=lf
+*.ps1 text eol=lf
+*.rc text eol=lf
+*.manifest text eol=lf
+*.ico binary
+*.png binary
+*.zip binary
+*.7z binary
+*.msi binary
+*.exe binary
