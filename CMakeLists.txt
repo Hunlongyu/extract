@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.25)
 
-project(Extract VERSION 0.6.1 LANGUAGES C CXX)
+project(Extract VERSION 0.7.0 LANGUAGES C CXX)
 
 if(NOT WIN32)
     message(FATAL_ERROR "Extract currently targets Windows only.")

@@ -9,7 +9,7 @@
   <img src="https://img.shields.io/badge/Windows-10%20%2F%2011-0078D4?style=flat-square" alt="Windows 10 / 11">
   <img src="https://img.shields.io/badge/Arch-x86%20%7C%20x64%20%7C%20ARM64-64748B?style=flat-square" alt="架构：x86、x64、ARM64">
   <img src="https://img.shields.io/badge/Portable-Single%20EXE-16A34A?style=flat-square" alt="便携运行：单个 EXE">
-  <img src="https://img.shields.io/badge/Version-v0.6.1-7C3AED?style=flat-square" alt="版本 v0.6.1">
+  <img src="https://img.shields.io/badge/Version-v0.7.0-7C3AED?style=flat-square" alt="版本 v0.7.0">
 </p>
 <p align="center"><a href="README.md">English</a> | <strong>简体中文</strong></p>
 
@@ -35,11 +35,11 @@ Extract 是一款轻量的 Windows 安装包解包工具。将一个或多个安
 
 1. 从 [Releases](https://github.com/Hunlongyu/extract/releases) 下载 EXE 并放到本地磁盘。Intel / AMD 64 位 Windows 选择 **x64**，ARM Windows 选择 **ARM64**，32 位 Windows 选择 **x86**。可重命名为 `Extract.exe`。
 2. 选中一个或多个安装包，拖到 **`Extract.exe` 的图标上**。
-3. 等待系统通知。单个安装包成功时，点击通知打开结果目录；批量处理、部分完成或失败时，打开任务记录。
+3. 在结果通知中，单个安装包成功时点击 **打开文件夹**；批量处理、部分完成或失败时点击 **查看结果**。点击通知正文也可打开同一位置。
 
 文件默认保存在**安装包旁边**，目录名为 `<安装包名称>_extracted`。已有同名目录时，自动添加 ` (2)`、` (3)` 等后缀，保留已有结果。内层包与其提取出的子目录也会一并保留。
 
-耗时任务会显示当前包、处理阶段及实际字节进度，内层包单独计数。结束后，同一条通知显示包名与结果，不再另弹完成提醒；短任务只显示结果。横幅收起后，可在通知中心继续查看。
+耗时任务会显示当前包与处理阶段。进度条按当前包已写入的文件字节计数；准备等阶段显示活动状态和已处理字节，不估算百分比。内层包单独计数。结束后，同一条通知显示包名与结果，不再另弹完成提醒；短任务只显示结果。横幅收起后，可在通知中心继续查看。
 
 **部分完成**表示已保留提取出的文件，但仍有内容缺失、目录未能还原，或内层包处理失败，具体原因可查看任务记录。没有收到通知时，可运行 `Extract.exe --open-last-result` 打开最近结果。
 
@@ -49,8 +49,8 @@ Extract 是一款轻量的 Windows 安装包解包工具。将一个或多个安
 
 | 格式 | 常见文件 | 当前支持范围 |
 | :--- | :--- | :--- |
-| **Inno Setup** | `.exe` | 已验证部分 6.x / 7.x 版本的内嵌包，详见[兼容性说明](docs/07-inno-implementation.md) |
-| **NSIS** | `.exe` | 已验证的 Unicode 3.x 结构、普通与固实压缩，以及部分 Electron / Tauri 封装 |
+| **Inno Setup** | `.exe` | 支持 6.0–6.7 和 7.1 的部分标准布局，详见[兼容性说明](docs/20-inno-compatibility.md) |
+| **NSIS** | `.exe` | 已验证的 Unicode 3.x 与部分 [ANSI 2.x 布局](docs/21-nsis-ansi-compatibility.md)、普通与固实压缩、部分 Electron / Tauri 封装；已识别的架构分支按目录分别保留 |
 | **Windows Installer** | `.msi` | 内嵌或外置 CAB、松散文件及混合源布局 |
 | **WiX Burn** | `.exe` | 布局 2 的 CAB 容器，支持 v3 / v4 清单及内嵌或本地外置载荷 |
 | **CAB** | `.cab` | 标准 Microsoft CAB 1.3：无压缩、MSZIP、LZX |

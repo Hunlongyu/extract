@@ -9,7 +9,7 @@
   <img src="https://img.shields.io/badge/Windows-10%20%2F%2011-0078D4?style=flat-square" alt="Windows 10 / 11">
   <img src="https://img.shields.io/badge/Arch-x86%20%7C%20x64%20%7C%20ARM64-64748B?style=flat-square" alt="Architectures: x86, x64, ARM64">
   <img src="https://img.shields.io/badge/Portable-Single%20EXE-16A34A?style=flat-square" alt="Portable: single EXE">
-  <img src="https://img.shields.io/badge/Version-v0.6.1-7C3AED?style=flat-square" alt="Version v0.6.1">
+  <img src="https://img.shields.io/badge/Version-v0.7.0-7C3AED?style=flat-square" alt="Version v0.7.0">
 </p>
 <p align="center"><strong>English</strong> | <a href="README.zh-CN.md">简体中文</a></p>
 
@@ -35,11 +35,11 @@ Extract is a lightweight Windows installer extractor. Drop one or more packages 
 
 1. Download the EXE from [Releases](https://github.com/Hunlongyu/extract/releases) and save it on a local drive. Choose **x64** for Intel / AMD 64-bit Windows, **ARM64** for ARM Windows, or **x86** for 32-bit Windows. You may rename it to `Extract.exe`.
 2. Select one or more installers and **drop them onto the `Extract.exe` icon**.
-3. Wait for the system notification. Clicking it opens the result folder for a single successful extraction, or the job record for batches, partial results, and failures.
+3. Use **Open folder** in the result notification for a single successful extraction, or **View results** for batches, partial results, and failures. Clicking the notification itself opens the same destination. Button labels currently appear in Chinese.
 
 Files are saved **next to the input package** in `<package-name>_extracted`. Existing folders are preserved by adding ` (2)`, ` (3)`, and so on. Nested packages are retained alongside their extracted subfolders.
 
-Longer tasks show the current package and stage, with byte-based progress when the total is known. Nested packages have their own progress. The same notification then shows the result and package name without another popup; short tasks show only the result. Check Notification Center if the banner closes.
+Longer tasks show the current package and stage. The progress bar tracks file bytes written for the current package; preparation and other stages show activity and processed bytes instead of an estimated percentage. Nested packages have their own progress. The same notification then shows the result and package name without another popup; short tasks show only the result. Check Notification Center if the banner closes.
 
 A **partial result** means extracted files were retained, but some content is missing, paths could not be restored, or a nested package failed. The job record explains the issue. If no notification appears, run `Extract.exe --open-last-result` to open the latest result.
 
@@ -49,8 +49,8 @@ A **partial result** means extracted files were retained, but some content is mi
 
 | Format | Typical files | Current support |
 | :--- | :--- | :--- |
-| **Inno Setup** | `.exe` | Tested embedded packages from selected 6.x / 7.x versions; see [compatibility notes](docs/07-inno-implementation.md) |
-| **NSIS** | `.exe` | Tested Unicode 3.x layouts, ordinary and solid compression, and selected Electron / Tauri wrappers |
+| **Inno Setup** | `.exe` | Selected standard layouts from 6.0–6.7 and 7.1; see [compatibility notes](docs/20-inno-compatibility.md) |
+| **NSIS** | `.exe` | Tested Unicode 3.x and selected [ANSI 2.x layouts](docs/21-nsis-ansi-compatibility.md), ordinary and solid compression, selected Electron / Tauri wrappers, and separate folders for recognized architecture branches |
 | **Windows Installer** | `.msi` | Embedded or external CABs, loose files, and mixed source layouts |
 | **WiX Burn** | `.exe` | Layout 2 CAB containers with v3 / v4 manifests; embedded or local external payloads |
 | **CAB** | `.cab` | Standard Microsoft CAB 1.3: stored, MSZIP, and LZX |
