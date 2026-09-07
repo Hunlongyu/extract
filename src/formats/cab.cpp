@@ -1,6 +1,7 @@
 #include "formats/cab.h"
 #include "formats/pe.h"
 #include "codecs/cab.h"
+#include "core/progress.h"
 #include <algorithm>
 namespace extract::formats {
 std::optional<CabLocation> cab_probe(io::Bytes input) {
@@ -51,6 +52,7 @@ fs::path CabPackage::extract(const fs::path& parent) {
     io::Output output(parent.empty() ? catalog.input.parent_path() : parent, catalog.input.stem().wstring());
     std::vector<Entry*> targets; for (auto& entry : catalog.files) targets.push_back(&entry);
     codecs::extract_cab(impl_->bytes, targets, output);
+    progress::Scope finalizing(progress::Phase::finalizing);
     const auto report = platform::utf8(catalog_json(catalog, true));
     { auto file = output.create_file(L"_extract-report.json"); platform::write_all(file.get(), std::as_bytes(std::span(report)));
       if (!FlushFileBuffers(file.get())) platform::io_failure(L"保存 CAB 清单失败"); }

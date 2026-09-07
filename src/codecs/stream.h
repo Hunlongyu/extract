@@ -13,6 +13,7 @@ public:
     Stream& operator=(const Stream&) = delete;
     void read_exact(std::span<std::byte> output);
     std::size_t read(std::span<std::byte> output);
+    std::uint64_t consumed() const noexcept;
     void finish();
 private:
     struct Impl;

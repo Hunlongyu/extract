@@ -1,5 +1,6 @@
 #include "codecs/stream.h"
 #include "platform/log.h"
+#include "core/progress.h"
 #include "codecs/nsis_bzip.h"
 #include <LzmaDec.h>
 #include <Lzma2Dec.h>
@@ -55,7 +56,14 @@ static_assert(offsetof(Allocator, interface) == 0);
 }
 
 std::uint32_t crc32(io::Bytes bytes) {
-    return static_cast<std::uint32_t>(::crc32_z(0, reinterpret_cast<const Bytef*>(bytes.data()), bytes.size()));
+    progress::Scope stage(progress::Phase::verifying, bytes.size(), L"安装包 CRC-32");
+    uLong result = 0;
+    while (!bytes.empty()) {
+        const auto count = (std::min)(bytes.size(), std::size_t{65536});
+        result = ::crc32_z(result, reinterpret_cast<const Bytef*>(bytes.data()), count);
+        bytes = bytes.subspan(count); progress::advance(count);
+    }
+    return static_cast<std::uint32_t>(result);
 }
 
 struct Stream::Impl {
@@ -189,6 +197,7 @@ void Stream::read_exact(std::span<std::byte> output) {
     require(impl_->read(output) == output.size(), Status::corrupt, L"压缩流未提供声明的文件内容。");
 }
 std::size_t Stream::read(std::span<std::byte> output) { return impl_->read(output); }
+std::uint64_t Stream::consumed() const noexcept { return impl_->position; }
 void Stream::finish() {
     std::array<std::byte, 1> extra{};
     require(impl_->read(extra) == 0, Status::corrupt, L"压缩流包含超出文件清单的数据。");

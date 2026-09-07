@@ -7,6 +7,7 @@
 #include "formats/burn.h"
 #include "io/input.h"
 #include "platform/log.h"
+#include "core/progress.h"
 #include <map>
 #include <algorithm>
 
@@ -32,6 +33,7 @@ std::unique_ptr<Package> parse(const io::Input& input, std::wstring_view format)
 }
 }
 std::unique_ptr<Package> open_package(const fs::path& path) {
+    progress::Scope progress(progress::Phase::analyzing, {}, {}, path.native());
     log::Scope step(L"package.detect", &path);
     io::Input input(path);
     std::array<std::byte, 8> header{};

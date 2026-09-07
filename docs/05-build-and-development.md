@@ -123,6 +123,8 @@ $process.ExitCode
 | `src/platform/jobs.*` | 本地任务摘要与打开结果 |
 | `src/platform/log.*` | 原生 UTF-8 日志、步骤上下文、大小轮转、保留策略及 AppData 回退 |
 | `src/platform/notifications.*` | AUMID、快捷方式、协议激活、原生 Toast |
+| `src/core/progress.*` | 按线程绑定的可选进度观察器、阶段隔离、实际字节计数 |
+| `tests/progress_probe.cpp`、`tests/progress_integration.py` | 真实 ZIP/CAB 提取进度、嵌套总量隔离、观察器失败及损坏输入 |
 | `tests/integration.ps1` | 生成无安装动作的 MSI，自制载荷与异常变体验证 |
 | `tests/cab_burn_integration.py` | 已知内容 CAB/Burn、签名偏移、v3/v4 命名空间、外置/在线和损坏反例 |
 | `tests/verify-burn.py` | 官方 Burn 样本、清单独立映射和载荷摘要、内层 MSI 与累计输出复核 |
@@ -154,3 +156,5 @@ Start-Process .\out\dist\win-x64-release\Extract.exe `
 探针通过 Windows Shell 启动已退出的程序，核对固定帮助协议成功及非法任务 ID 拒绝。它不等于实际点击通知的视觉验收。
 
 近期真实样本验证方法与结果、当前限制见 [MSI 实现与验证](06-msi-first-slice.md)和 [Inno 实现与验证](07-inno-implementation.md)。在干净 Windows 10/11、真实 Explorer 拖拽及通知横幅点击上的人工验收仍需补充。
+
+阶段划分、进度精度及通知更新行为见[解包进度通知](18-progress-notifications.md)。

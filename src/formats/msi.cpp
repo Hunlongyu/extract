@@ -1,5 +1,6 @@
 #include "formats/msi.h"
 #include "platform/log.h"
+#include "core/progress.h"
 #include "codecs/cab.h"
 #include "platform/files.h"
 #include "io/temporary.h"
@@ -282,6 +283,7 @@ struct MsiPackage::Impl {
             check(MsiRecordReadStream(record.value, 1, reinterpret_cast<char*>(chunk.data()), &count), L"读取 CAB 数据失败");
             if (count == 0) break;
             result->append(std::span(chunk).first(count));
+            progress::advance(count);
         }
         return result;
     }
@@ -299,7 +301,10 @@ fs::path MsiPackage::extract(const fs::path& parent) {
         std::unique_ptr<io::TemporaryFile> embedded;
         std::unique_ptr<io::Input> external;
         io::Bytes bytes;
-        if (media.cabinet[0] == L'#') { embedded = impl_->cabinet_bytes(media.cabinet.substr(1)); bytes = embedded->bytes(); }
+        if (media.cabinet[0] == L'#') {
+            progress::Scope stage(progress::Phase::preparing, {}, media.cabinet);
+            embedded = impl_->cabinet_bytes(media.cabinet.substr(1)); bytes = embedded->bytes();
+        }
         else {
             try { external = std::make_unique<io::Input>(impl_->catalog.input.parent_path() / media.cabinet); }
             catch (const Failure& e) { throw Failure(e.status, L"读取 MSI 外置 CAB 失败：" + media.cabinet + L"；" + e.message, e.native_code); }
@@ -322,6 +327,7 @@ fs::path MsiPackage::extract(const fs::path& parent) {
     for (std::size_t i = 0; i < impl_->sources.size(); ++i) {
         const auto& source = impl_->sources[i]; if (source.compressed) continue;
         auto& entry = impl_->catalog.files[i];
+        progress::file(entry.path.native());
         log::Scope step(L"msi.loose_file", nullptr, &source.path);
         try {
             io::Input input(impl_->catalog.input.parent_path() / source.path);
@@ -331,6 +337,7 @@ fs::path MsiPackage::extract(const fs::path& parent) {
             codecs::verify_file(entry, output.full_path(entry.path));
         } catch (const Failure& e) { throw Failure(e.status, L"读取 MSI 松散源文件失败：" + source.path.wstring() + L"；" + e.message, e.native_code); }
     }
+    progress::Scope finalizing(progress::Phase::finalizing);
     const auto report = platform::utf8(catalog_json(impl_->catalog, true));
     {
         auto file = output.create_file(L"_extract-report.json");

@@ -1,5 +1,6 @@
 #include "formats/inno.h"
 #include "platform/log.h"
+#include "core/progress.h"
 #include "formats/pe.h"
 #include "codecs/stream.h"
 #include "io/output.h"
@@ -336,11 +337,16 @@ struct InnoPackage::Impl {
             std::uint64_t position = 0;
             for (const auto index : chunk.locations) {
                 const auto& location = locations[index];
-                while (position < location.suboffset) {
-                    const auto size = static_cast<std::size_t>((std::min)(location.suboffset - position, static_cast<std::uint64_t>(buffer.size())));
-                    stream.read_exact(std::span(buffer).first(size)); position += size;
+                if (position < location.suboffset) {
+                    progress::Scope stage(progress::Phase::decoding, location.suboffset - position, L"跳过数据块中的未提取内容");
+                    while (position < location.suboffset) {
+                        const auto size = static_cast<std::size_t>((std::min)(location.suboffset - position, static_cast<std::uint64_t>(buffer.size())));
+                        stream.read_exact(std::span(buffer).first(size)); position += size;
+                        progress::advance(size);
+                    }
                 }
                 std::vector<platform::Handle> files;
+                if (!location.files.empty()) progress::file(catalog.files[location.files.front()].path.native());
                 for (auto entry : location.files) files.push_back(output.create_file(catalog.files[entry].path));
                 std::uint64_t written = 0;
                 while (written < location.size) {
@@ -348,7 +354,7 @@ struct InnoPackage::Impl {
                     auto bytes = std::span(buffer).first(size);
                     stream.read_exact(bytes);
                     if (location.flags & 4) undo_call_filter(bytes, static_cast<std::uint32_t>(written));
-                    for (const auto& file : files) platform::write_all(file.get(), bytes);
+                    for (const auto& file : files) platform::write_payload(file.get(), bytes);
                     written += size; position += size;
                 }
                 for (auto& file : files) {
@@ -368,6 +374,7 @@ struct InnoPackage::Impl {
             }
             stream.finish();
         }
+        progress::Scope finalizing(progress::Phase::finalizing);
         const auto report = platform::utf8(catalog_json(catalog, true));
         {
             auto file = output.create_file(L"_extract-report.json");

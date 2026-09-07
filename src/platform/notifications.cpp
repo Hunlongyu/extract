@@ -1,6 +1,7 @@
 #include "platform/notifications.h"
 #include "platform/jobs.h"
 #include "platform/console.h"
+#include "platform/log.h"
 
 #include <shobjidl.h>
 #include <propkey.h>
@@ -21,6 +22,7 @@ constexpr wchar_t app_id[] = L"Hunlongyu.Extract";
 constexpr wchar_t class_id[] = L"{81A1EB43-E598-4550-9F17-561103A29D7F}";
 constexpr GUID activator_id = {0x81a1eb43, 0xe598, 0x4550, {0x9f, 0x17, 0x56, 0x11, 0x03, 0xa2, 0x9d, 0x7f}};
 constexpr wchar_t protocol_key[] = L"Software\\Classes\\hunlongyu-extract";
+constexpr wchar_t progress_tag[] = L"progress";
 
 void check(HRESULT result, const wchar_t* operation) {
     if (FAILED(result)) throw Failure(Status::io_error,
@@ -70,6 +72,38 @@ std::wstring xml_escape(std::wstring_view text) {
         }
     }
     return escaped;
+}
+
+ComPtr<IToastNotification> make_notification(const std::wstring& xml, std::wstring_view job_id) {
+    ComPtr<IInspectable> inspectable;
+    check(RoActivateInstance(HStringReference(RuntimeClass_Windows_Data_Xml_Dom_XmlDocument).Get(), &inspectable), L"创建通知 XML 失败");
+    ComPtr<IXmlDocument> document;
+    ComPtr<IXmlDocumentIO> document_io;
+    check(inspectable.As(&document), L"获取通知 XML 文档失败");
+    check(inspectable.As(&document_io), L"获取通知 XML 读写接口失败");
+    check(document_io->LoadXml(HStringReference(xml.c_str()).Get()), L"解析通知 XML 失败");
+    ComPtr<IToastNotificationFactory> factory;
+    check(RoGetActivationFactory(HStringReference(RuntimeClass_Windows_UI_Notifications_ToastNotification).Get(), IID_PPV_ARGS(&factory)), L"创建通知工厂失败");
+    ComPtr<IToastNotification> notification;
+    check(factory->CreateToastNotification(document.Get(), &notification), L"创建通知失败");
+    if (!job_id.empty()) {
+        ComPtr<IToastNotification2> identity;
+        check(notification.As(&identity), L"获取通知标识接口失败");
+        check(identity->put_Tag(HStringReference(progress_tag).Get()), L"设置通知标记失败");
+        const std::wstring group(job_id);
+        check(identity->put_Group(HStringReference(group.c_str()).Get()), L"设置通知分组失败");
+    }
+    return notification;
+}
+
+std::wstring size_text(std::uint64_t value) {
+    constexpr std::wstring_view units[] = {L"B", L"KiB", L"MiB", L"GiB", L"TiB", L"PiB", L"EiB"};
+    std::size_t unit = 0;
+    double amount = static_cast<double>(value);
+    while (amount >= 1024 && unit + 1 < std::size(units)) { amount /= 1024; ++unit; }
+    if (!unit) return std::to_wstring(value) + L" B";
+    const auto tenths = static_cast<unsigned>(amount * 10);
+    return std::to_wstring(tenths / 10) + L"." + std::to_wstring(tenths % 10) + L" " + std::wstring(units[unit]);
 }
 
 void delete_tree(const std::wstring& path) {
@@ -152,7 +186,7 @@ void unregister_notifications() {
     delete_tree(std::wstring(L"Software\\Classes\\AppUserModelId\\") + app_id);
 }
 
-HRESULT show_notification(std::wstring_view title, std::wstring_view body, std::wstring_view job_id) noexcept {
+HRESULT show_notification(std::wstring_view title, std::wstring_view body, std::wstring_view job_id, bool suppress_popup) noexcept {
     try {
         require(job_id.empty() || valid_job_id(job_id), Status::internal_error, L"通知任务标识无效。");
         register_notifications();
@@ -167,22 +201,138 @@ HRESULT show_notification(std::wstring_view title, std::wstring_view body, std::
         const auto xml = L"<toast activationType=\"protocol\" launch=\"" + xml_escape(uri) + L"\"><visual><binding template=\"ToastGeneric\"><text>"
             + xml_escape(title) + L"</text><text>" + xml_escape(body.substr(0, 500))
             + L"</text></binding></visual><audio silent=\"true\"/></toast>";
-        ComPtr<IInspectable> inspectable;
-        check(RoActivateInstance(HStringReference(RuntimeClass_Windows_Data_Xml_Dom_XmlDocument).Get(), &inspectable), L"创建通知 XML 失败");
-        ComPtr<IXmlDocument> document;
-        ComPtr<IXmlDocumentIO> document_io;
-        check(inspectable.As(&document), L"获取通知 XML 文档失败");
-        check(inspectable.As(&document_io), L"获取通知 XML 读写接口失败");
-        check(document_io->LoadXml(HStringReference(xml.c_str()).Get()), L"解析通知 XML 失败");
-        ComPtr<IToastNotificationFactory> factory;
-        check(RoGetActivationFactory(HStringReference(RuntimeClass_Windows_UI_Notifications_ToastNotification).Get(), IID_PPV_ARGS(&factory)), L"创建通知工厂失败");
-        ComPtr<IToastNotification> notification;
-        check(factory->CreateToastNotification(document.Get(), &notification), L"创建通知失败");
+        const auto notification = make_notification(xml, job_id);
+        if (suppress_popup) {
+            ComPtr<IToastNotification2> options;
+            check(notification.As(&options), L"获取通知显示选项失败");
+            check(options->put_SuppressPopup(true), L"设置静默结果通知失败");
+        }
         return notifier->Show(notification.Get());
     } catch (const Failure& failure) {
         write_diagnostic(failure.message + L"\r\n", true);
         return failure.native_code != 0 ? static_cast<HRESULT>(failure.native_code) : E_FAIL;
     } catch (...) { return E_FAIL; }
+}
+
+struct ProgressNotification::Impl {
+    std::wstring job;
+    ComPtr<IToastNotifier> notifier;
+    ComPtr<IToastNotifier2> updater;
+    ULONGLONG last_update = 0;
+    ULONGLONG started = GetTickCount64();
+    std::size_t index = 1, count = 1;
+    UINT32 sequence = 0;
+    bool shown = false, disabled = false;
+
+    explicit Impl(std::wstring_view id) : job(id) {
+        require(valid_job_id(id), Status::internal_error, L"进度通知任务标识无效。");
+    }
+    void send(const progress::Snapshot& value) {
+        if (disabled) return;
+        const auto now = GetTickCount64();
+        // 短任务只显示一次包含包名的结果，避免先弹进度再立即消失。
+        if (!shown && now - started < 500) return;
+        if (shown && now - last_update < 250) return;
+        last_update = now;
+        if (!notifier) {
+            register_notifications();
+            ComPtr<IToastNotificationManagerStatics> manager;
+            check(RoGetActivationFactory(HStringReference(RuntimeClass_Windows_UI_Notifications_ToastNotificationManager).Get(), IID_PPV_ARGS(&manager)), L"创建进度通知管理器失败");
+            check(manager->CreateToastNotifierWithId(HStringReference(app_id).Get(), &notifier), L"创建进度通知发送器失败");
+            NotificationSetting setting{};
+            if (SUCCEEDED(notifier->get_Setting(&setting)) && setting != NotificationSetting_Enabled) {
+                disabled = true; log::write(log::Level::info, L"notification.progress_disabled", L"系统已禁用通知"); return;
+            }
+            // Windows 10 1703 以前没有数据绑定更新接口，继续保留最终结果通知。
+            check(notifier.As(&updater), L"系统不支持通知进度更新");
+        }
+        const auto package = fs::path(value.package.view()).filename().wstring();
+        const auto heading = L"Extract：" + std::wstring(progress::phase_name(value.phase));
+        const auto context = (count > 1 ? L"输入 " + std::to_wstring(index) + L" / " + std::to_wstring(count) + L" · " : L"") + package;
+        std::wstring fraction = L"indeterminate", amount = L"处理中";
+        if (value.total && *value.total) {
+            const auto ratio = static_cast<double>(value.completed) / static_cast<double>(*value.total);
+            fraction = std::to_wstring(value.completed < *value.total ? (std::min)(0.999999, ratio) : 1.0);
+            const auto percent = value.completed < *value.total ? (std::min)(99U, static_cast<unsigned>(ratio * 100)) : 100U;
+            amount = std::to_wstring(percent) + L"% · " + size_text(value.completed) + L" / " + size_text(*value.total);
+        } else if (value.completed) amount = L"已处理 " + size_text(value.completed);
+        const std::wstring item(value.item.view());
+        const auto status = item.empty() ? std::wstring(progress::phase_name(value.phase)) : item;
+
+        ComPtr<IInspectable> inspectable;
+        check(RoActivateInstance(HStringReference(RuntimeClass_Windows_UI_Notifications_NotificationData).Get(), &inspectable), L"创建通知进度数据失败");
+        ComPtr<INotificationData> data;
+        check(inspectable.As(&data), L"获取通知进度接口失败");
+        ComPtr<ABI::Windows::Foundation::Collections::IMap<HSTRING, HSTRING>> values;
+        check(data->get_Values(&values), L"读取通知数据字段失败");
+        const auto insert = [&](const wchar_t* key, const std::wstring& text) {
+            boolean replaced = false;
+            check(values->Insert(HStringReference(key).Get(), HStringReference(text.c_str()).Get(), &replaced), L"写入通知进度字段失败");
+        };
+        insert(L"heading", heading); insert(L"context", context); insert(L"fraction", fraction);
+        insert(L"amount", amount); insert(L"status", status);
+        check(data->put_SequenceNumber(++sequence), L"设置通知更新序号失败");
+        if (!shown) {
+            const auto xml = L"<toast activationType=\"protocol\" launch=\"hunlongyu-extract://job/" + xml_escape(job)
+                + L"\"><visual><binding template=\"ToastGeneric\"><text>{heading}</text><text>{context}</text>"
+                  L"<progress title=\"当前阶段\" value=\"{fraction}\" valueStringOverride=\"{amount}\" status=\"{status}\"/>"
+                  L"</binding></visual><audio silent=\"true\"/></toast>";
+            const auto notification = make_notification(xml, job);
+            ComPtr<IToastNotification4> binding;
+            check(notification.As(&binding), L"获取进度通知数据绑定接口失败");
+            check(binding->put_Data(data.Get()), L"绑定通知进度失败");
+            check(notifier->Show(notification.Get()), L"发送进度通知失败");
+            shown = true;
+            log::write(log::Level::info, L"notification.progress_started", job);
+        } else {
+            NotificationUpdateResult result{};
+            check(updater->UpdateWithTagAndGroup(data.Get(), HStringReference(progress_tag).Get(), HStringReference(job.c_str()).Get(), &result), L"更新进度通知失败");
+            log::detail(log::Level::info, L"notification.progress_update", [&] {
+                return L"job=" + job + L"; sequence=" + std::to_wstring(sequence) + L"; result=" + std::to_wstring(result)
+                    + L"; phase=" + std::wstring(progress::phase_name(value.phase)) + L"; bytes=" + std::to_wstring(value.completed)
+                    + L"; total=" + (value.total ? std::to_wstring(*value.total) : L"unknown");
+            });
+            if (result != NotificationUpdateResult_Succeeded) {
+                disabled = true;
+                log::detail(log::Level::info, L"notification.progress_stopped", [&] { return L"result=" + std::to_wstring(result); });
+            }
+        }
+    }
+    void close() noexcept {
+        disabled = true;
+        if (!shown) return;
+        shown = false;
+        ComPtr<IToastNotificationManagerStatics2> manager;
+        if (SUCCEEDED(RoGetActivationFactory(HStringReference(RuntimeClass_Windows_UI_Notifications_ToastNotificationManager).Get(), IID_PPV_ARGS(&manager)))) {
+            ComPtr<IToastNotificationHistory> history;
+            if (SUCCEEDED(manager->get_History(&history)))
+                (void)history->RemoveGroupedTagWithId(HStringReference(progress_tag).Get(), HStringReference(job.c_str()).Get(), HStringReference(app_id).Get());
+        }
+    }
+};
+ProgressNotification::ProgressNotification(std::wstring_view job_id) noexcept {
+    if (job_id.empty()) return;
+    try { impl_ = std::make_unique<Impl>(job_id); } catch (...) {}
+}
+ProgressNotification::~ProgressNotification() { close(); }
+void ProgressNotification::batch(std::size_t index, std::size_t count) noexcept {
+    if (impl_) { impl_->index = index; impl_->count = count; }
+}
+void ProgressNotification::update(const progress::Snapshot& value) noexcept {
+    if (!impl_) return;
+    try { impl_->send(value); }
+    catch (const Failure& failure) { impl_->disabled = true; log::failure(L"notification.progress_failed", failure); }
+    catch (...) { impl_->disabled = true; }
+}
+void ProgressNotification::close() noexcept { if (impl_) impl_->close(); }
+HRESULT ProgressNotification::complete(std::wstring_view title, std::wstring_view body, std::wstring_view job_id) noexcept {
+    const bool existing = impl_ && impl_->shown;
+    const auto result = show_notification(title, body, job_id, existing);
+    log::write(log::Level::info, L"notification.result_mode", existing ? L"updated-existing" : L"standalone");
+    if (result == S_OK) {
+        if (impl_) { impl_->disabled = true; impl_->shown = false; }
+    } else close();
+    return result;
 }
 
 void activate_notification(std::wstring_view uri) {

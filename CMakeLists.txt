@@ -79,6 +79,7 @@ endforeach()
 
 add_library(extract_core STATIC
     src/core/types.cpp
+    src/core/progress.cpp
     src/core/package.cpp
     src/core/tree.cpp
     src/platform/files.cpp
@@ -119,6 +120,8 @@ set_target_properties(Extract PROPERTIES
 
 include(CTest)
 if(BUILD_TESTING)
+    add_executable(extract_progress_probe tests/progress_probe.cpp)
+    target_link_libraries(extract_progress_probe PRIVATE extract_core)
     add_executable(extract_log_probe tests/log_probe.cpp)
     target_link_libraries(extract_log_probe PRIVATE extract_core)
     add_executable(extract_path_tests tests/path_tests.cpp)
@@ -137,6 +140,11 @@ if(BUILD_TESTING)
     set(EXTRACT_NSIS_COMPILER "" CACHE FILEPATH "Official makensis.exe used only to generate test fixtures")
     set(EXTRACT_7Z_TEST_TOOL "" CACHE FILEPATH "Official 7zr.exe used only to generate archive test fixtures")
     if(Python3_Interpreter_FOUND)
+        add_test(NAME progress_integration COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/progress_integration.py"
+            --probe "$<TARGET_FILE:extract_progress_probe>"
+            --work-root "${CMAKE_CURRENT_BINARY_DIR}/progress-fixtures")
+        set_tests_properties(progress_integration PROPERTIES TIMEOUT 180)
         add_test(NAME large_integration COMMAND "${Python3_EXECUTABLE}"
             "${CMAKE_CURRENT_SOURCE_DIR}/tests/large_integration.py"
             --executable "$<TARGET_FILE:Extract>"

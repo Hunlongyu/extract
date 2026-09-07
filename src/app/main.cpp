@@ -99,12 +99,19 @@ int run() {
 
     std::optional<extract::platform::JobRecord> record;
     if (!list_only) record.emplace();
+    const bool report_progress = record.has_value() && !quiet;
+    extract::platform::ProgressNotification progress_notification(report_progress ? std::wstring_view(record->id()) : std::wstring_view{});
+    extract::progress::Connection progress_connection(report_progress ? &progress_notification : nullptr);
+    std::size_t input_index = 0;
     std::wstring summary;
+    std::wstring failure_reason;
     extract::fs::path single_output;
     int first_error = ERROR_SUCCESS;
     std::size_t succeeded = 0;
     std::size_t partial = 0;
     for (const auto& input : inputs) {
+        progress_notification.batch(++input_index, inputs.size());
+        extract::progress::Scope input_progress(extract::progress::Phase::analyzing, {}, {}, input.native());
         extract::log::Scope input_step(L"input.process", &input);
         try {
             auto package = extract::open_package(input);
@@ -123,17 +130,20 @@ int run() {
             extract::log::write(complete ? extract::log::Level::info : extract::log::Level::warning,
                 L"input.result", list_only ? L"listed" : complete ? L"complete" : L"partial");
         } catch (const extract::Failure& failure) {
+            failure_reason = failure.message;
             extract::log::failure(L"input.failed", failure);
             extract::platform::write_diagnostic(input.wstring() + L"：" + failure.message + L"\r\n", true);
             summary += L"失败：" + input.wstring() + L"\r\n原因：" + failure.message + L"\r\n\r\n";
             if (first_error == ERROR_SUCCESS) first_error = extract::exit_code(failure.status);
         } catch (const std::bad_alloc& error) {
+            failure_reason = L"系统内存或地址空间不足。";
             extract::log::exception(L"input.out_of_memory", error);
             const auto message = input.wstring() + L"：系统内存或地址空间不足；32 位程序可改用 x64 或 ARM64 版本。\r\n";
             extract::platform::write_diagnostic(message, true);
             summary += L"失败：" + message + L"\r\n";
             if (first_error == ERROR_SUCCESS) first_error = ERROR_NOT_ENOUGH_MEMORY;
         } catch (const std::exception& error) {
+            failure_reason = L"内部错误，点击查看任务记录。";
             extract::log::exception(L"input.failed", error);
             extract::platform::write_diagnostic(input.wstring() + L"：内部错误。\r\n", true);
             summary += L"失败：" + input.wstring() + L"\r\n原因：内部错误。\r\n\r\n";
@@ -149,11 +159,22 @@ int run() {
             extract::platform::write_diagnostic(failure.message + L"\r\n", true);
         }
         if (!quiet) {
-            const auto title = first_error == ERROR_SUCCESS ? L"Extract：文件提取完成" : L"Extract：存在未完成的任务";
-            const auto body = L"完成 " + std::to_wstring(succeeded) + L" 个，部分完成 " + std::to_wstring(partial)
-                + L" 个，失败 " + std::to_wstring(inputs.size() - succeeded - partial)
-                + L" 个。点击查看" + (inputs.size() == 1 && succeeded == 1 ? std::wstring(L"输出目录。") : std::wstring(L"任务记录。"));
-            const HRESULT notified = extract::platform::show_notification(title, body, record->id());
+            std::wstring title, body;
+            if (inputs.size() == 1) {
+                title = std::wstring(L"Extract：") + (succeeded == 1 ? L"已完成 · " : partial == 1 ? L"部分完成 · " : L"失败 · ")
+                    + inputs.front().filename().wstring();
+                if (succeeded == 1) body = L"输出：" + single_output.wstring() + L"\n点击打开文件夹。";
+                else if (partial == 1) body = L"已保留部分文件。输出：" + single_output.wstring() + L"\n点击查看未完成原因。";
+                else body = L"原因：" + failure_reason + L"\n点击查看任务记录。";
+            } else {
+                title = first_error == ERROR_SUCCESS ? L"Extract：批量处理已完成" : L"Extract：批量处理存在未完成项";
+                body = L"完成 " + std::to_wstring(succeeded) + L" 个，部分完成 " + std::to_wstring(partial)
+                    + L" 个，失败 " + std::to_wstring(inputs.size() - succeeded - partial) + L" 个。\n"
+                    + inputs[0].filename().wstring() + L"、" + inputs[1].filename().wstring()
+                    + (inputs.size() > 2 ? L" 等 " + std::to_wstring(inputs.size()) + L" 个安装包。" : L"。")
+                    + L"点击查看各包结果。";
+            }
+            const HRESULT notified = progress_notification.complete(title, body, record->id());
             const auto notification_status = notified == S_OK ? L"通知已提交；显示取决于系统设置。" :
                 (notified == S_FALSE ? L"系统通知已禁用。" : L"系统通知提交失败。");
             extract::log::detail(notified == S_OK ? extract::log::Level::info : extract::log::Level::warning, L"notification.result", [&] {

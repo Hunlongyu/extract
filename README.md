@@ -26,7 +26,7 @@ Extract is a lightweight Windows installer extractor. Drop one or more packages 
 ## Features
 
 | 📦 Standalone EXE | 🛡️ Static extraction |
-| --- | --- |
+| :--- | :--- |
 | No external extraction tools or VC++ runtime installation required. | Inspect and extract files without running the installer. |
 | **🪆 Nested extraction** | **🌐 Unicode paths** |
 | Automatically unpack recognized installers inside a package. | Supports names containing Unicode characters and spaces. |
@@ -39,6 +39,8 @@ Extract is a lightweight Windows installer extractor. Drop one or more packages 
 
 Files are saved **next to the input package** in `<package-name>_extracted`. Existing folders are preserved by adding ` (2)`, ` (3)`, and so on. Nested packages are retained alongside their extracted subfolders.
 
+Longer tasks show the current package and stage, with byte-based progress when the total is known. Nested packages have their own progress. The same notification then shows the result and package name without another popup; short tasks show only the result. Check Notification Center if the banner closes.
+
 A **partial result** means extracted files were retained, but some content is missing, paths could not be restored, or a nested package failed. The job record explains the issue. If no notification appears, run `Extract.exe --open-last-result` to open the latest result.
 
 > Extracted applications may still require installation if they depend on drivers, services, registry settings, or additional runtimes.
@@ -46,7 +48,7 @@ A **partial result** means extracted files were retained, but some content is mi
 ## Supported formats
 
 | Format | Typical files | Current support |
-| --- | --- | --- |
+| :--- | :--- | :--- |
 | **Inno Setup** | `.exe` | Tested embedded packages from selected 6.x / 7.x versions; see [compatibility notes](docs/07-inno-implementation.md) |
 | **NSIS** | `.exe` | Tested Unicode 3.x layouts, ordinary and solid compression, and selected Electron / Tauri wrappers |
 | **Windows Installer** | `.msi` | Embedded or external CABs, loose files, and mixed source layouts |

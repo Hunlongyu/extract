@@ -37,7 +37,7 @@ void Input::copy_to(HANDLE destination) const {
     for (std::uint64_t offset = 0; offset < size_;) {
         const auto count = static_cast<std::size_t>((std::min)(size_ - offset, static_cast<std::uint64_t>(buffer.size())));
         auto part = std::span(buffer).first(count);
-        read(offset, part); platform::write_all(destination, part); offset += count;
+        read(offset, part); platform::write_payload(destination, part); offset += count;
     }
 }
 Bytes Input::bytes() const {

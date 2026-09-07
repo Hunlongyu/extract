@@ -1,5 +1,6 @@
 #include "formats/burn.h"
 #include "platform/log.h"
+#include "core/progress.h"
 #include "formats/pe.h"
 #include "codecs/cab.h"
 #include <objbase.h>
@@ -282,11 +283,13 @@ fs::path BurnPackage::extract(const fs::path& parent) {
     }
     for (const auto& source : impl_->loose) {
         auto& entry = catalog.files[source.entry];
+        progress::file(entry.path.native());
         log::Scope step(L"burn.loose_file", nullptr, &entry.path);
-        { auto file = output.create_file(entry.path); platform::write_all(file.get(), source.bytes);
+        { auto file = output.create_file(entry.path); platform::write_payload(file.get(), source.bytes);
           if (!FlushFileBuffers(file.get())) platform::io_failure(L"保存 Burn 外置载荷失败"); }
         codecs::verify_file(entry, output.full_path(entry.path));
     }
+    progress::Scope finalizing(progress::Phase::finalizing);
     const auto report = platform::utf8(catalog_json(catalog, true));
     { auto file = output.create_file(L"_extract-report.json"); platform::write_all(file.get(), std::as_bytes(std::span(report)));
       if (!FlushFileBuffers(file.get())) platform::io_failure(L"保存 Burn 报告失败"); }

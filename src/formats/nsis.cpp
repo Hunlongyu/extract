@@ -1,5 +1,6 @@
 #include "formats/nsis.h"
 #include "platform/log.h"
+#include "core/progress.h"
 #include "codecs/stream.h"
 #include "io/output.h"
 #include "io/temporary.h"
@@ -67,12 +68,16 @@ class SolidData {
 public:
     SolidData(Compression method, io::Bytes input) : file_(L"nsis-cache") {
         log::Scope step(L"nsis.decode_solid_cache");
+        progress::Scope stage(progress::Phase::decoding, input.size(), L"压缩数据读取量");
         codecs::Stream stream(method, input);
+        std::uint64_t consumed = 0;
         std::array<std::byte, 65536> buffer{};
         for (;;) {
             const auto size = stream.read(buffer);
+            const auto used = stream.consumed();
             if (!size) break;
             file_.append(std::span(buffer).first(size));
+            progress::advance(used - consumed); consumed = used;
         }
         require(!file_.bytes().empty(), Status::corrupt, L"NSIS Solid 数据为空。");
     }
@@ -506,14 +511,17 @@ struct NsisPackage::Impl {
         const auto choices = method ? std::vector<Compression>{*method} : candidates(payload.bytes);
         for (auto candidate : choices) {
             try {
+                progress::Scope stage(progress::Phase::analyzing, payload.bytes.size(), L"正在测量文件，按压缩数据读取量");
                 codecs::Stream stream(candidate, payload.bytes);
                 std::uint64_t total = 0;
+                std::uint64_t consumed = 0;
                 std::array<std::byte, 65536> buffer{};
                 for (;;) {
                     const auto size = stream.read(buffer);
                     if (!size) break;
                     require(size <= max_file_bytes - total, Status::limit_exceeded, L"NSIS 单文件展开超出 64 位文件范围。");
                     total += size;
+                    progress::advance(stream.consumed() - consumed); consumed = stream.consumed();
                 }
                 payload.size = total; payload.method = candidate; method = candidate; return;
             } catch (const Failure& failure) {
@@ -528,6 +536,7 @@ struct NsisPackage::Impl {
         std::array<std::byte, 65536> buffer{};
         for (std::size_t i = 0; i < catalog.files.size(); ++i) {
             auto& entry = catalog.files[i]; const auto& payload = payloads.at(file_offsets[i]);
+            progress::file(entry.path.native());
             log::Scope step(L"file.extract", nullptr, &entry.path);
             codecs::Stream stream(payload.method, payload.bytes);
             auto file = output.create_file(entry.path);
@@ -535,13 +544,14 @@ struct NsisPackage::Impl {
             while (written < entry.size) {
                 const auto size = static_cast<std::size_t>((std::min)(entry.size - written, static_cast<std::uint64_t>(buffer.size())));
                 auto bytes = std::span(buffer).first(size); stream.read_exact(bytes);
-                platform::write_all(file.get(), bytes); written += size;
+                platform::write_payload(file.get(), bytes); written += size;
             }
             stream.finish();
             if (!FlushFileBuffers(file.get())) platform::io_failure(L"刷新 NSIS 输出文件失败");
             file.reset(); entry.sha256 = platform::sha256(output.full_path(entry.path));
             log::verified(entry);
         }
+        progress::Scope finalizing(progress::Phase::finalizing);
         const auto report = platform::utf8(catalog_json(catalog, true));
         {
             auto file = output.create_file(L"_extract-report.json");

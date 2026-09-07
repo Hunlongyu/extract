@@ -1,5 +1,6 @@
 #include "platform/files.h"
 #include "platform/log.h"
+#include "core/progress.h"
 
 #include <bcrypt.h>
 #include <objbase.h>
@@ -125,14 +126,17 @@ std::string utf8(std::wstring_view text) {
     return result;
 }
 
-void write_all(HANDLE file, std::span<const std::byte> bytes) {
+static void write_bytes(HANDLE file, std::span<const std::byte> bytes, bool payload) {
     while (!bytes.empty()) {
         const auto chunk = static_cast<DWORD>((std::min)(bytes.size(), std::size_t{1 << 20}));
         DWORD written = 0;
         if (!WriteFile(file, bytes.data(), chunk, &written, nullptr) || written == 0) io_failure(L"写入文件失败");
         bytes = bytes.subspan(written);
+        if (payload) progress::advance(written);
     }
 }
+void write_all(HANDLE file, std::span<const std::byte> bytes) { write_bytes(file, bytes, false); }
+void write_payload(HANDLE file, std::span<const std::byte> bytes) { write_bytes(file, bytes, true); }
 
 static std::wstring file_hash(const fs::path& path, LPCWSTR algorithm_name, ULONG digest_size) {
     log::Scope step(L"file.hash", nullptr, &path);
@@ -140,6 +144,10 @@ static std::wstring file_hash(const fs::path& path, LPCWSTR algorithm_name, ULON
     Handle file(CreateFileW(extended_path(path).c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr,
                             OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN | FILE_FLAG_OPEN_REPARSE_POINT, nullptr));
     if (!file) io_failure(L"无法读取待校验文件");
+    LARGE_INTEGER file_size{};
+    const auto total = GetFileSizeEx(file.get(), &file_size) && file_size.QuadPart >= 0
+        ? std::optional<std::uint64_t>(static_cast<std::uint64_t>(file_size.QuadPart)) : std::nullopt;
+    progress::Scope progress(progress::Phase::verifying, total, path.native());
     BCRYPT_ALG_HANDLE algorithm = nullptr;
     if (BCryptOpenAlgorithmProvider(&algorithm, algorithm_name, nullptr, 0) < 0)
         throw Failure(Status::internal_error, L"无法初始化文件摘要算法。");
@@ -154,6 +162,7 @@ static std::wstring file_hash(const fs::path& path, LPCWSTR algorithm_name, ULON
         if (!ReadFile(file.get(), bytes.data(), static_cast<DWORD>(bytes.size()), &read, nullptr)) io_failure(L"校验读取失败");
         if (read == 0) break;
         if (BCryptHashData(hash, bytes.data(), read, 0) < 0) throw Failure(Status::internal_error, L"文件摘要计算失败。");
+        progress::advance(read);
     }
     std::vector<UCHAR> digest(digest_size);
     if (BCryptFinishHash(hash, digest.data(), static_cast<ULONG>(digest.size()), 0) < 0)

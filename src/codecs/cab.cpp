@@ -1,5 +1,6 @@
 #include "codecs/cab.h"
 #include "platform/log.h"
+#include "core/progress.h"
 #include <fdi.h>
 #include <msi.h>
 #include <algorithm>
@@ -71,6 +72,7 @@ std::vector<CabMember> cab_members(io::Bytes bytes) {
 void verify_file(Entry& entry, const fs::path& path) {
     log::Scope step(L"file.verify", nullptr, &path);
     if (entry.msi_hash) {
+        progress::Scope stage(progress::Phase::verifying, {}, entry.path.native());
         MSIFILEHASHINFO info{}; info.dwFileHashInfoSize = sizeof(info);
         const auto code = MsiGetFileHashW(platform::extended_path(path).c_str(), 0, &info);
         if (code != ERROR_SUCCESS) platform::io_failure(L"MSI 文件哈希读取失败", code);
@@ -155,7 +157,7 @@ UINT DIAMONDAPI write(INT_PTR id, void* data, UINT count) noexcept {
         require(count <= c.entry->size - c.written, Status::corrupt, L"CAB 输出超过声明大小。");
         const auto* bytes = static_cast<const std::byte*>(data);
         if (c.memory) c.memory->insert(c.memory->end(), bytes, bytes + count);
-        else platform::write_all(c.destination.get(), {bytes, count});
+        else platform::write_payload(c.destination.get(), {bytes, count});
         c.written += count; return count;
     } catch (...) { current->error = std::current_exception(); return static_cast<UINT>(-1); }
 }
@@ -173,7 +175,10 @@ INT_PTR DIAMONDAPI notify(FDINOTIFICATIONTYPE type, PFDINOTIFICATION n) noexcept
             c.entry = c.targets[index]; c.written = 0;
             log::detail(log::Level::info, L"cab.file_begin", [&] { return c.entry->path.wstring() + L"; member=" + member.decoded_name; });
             require(c.entry->size == member.size, Status::corrupt, L"CAB 成员与安装包文件大小不符。");
-            if (c.output) c.destination = c.output->create_file(c.entry->path);
+            if (c.output) {
+                progress::file(c.entry->path.native());
+                c.destination = c.output->create_file(c.entry->path);
+            }
             return 1;
         }
         if (type == fdintCLOSE_FILE_INFO) {

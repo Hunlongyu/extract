@@ -1,5 +1,6 @@
 #include "formats/archive.h"
 #include "platform/log.h"
+#include "core/progress.h"
 #include "codecs/stream.h"
 #include "io/output.h"
 #include <7z.h>
@@ -84,7 +85,7 @@ struct MemoryStream {
     }
     static SRes skip(ILookInStreamPtr p, size_t size) noexcept {
         auto& s = self(p); if (size > s.bytes.size() - s.position) return SZ_ERROR_INPUT_EOF;
-        s.position += size; return SZ_OK;
+        s.position += size; progress::pulse(); return SZ_OK;
     }
     static SRes read(ILookInStreamPtr p, void* buffer, size_t* size) noexcept {
         const void* source = nullptr; look(p, &source, size);
@@ -223,6 +224,7 @@ struct ArchivePackage::Impl {
         std::array<std::byte, 65536> buffer{};
         for (std::size_t i = 0; i < catalog.files.size(); ++i) {
             auto& entry = catalog.files[i];
+            progress::file(entry.path.native());
             log::Scope step(L"file.extract", nullptr, &entry.path);
             auto file = output.create_file(entry.path);
             UInt32 crc = CRC_INIT_VAL;
@@ -231,6 +233,7 @@ struct ArchivePackage::Impl {
                 if (folder != 0xffffffffU) {
                     if (folder != current_folder) {
                         log::Scope folder_step(L"7z.decode_folder");
+                        progress::Scope stage(progress::Phase::decoding, {}, L"7z 固实数据块");
                         folder_data.reset();
                         folder_data = std::make_unique<MappedFolder>(static_cast<std::size_t>(SzAr_GetFolderUnpackSize(&db.db, folder)));
                         sdk_result(SzAr_DecodeFolder(&db.db, folder, &seven->stream.api, db.dataPos,
@@ -241,7 +244,11 @@ struct ArchivePackage::Impl {
                     require(db.UnpackPositions[index] >= base, Status::corrupt, L"7z 文件偏移无效。");
                     const auto offset = db.UnpackPositions[index] - base;
                     const auto data = io::slice({reinterpret_cast<const std::byte*>(folder_data->data()), folder_data->size()}, offset, entry.size);
-                    crc = CrcUpdate(crc, data.data(), data.size()); platform::write_all(file.get(), data);
+                    for (std::size_t offset_in_file = 0; offset_in_file < data.size();) {
+                        const auto part = data.subspan(offset_in_file, (std::min)(buffer.size(), data.size() - offset_in_file));
+                        crc = CrcUpdate(crc, part.data(), part.size()); platform::write_payload(file.get(), part);
+                        offset_in_file += part.size();
+                    }
                 } else require(entry.size == 0, Status::corrupt, L"7z 非空文件缺少数据流。");
             } else {
                 const auto& payload = zip[i]; codecs::Stream stream(payload.method, io::slice(input.bytes(), payload.data, payload.packed));
@@ -249,7 +256,7 @@ struct ArchivePackage::Impl {
                 while (remaining) {
                     const auto n = static_cast<std::size_t>((std::min)(remaining, static_cast<std::uint64_t>(buffer.size())));
                     auto part = std::span(buffer).first(n); stream.read_exact(part);
-                    crc = CrcUpdate(crc, part.data(), part.size()); platform::write_all(file.get(), part); remaining -= n;
+                    crc = CrcUpdate(crc, part.data(), part.size()); platform::write_payload(file.get(), part); remaining -= n;
                 }
                 stream.finish();
             }
@@ -262,6 +269,7 @@ struct ArchivePackage::Impl {
             log::verified(entry);
         }
         folder_data.reset();
+        progress::Scope finalizing(progress::Phase::finalizing);
         const auto report = platform::utf8(catalog_json(catalog, true));
         { auto file = output.create_file(L"_extract-report.json"); platform::write_all(file.get(), std::as_bytes(std::span(report)));
           if (!FlushFileBuffers(file.get())) platform::io_failure(L"无法保存归档报告"); }

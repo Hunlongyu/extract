@@ -6,6 +6,7 @@
 #include "formats/burn.h"
 #include "io/input.h"
 #include "platform/log.h"
+#include "core/progress.h"
 #include <algorithm>
 #include <map>
 #include <set>
@@ -56,6 +57,7 @@ std::wstring name(Kind kind) {
     }
 }
 void save_report(const fs::path& directory, const Catalog& catalog) {
+    progress::Scope progress(progress::Phase::finalizing, {}, {}, catalog.input.native());
     log::Scope step(L"report.save", nullptr, &directory);
     const auto locks = platform::lock_ancestors(directory);
     const auto temporary = directory / (L".report-" + platform::unique_id() + L".tmp");
@@ -107,7 +109,10 @@ struct Context {
             ~ActiveGuard() { values.erase(hash); }
         } active_guard{active, hash};
         ExtractionResult result;
-        result.output = package->extract(parent);
+        {
+            progress::Scope progress(progress::Phase::extracting, planned.total_size, {}, package_path.native());
+            result.output = package->extract(parent);
+        }
         Catalog catalog = package->catalog();
         package.reset(); // 递归前释放上层映射与 Solid 磁盘缓存。
         result.primary_output = result.output;
@@ -121,6 +126,7 @@ struct Context {
         catalog.tree_total_bytes = result.total_bytes; catalog.tree_file_count = result.file_count;
         save_report(result.output, catalog);
         bool nested_ok = true;
+        progress::Scope scanning(progress::Phase::scanning, {}, {}, package_path.native());
         std::vector<fs::path> inner_primary;
         std::set<fs::path> archive_primary;
         for (auto& entry : catalog.files) {
@@ -134,6 +140,7 @@ struct Context {
                 (platform::equal_name(extension, L".zip") || platform::equal_name(extension, L".7z") || platform::equal_name(extension, L".cab"));
             if (!executable && !archive) continue;
             const auto path = result.output / entry.path;
+            progress::file(entry.path.native());
             log::Scope child_step(L"nested.inspect", &path);
             Catalog::Nested nested; nested.input = entry.path;
             try {
