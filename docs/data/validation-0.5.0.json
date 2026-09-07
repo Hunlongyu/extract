@@ -1,0 +1,179 @@
+{
+  "version": "0.5.0",
+  "date": "2026-09-07",
+  "verification": "Static extraction only; never executed installers or output binaries.",
+  "generatedCabBurnCases": 39,
+  "invalidMsiFixtures": 16,
+  "pythonBurn": {
+    "inputSha256": "b12e2e82461ac8e51fc43289050bc8eb937a32d84ce4d242e2c88258c37cf2bb",
+    "exitCode": 299,
+    "manifestPayloadsVerified": 28,
+    "missingExternalPayloads": [
+      "ucrt_AllUsers",
+      "ucrt_JustForMe",
+      "core_AllUsers_pdb",
+      "core_AllUsers_d",
+      "core_JustForMe_pdb",
+      "core_JustForMe_d",
+      "exe_AllUsers_pdb",
+      "exe_AllUsers_d",
+      "exe_JustForMe_pdb",
+      "exe_JustForMe_d",
+      "dev_AllUsers_d",
+      "dev_JustForMe_d",
+      "lib_AllUsers_pdb",
+      "lib_AllUsers_d",
+      "lib_JustForMe_pdb",
+      "lib_JustForMe_d",
+      "freethreaded_AllUsers",
+      "freethreaded_AllUsers_pdb",
+      "freethreaded_AllUsers_d",
+      "freethreaded_JustForMe",
+      "freethreaded_JustForMe_pdb",
+      "freethreaded_JustForMe_d",
+      "test_AllUsers_pdb",
+      "test_AllUsers_d",
+      "test_JustForMe_pdb",
+      "test_JustForMe_d",
+      "tcltk_AllUsers_pdb",
+      "tcltk_AllUsers_d",
+      "tcltk_JustForMe_pdb",
+      "tcltk_JustForMe_d"
+    ],
+    "nestedPackages": 22,
+    "totalFiles": 8530,
+    "totalBytes": 341474642
+  },
+  "userInstallers": [
+    {
+      "name": "ECHO-NEXT-Setup-26.8.2.exe",
+      "inputSha256": "131ca4727757e6c9a366013feb0dd782946a9e2ab200afc27e73a47444b22698",
+      "exitCode": 299,
+      "totalFiles": 441,
+      "totalBytes": 1159296535,
+      "layers": [
+        {
+          "format": "NSIS",
+          "files": 11,
+          "bytes": 265069932,
+          "status": "partial",
+          "unresolved": [
+            "_unresolved/nsis-2323/Uninstall ECHO NEXT.exe"
+          ]
+        },
+        {
+          "format": "7z",
+          "files": 430,
+          "bytes": 894226603,
+          "status": "complete",
+          "unresolved": []
+        }
+      ]
+    },
+    {
+      "name": "Pebble_0.1.4_x64-setup.exe",
+      "inputSha256": "5f4054c93cd3933a930daedf8b2dd3848b677617b2f5df0148de349cf670d44e",
+      "exitCode": 0,
+      "totalFiles": 7,
+      "totalBytes": 16212862,
+      "layers": [
+        {
+          "format": "NSIS",
+          "files": 7,
+          "bytes": 16212862,
+          "status": "complete",
+          "unresolved": []
+        }
+      ]
+    },
+    {
+      "name": "Textify.exe",
+      "inputSha256": "cef497c5237f4b10b09fd4d45b051f3777f9705debb2bb6bf7dcf7ffe400b01e",
+      "exitCode": 0,
+      "totalFiles": 6,
+      "totalBytes": 236025,
+      "layers": [
+        {
+          "format": "Inno Setup",
+          "files": 6,
+          "bytes": 236025,
+          "status": "complete",
+          "unresolved": []
+        }
+      ]
+    },
+    {
+      "name": "vic-diary-2.0.0-setup.exe",
+      "inputSha256": "4f375a152ad4ee4ece439c8927f4150e1517ff9713ad45de2e4cd9bec9de8221",
+      "exitCode": 299,
+      "totalFiles": 100,
+      "totalBytes": 328953160,
+      "layers": [
+        {
+          "format": "NSIS",
+          "files": 10,
+          "bytes": 67694225,
+          "status": "partial",
+          "unresolved": [
+            "_unresolved/nsis-1965/Uninstall vic-diary.exe"
+          ]
+        },
+        {
+          "format": "7z",
+          "files": 90,
+          "bytes": 261258935,
+          "status": "complete",
+          "unresolved": []
+        }
+      ]
+    },
+    {
+      "name": "XnViewMP_v1.11.6.0_setup_x64_mefcl.exe",
+      "inputSha256": "c497589599950fbe7ee034d51d0890b5c8c3b474f927267bddca89ed6562856a",
+      "exitCode": 0,
+      "totalFiles": 1083,
+      "totalBytes": 251326796,
+      "layers": [
+        {
+          "format": "NSIS",
+          "files": 3,
+          "bytes": 60469400,
+          "status": "complete",
+          "unresolved": []
+        },
+        {
+          "format": "Inno Setup",
+          "files": 1080,
+          "bytes": 190857396,
+          "status": "complete",
+          "unresolved": []
+        }
+      ]
+    }
+  ],
+  "automatedValidation": {
+    "debugSuitesPassed": [
+      "path_policy",
+      "msi_integration",
+      "cab_burn_integration",
+      "inno_integration",
+      "nsis_integration",
+      "nested_integration",
+      "archive_integration"
+    ],
+    "releaseSuitesPassed": [
+      "path_policy",
+      "msi_integration",
+      "cab_burn_integration",
+      "inno_integration",
+      "nsis_integration",
+      "nested_integration",
+      "archive_integration"
+    ],
+    "finalTargetedSuitesBothBuilds": [
+      "path_policy",
+      "msi_integration",
+      "cab_burn_integration"
+    ]
+  }
+}

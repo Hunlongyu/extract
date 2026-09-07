@@ -1,0 +1,341 @@
+﻿Root,RelativePath,Size,Version,Description,SHA256,Category,Purpose,Recommendation,Evidence
+A,7ZSplit.exe,9728,"0, 2, 0, 1017",7z SFX Archives splitter,4d32f7017afad3fea254a9d550c1ada112b2f32e4a627518761ce7c0593a965d,安装包与封装,7z SFX 的模块、配置与归档拆分；SfxSplit 的作者信息指向 7zsfx。,已有 PE + ZIP/7z；补识别和精确边界，不重做一套压缩引擎。,本地版本资源、静态字符串；上游工具表
+A,acefile.exe,6098939,,,0fc10efb7125f3e184544a3384a1f602ab284d92b01a36cd6c7858bac64870d0,通用归档,ACE 归档，两套工具。,不做历史格式专项。,本地 xace 版本资源；上游 acefile 工具表
+A,arc.exe,84480,5.21j.1926,Arc: create and extract files from DOS .ARC files,802695c1cba1bab7aa0c3531b40d769587a925201aee4f7d58d85b99f4f7ff33,通用归档,传统 DOS ARC 归档。,不做。,本地 FileDescription
+A,arj.exe,270443,,,00ac8169236b8f9910c661e6d8b82c2f2e5800338a9c7775d691e622f3521ac9,通用归档,ARJ 归档及相应自解压包。,不做历史格式专项。,本地 arj 说明
+A,AspackDie.exe,13312,,,465e075688109b59ce08d12499751a6eff19cc825941e9d4dec9b792ae5220d5,识别、宿主及可执行程序封装,ASPack 可执行文件脱壳；配套 ForceLibrary.dll。,不做。,本地 aspackdie 说明；ForceLibrary 版本资源
+A,Bio.cs.dll,13824,1.0.0.0,Bio.cs,00d84cd0d109c738b56e29fe6b8407c017679274fb5ac3120ab5940415323004,配套库,Bio.cs,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,BMS.db,492544,,,425e543da9b14e06e0efec29c5333274cf3c4b7e746c9b0d1326f5996d4b4ace,规则或配置数据,对应检测器、游戏/归档解释器、插件的配套数据,不算作新增格式,本地路径及配置
+A,bsab.exe,2661888,1.9.5.0,BSA Browser CLI,85b0ae4a39a80528e7a0823518d2f00d55e80c7a86ad8799f5b93abf8f9fcaba,游戏与多媒体资源,Bethesda BSA/BA2 游戏资源。,不做。,A/def/bsa.ini；版本资源
+A,Champollion.exe,1460736,,,b4f2cd412d039f52f283b4a342639cdd7fc756b26ae4a40017926138e933947a,游戏与多媒体资源,Papyrus PEX 游戏脚本反编译。,不做。,A/def/pex.ini
+A,cicdec.exe,18944,2.1.0.0,cicdec,db11afc66b7d2a39344c78fc93442824b6b9f91fd7771df2fa8a6f3a4bf1f831,安装包与封装,Clickteam Install Creator 安装包。,候选扩展；有近期失败样本再投入。,本地版本资源；作者 cicdec 仓库
+A,clit.exe,46080,,,e87bf25bf6251c9e5cbdf5154eed9bf45e3189501c6a6e9e6d6adea6bdb55078,文档、邮件与数据转换,分别反编译 WinHelp HLP、展开 Microsoft Reader LIT 电子书。,不做。,本地作者说明；A/def/lit.ini
+A,daa2iso.exe,33792,,,d75498d5d7778ce42606a4c91f9d5cf3daaa6a96eff5eb71faefd9b969d0c28b,镜像与固件,分别把 DAA、UIF 镜像转换成 ISO。,不做专用转换器。,本地作者说明
+A,dbxplug.wcx,95744,1.0.7.9,Plugin for Windows Commander: Outlook Expres 5.X  DBX-File reader,7713e74d93bea2e66143da6eace4e5530167a985787aa0e66f8fdb1e00e25ce1,WCX 插件,Outlook Express DBX 邮件库插件,按格式选择解析能力；不复制插件宿主,本地插件作者说明、版本资源及配置
+A,demoleition.exe,650240,0.6.1.0,de-mole-ition - static Molebox 2.x unpacker,0de41de429b7784fee0bf1c955bafe93e1e83d9ae57dd12722a40bfa45377050,识别、宿主及可执行程序封装,MoleBox 2.x 静态拆包。,不纳入近期安装包主线。,本地 FileDescription；作者说明
+A,E_WISE_W.EXE,38400,,,f25cf0f24f9aa398fa54b0a3559d670db7c3a12f44340a2730d35584772354df,安装包与封装,Wise Installer 静态载荷提取；E_WISE.INI 提供配套信息。,低优先级；遇到实际近期样本再排期。,本地 ewise / wun 作者说明
+A,E_WISE.INI,1583,,,81607ec83cd1c1cd75bee81a1d76773a3174e9a3df71c3e0dcad4d9d0842e66e,规则或配置数据,对应检测器、游戏/归档解释器、插件的配套数据,不算作新增格式,本地路径及配置
+A,EnigmaVBUnpacker.exe,629760,0.5.8.0,EnigmaVBUnpacker - static Enigma Virtual Box unpacker,173a3f1cdfe9734d93207af7b930dc38d37238a2b2070159c3a4d311f3baa41d,识别、宿主及可执行程序封装,Enigma Virtual Box 单文件虚拟文件系统的静态拆包。,可选扩展，排在常见安装包之后；提取完成不代表程序能脱离虚拟化运行。,本地 FileDescription；作者说明
+A,exeinfope.exe,1735680,0.0.6.0,ExEinfo PE - Win32 exe identifier,c0aa4c6cb0c2dc5ef4764b4fb96cdf1a3a04d861fceef905101ff2d5db05b143,识别、宿主及可执行程序封装,PE 文件、编译器和壳的识别；不是应用文件提取器。,参考识别特征；识别结果只能作为解析候选。,本地说明、版本资源
+A,exeinfopeRUN.cfg,222,,,19f03e24c7bbc4c3f7d5455b4780193bef405dd5415141420bbf9dd82382d48a,规则或配置数据,对应检测器、游戏/归档解释器、插件的配套数据,不算作新增格式,本地路径及配置
+A,Ext_Detector.dll,105984,0.5.5.2,Exeinfope non exe detector library by A.S.L,2f9c209452eae5efec4a2d338a4fc6c710c0e90ee665d40b57379d0a62430024,配套库,Exeinfope non exe detector library by A.S.L,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,ForceLibrary.dll,12800,[ ForceLibrary 1.4 BETA ] by yoda,Making processes load your dlls >:-),a405bef4730c5317da59ac48bc44a4af24cc1911a0531d393d229233dd84f35b,配套库,Making processes load your dlls >:-),不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,Foundation.1.0.dll,2446468,,,908fe0c74666577eadfc5948deff2bbf6d1da223dcb8239e84248c491ef3c38f,配套库,配套库；具体职责以所属工具为准，未动态加载确认,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,fsbext.exe,102912,,,84cc08c23ac69234f51a66f85b98d06ec271f83dc62fb723e776834a00d67ed0,游戏与多媒体资源,FMOD FSB 音频资源包。,不做。,上游工具表与作者说明
+A,gaup_pro.wcx,98816,0.6.0.1 PRO,Game Archive UnPacker plugin for Total Commander,c7776ffdbdfba8b00a032b26866bae7afab1ca1237ded721c1593f6cdce62784,WCX 插件,Game Archive UnPacker 游戏资源插件,按格式选择解析能力；不复制插件宿主,本地插件作者说明、版本资源及配置
+A,gc.dll,81920,,,1bd55170477b4838e03c553ceccba2d1bfe4a7de0d385c3a7b3d6c7081180624,配套库,配套库；具体职责以所属工具为准，未动态加载确认,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,gcmt-dll.dll,69632,,,938cb5c8d1daf7c9598a2bfefadd28723c7f46d5c6607cc1d9554de23f6ef9e1,配套库,配套库；具体职责以所属工具为准，未动态加载确认,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,godotdec.exe,10240,2.1.0.0,godotdec,9306284afd671e555c088fb904d96e69f8df29cf38cebc82937b32f39e983adb,游戏与多媒体资源,Godot PCK 及内嵌 PCK 的 EXE。,不做游戏内部资源展开。,A/def/godot.ini
+A,helpdeco.exe,237056,,,9c5c58a524d557b9d7c1eabb2a5cbd7716e6586ec93df90089f1d1213b11c8ac,文档、邮件与数据转换,分别反编译 WinHelp HLP、展开 Microsoft Reader LIT 电子书。,不做。,本地作者说明；A/def/lit.ini
+A,i6comp.exe,114688,,,1181ae0dada52ea5a5990d11f966e5986bf0a01614d2d5e5ad63b7c79e29fa29,安装包与封装,InstallShield 5.x / 6.x 专有 CAB 的提取、维护工具。,参考数据结构；不专门重做这两个历史版本的完整工具。,i6comp 本地说明；i5comp 静态字符串
+A,ICSharpCode.SharpZipLib.dll,198656,1.2.0.246,ICSharpCode.SharpZipLib,2c32b22249ca820844cb40305e6353e8ca2f52737e5f5ee13f6bb8b36ade7263,配套库,ICSharpCode.SharpZipLib,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,innoextract.exe,2338304,,,0dab51583e403970065db49f87a6a2bf683ab6ebfdf27bede2bf633dd232a1a2,安装包与封装,Inno Setup 安装包：文件表、路径、压缩块、版本差异。,已有模块；持续补近期结构、分卷和路径变体。,A 说明文档；上游工具表
+A,innounp.exe,1790976,2.71.1,InnoUnp - Inno Setup Unpacker,94377351f03257b06e221285b16d41108040151ab672b96faf1d3d874a7d0a32,安装包与封装,Inno Setup 安装包：文件表、路径、压缩块、版本差异。,已有模块；持续补近期结构、分卷和路径变体。,A 说明文档；上游工具表
+A,InstExpl.dll,41984,,,611bc56e85331eda5583e945e5e2c39d656914b9cb49b0000c216b00337a46c8,配套库,配套库；具体职责以所属工具为准，未动态加载确认,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,InstExpl.wcx,49152,"0, 9, 1, 0",InstallExplorer for Total Commander,6057a2b23bcf5ca7e0bdd9f183e7cf174ffdb346ce23f972f152d6e92700fd94,WCX 插件,InstallExplorer：Wise、VISE、Inno、Gentee、InstallShield、旧 NSIS、SetupFactory、Eschalon、MSI 的多格式插件,按格式选择解析能力；不复制插件宿主,本地插件作者说明、版本资源及配置
+A,iso.wcx,19456,"1, 7, 7, 0",iso.wcx,2802d6d1aa1f50aa278268929c08c148a4757ead7786fe73f5402fe8bc36ea43,WCX 插件,ISO 光盘镜像插件,按格式选择解析能力；不复制插件宿主,本地插件作者说明、版本资源及配置
+A,IsXunpack.exe,58368,,,b9b389906763dff3c34ca0e28226b5f7b9cfa46273b0bb1d37e8640c72b90792,安装包与封装,部分 InstallShield 单 EXE 外壳：取出 CAB/HDR、setup 文件，未必已经取出应用。,参考外壳到载荷的分层设计；新版本必须另做样本验证。,本地 isxunpack_readme.txt
+A,jsMSIx.exe,184320,1.11.0704,MSI Unpacker - unpacks MSI/MSM files,edc6293d46c7a1d907a4b62b1d0ec097a83f829e33172516edaa2cb84c2c1427,安装包与封装,Windows Installer MSI/MSM 内容提取；其中 MsiX 是旧工具名称，不是现代 MSIX 格式。,已有 MSI；优先补多 CAB、外置 CAB、松散源文件。,本地版本资源；lessmsi 上游
+A,lconvert.exe,3244544,5.13.2.0,Qt Translation File Converter,8f7b81ce126136c77b4a93b803f558e0b65bdd4e952af9aabb2149626b0bdde9,文档、邮件与数据转换,分别转换 Qt QM 翻译文件、GNU Gettext MO 翻译目录。,不做。,A/def/qm.ini、mo.ini；版本资源
+A,libbz2-1.dll,100964,,,b79cd3a7102e359ef6324e98966a67939e58ec2b651ae2847cae84a4dfa453f7,配套库,配套库；具体职责以所属工具为准，未动态加载确认,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,lzip.exe,1591510,,,8e97fab3223d7749e7b82b70dc575348f32e96519135b437a5f6a0ebc382d515,通用归档,分别为 LZIP 和 LZO/lzop 压缩流。,安装器确有这种压缩方法时再接基础库；不单列首批格式。,本地说明；上游工具表
+A,lzop.exe,94734,,,0beab98e9e5877a0a13047d71c11902c07283f983ac7a1c3c98696d24a315442,通用归档,分别为 LZIP 和 LZO/lzop 压缩流。,安装器确有这种压缩方法时再接基础库；不单列首批格式。,本地说明；上游工具表
+A,MediaInfo.dll,5179840,20.03.0.0,Most relevant technical and tag data for video and audio files,4dc4b7fcab02e7c53f69e5ec59eeff60be22bc1a7ccc7f0ef9828c9e3090fc91,配套库,Most relevant technical and tag data for video and audio files,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,msgunfmt.exe,1958505,0.19.8.1,GPLed program for Windows NT/2000/XP/Vista/7 and Windows 95/98/ME,ad30ff9d4e5261ac279334f119820c5f57b811fce7727879830183e0cf78faa2,文档、邮件与数据转换,分别转换 Qt QM 翻译文件、GNU Gettext MO 翻译目录。,不做。,A/def/qm.ini、mo.ini；版本资源
+A,msi.wcx,97792,,,bcc34cb4bcdd8902d762a2e60a0c3793ae92814c6a742f82eb329fcea4518b67,WCX 插件,MSI/MSP 数据库内嵌 OLE 流浏览/提取；不能等同按安装目录完整还原应用,按格式选择解析能力；不复制插件宿主,本地插件作者说明、版本资源及配置
+A,MsiX.exe,139264,"1, 0, 0, 0",MSI Extractor,3598ad3754ce45e914688ab9ab2960f11f57e3f35d3ef6b6e60a3d0a1c64d097,安装包与封装,Windows Installer MSI/MSM 内容提取；其中 MsiX 是旧工具名称，不是现代 MSIX 格式。,已有 MSI；优先补多 CAB、外置 CAB、松散源文件。,本地版本资源；lessmsi 上游
+A,mtee.exe,19456,,,221748edd4763571e395189772f166625f8e2b9429d1ee334228ef92f3f0c326,识别、宿主及可执行程序封装,复制命令行输出到日志等目的地。,已有日志功能，无需独立程序。,上游工具表与作者项目
+A,NBHextract.exe,35328,,,2e1adf481ac0e5b0c4abe9980a4740913a41eb88f8a5c37b2c15f0690096fc3d,镜像与固件,HTC NBH ROM 固件。,不做。,上游工具表与作者项目说明
+A,neko.dll,100352,,,0ef87d06612b3d3f80bbc40ec858f3160fa33e39294d92cb3ba33f4b43d1694e,配套库,配套库；具体职责以所属工具为准，未动态加载确认,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,observer.ini,829,,,83c334815e274d0e3c89532417139d5feb11823061dffd4926719ca8cfbdc422,规则或配置数据,对应检测器、游戏/归档解释器、插件的配套数据,不算作新增格式,本地路径及配置
+A,pdfdetach.exe,1011712,,,fca7c09e0a9a2d37fd26bd9bf73bc5a0d13c4d3255d40da2c07a4b80929c3272,文档、邮件与数据转换,分别提取 PDF 附件、图片、文本，转换 HTML、渲染 PNG。,不做；保持提取出的 PDF 原样。,本地说明与上游 Xpdf 工具表
+A,pdftohtml.exe,1805824,,,e13ff12ef25ee5388cd9fec627b00080d3bac278d3dd14da8fba0a5f6e378d78,文档、邮件与数据转换,分别提取 PDF 附件、图片、文本，转换 HTML、渲染 PNG。,不做；保持提取出的 PDF 原样。,本地说明与上游 Xpdf 工具表
+A,pdftopng.exe,1757184,,,e0f3c31853c74b9396ed7e5aa66e5a839afb88fc6b49427d62e3c57344ad8396,文档、邮件与数据转换,分别提取 PDF 附件、图片、文本，转换 HTML、渲染 PNG。,不做；保持提取出的 PDF 原样。,本地说明与上游 Xpdf 工具表
+A,pdftotext.exe,1074176,,,1537fac2fefa3ac26164401d566d8fc55ea7cda1f9bf502ae4303090f70740b1,文档、邮件与数据转换,分别提取 PDF 附件、图片、文本，转换 HTML、渲染 PNG。,不做；保持提取出的 PDF 原样。,本地说明与上游 Xpdf 工具表
+A,PDunSIS.wcx,65536,"1, 0, 0, 0",PDunSIS,13518d6aac144bdb70fa0a98811d18eb1f09ca40b8892b5ad654d875afef7d49,WCX 插件,Symbian/EPOC SIS 安装包插件；不是 NSIS,按格式选择解析能力；不复制插件宿主,本地插件作者说明、版本资源及配置
+A,pea.exe,2955776,0.72.0,"Pea: pack, encrypt, authenticate",3f1f389be8cff6727ac2ab61266bbe42a3c918fe24916699d861f9d507c7ad6c,通用归档,PEA 压缩、加密和认证容器；不是完整 PeaZip 界面的全部后端。,低优先级。,本地版本资源及 pea 说明
+A,PEiD.exe,219136,,,e13171d50f45a79bc09b9e4b9ffa38eb02301aca94a1867a9bf8acccc3759030,识别、宿主及可执行程序封装,PE 文件、编译器和壳的识别；不是应用文件提取器。,参考识别特征；识别结果只能作为解析候选。,本地说明、版本资源
+A,quickbms.exe,5739520,check the version at runtime,QuickBMS,e1c8460ab150f7616a3718158cb406328095e5429153d4b7f629147e581359d2,游戏与多媒体资源,脚本驱动的二进制格式解释器；本地 BMS.db 提供解包脚本集合，也有少数安装器脚本。,仅参考确实命中安装器的脚本；不重做整个解释器。,本地 quickbms 说明；UniExtract 的 BmsExtract 调用
+A,RAIU.EXE,40960,,,befa024422b3fb6b5265bbd600806100e9734a3e593d8b1c9ebe8f1b031e5628,安装包与封装,Reflexive Arcade 游戏安装器的外层包装，通常还要接 Inno 提取。,不做历史专用分支；参考多层识别思路即可。,UniExtract 作者说明与源码
+A,regexp.ndll,198144,,,d18e3e8b9285490566fa36c5dc0580aad68a0e84f82c87fc8ebe14c93cbe6bb2,配套库,配套库；具体职责以所属工具为准，未动态加载确认,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,RgssDecrypter.exe,44032,1.0.0.1,RgssDecrypter,8c7c49049c1b979dc68395bbfe416bb8975690d278fc5f47f9601030ffce2adf,游戏与多媒体资源,分别处理 RPG Maker RGSS 归档和 RPG Maker MV 资源。,不做。,本地版本资源；A/def/rpgmvp.ini
+A,RgssDecrypter.Lib.dll,10240,1.0.0.0,RgssDecrypter.Lib,fbbb4e32cb4afd8f0bc110fa658eee8c3d15d04d1b1c9dfc03f2bed4d25a2303,配套库,RgssDecrypter.Lib,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,rmvdec.exe,61430,,,5d899e00a66abde2cc0a3c5cfa43006fb224e3ec62d81b3901476705815e5fb0,游戏与多媒体资源,分别处理 RPG Maker RGSS 归档和 RPG Maker MV 资源。,不做。,本地版本资源；A/def/rpgmvp.ini
+A,sfarkxtc.exe,32768,,,6faee7c69b0d5d4cf0c2c381b277a89f175380433142550dc87ecf57c955f543,游戏与多媒体资源,sfArk 压缩音色库。,不做。,上游工具表与作者项目
+A,spoondec.exe,61360,,,b7819e993b5ec36e16daa6446307b9ee8fbb05b611fa9185495eafbe5dc3ba3b,安装包与封装,Spoon Installer 安装包载荷。,低优先级；不要与所有应用虚拟化封装混为一谈。,A/def/spoon.ini；作者 spoondec 仓库
+A,sqlite3.exe,966656,3.31.1,"SQLite is a software library that implements a self-contained, serverless, zero-configuration, transactional SQL database engine.",cb47b6066f756f991a1844dcc912881488a11c3ff55d250618fed7e1dfdcff47,文档、邮件与数据转换,SQLite 数据库访问/导出；也可供工具管理自身数据。,不做数据库转换功能。,本地版本资源；UniExtract 源码
+A,std.ndll,118784,,,21320d2e48749a6d2d19a1e711c55751557f7a2dac8c9ffa7750c83c1e74d3bf,配套库,配套库；具体职责以所属工具为准，未动态加载确认,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,swfextract.exe,723005,,,abd760cc1dc492c933bb7cf3b5adb9072b75bd21b229a67e449d36f97acc3f5c,游戏与多媒体资源,SWF 图片、音频等资源。,不做。,本地说明与上游工具表
+A,TotalObserver.wcx,138240,1.2.0.0,Total Commander Plugin that allows users to browse various file containers and extract content from them.,eab0e136c5deb7df2fc98e359d310c81109e7919dca4289101423362c76cbcc6,WCX 插件,Observer 模块的 Total Commander 宿主；实际格式由 modules 和配置决定,按格式选择解析能力；不复制插件宿主,本地插件作者说明、版本资源及配置
+A,trid.exe,108544,,,d8c91ee0720759d44aac1dc16f9b400da5fd259748aefbca5a549329396d2483,识别、宿主及可执行程序封装,TrID 基于特征库判断文件类型；file/libmagic 使用 magic 规则。,做少量确定性探测，未知包保存诊断；不追求识别所有文件。,本地说明；A/def/registry.ini
+A,triddefs.trd,4926220,,,038f529e870d607dd3f65342945d4502fd804c61832db4189c5dd14fedd8142a,规则或配置数据,对应检测器、游戏/归档解释器、插件的配套数据,不算作新增格式,本地路径及配置
+A,TrIDLib.dll,40960,1.02,TrIDLib - Free,99bbfec6a939446cb6561ab4237ab043b72088e663b5c46806453c94e2a03ed7,配套库,TrIDLib - Free,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,ttarchext.exe,977920,,,057088b4dbaa92258a81641807840ae447625997065e29400ed70e2897eeba3d,游戏与多媒体资源,Telltale TTARCH 游戏资源。,不做。,上游工具表与作者工具说明
+A,UHARC02.EXE,99444,,,570b7b5feffa88a194bc002c2941ee24e3f971e11289d4fad736ce0e6dbac14a,通用归档,UHARC 的不同历史版本。,不做。,本地 UHARC 说明；上游工具表
+A,UHARC04.EXE,100864,,,a45c6f7da7d9660ec4a60f2eaa15162ae3513fcb45fbbeb75b6a31df6bff697b,通用归档,UHARC 的不同历史版本。,不做。,本地 UHARC 说明；上游工具表
+A,uif2iso.exe,92160,,,b190b6b892c64f003a08525bcc5b58d58cb0145ab55c14ed62af4a35bc8ffcbe,镜像与固件,分别把 DAA、UIF 镜像转换成 ISO。,不做专用转换器。,本地作者说明
+A,unadf.exe,98304,,,4b88b30a4ca258924dde6512e9f4fe03ca92168b2f0a00cb5b4feaf016077d2b,镜像与固件,Amiga ADF 磁盘镜像。,不做。,A/def/adf.ini
+A,unalz.exe,159744,,,4a35788e517e509202d11f0e7b4299f303de808727c20557a5625c8526f35f68,通用归档,ALZip 的 ALZ 归档。,低优先级。,A/def/alz.ini
+A,unar.exe,5785366,,,c4900a02c15904590bb611750382a7da37e2f6843c025862c142e2300414ab8d,通用归档,前者是 The Unarchiver 命令行、多格式读取；本地路由用于 StuffIt。后者是旧 StuffIt Expander。,不因同样能解压就重做；StuffIt 不纳入 Windows 安装包主线。,A/def/sit.ini；本地版本资源；上游工具表
+A,unarc.exe,214016,,,3b7a0ef0ca48ff2c3d9511303003bb778df7842c5e782e9d9443d400b67eb791,通用归档,FreeArc 归档；与下面 DOS ARC 同扩展名但格式不同。,低优先级，面向特定重打包样本再评估。,上游工具表；本地 freearc 说明
+A,unecm.exe,7680,,,45f597a50d868f2fce11877f52983b2097cf6b9ac569c35122cc3fdc28d03705,镜像与固件,ECM 光盘数据恢复。,不纳入主线。,A/def/ecm.ini
+A,unisz.exe,114688,,,bac9099d4018760fe0e688cf6a59c9af35e2b00458608f57d040c1854fc8e098,镜像与固件,UltraISO ISZ 压缩镜像展开。,不纳入主线。,本地 unisz 说明
+A,unlzx.exe,45191,,,d924011d6937a4320e6bfd3c7b46e878d690b39cba9f06a204a4ca5776ce3d2b,通用归档,传统 LZX 归档，不能据此认为它是标准 CAB 的 LZX 接口。,不做独立格式专项。,本地 unlzx 说明
+A,Unpack.dll,478720,,,d9ae14389c8d9ce3ad018377106d78d4d7b5876f3935202b9e0e8af7164f6495,配套库,配套库；具体职责以所属工具为准，未动态加载确认,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,unrpa.exe,6009050,,,c92ec291e999b97ce4113f7cd83ae34428e6d6cdcd6000d67277b3be29a499b9,游戏与多媒体资源,Ren'Py RPA 归档。,不做。,本地 unrpa 作者说明
+A,unshield.exe,117760,,,fc47a75619f4d9b31e32b5af049e1c94e986bab43b0afdb5b3d5ce31be6a66cd,安装包与封装,InstallShield 专有 CAB/HDR 文件表、组件、文件组和跨卷载荷。,值得自研，列入第二批；以近期样本确定结构。,unshield 上游；InstallShield 2025 官方文档
+A,UNUHARC06.EXE,75264,,,a9cf9da45402aedfa8e8c9d87d09941dfacb49ac454f618a918975fd390ee9c9,通用归档,UHARC 的不同历史版本。,不做。,本地 UHARC 说明；上游工具表
+A,unzip.exe,204800,6.0,Info-ZIP's UnZip for Win32 console,2122557d350fd1c59fb0ef32125330bde673e9331eb9371b454c2ad2d82091ac,通用归档,ZIP 及部分 ZIP 自解压包。,已有 ZIP/ZIP64；无需再做另一个 ZIP 工具。,本地版本资源、unzip 说明
+A,unzoo.exe,46669,,,bfe350b25f4cfc69d23b71a084218092ba544c05bfc6facb97f1bee93109656c,通用归档,Zoo 归档。,不做。,上游工具表与本地格式表
+A,upx.exe,411648,3.96 (2020-01-23),UPX executable packer,d634cde09d1aa1320a1d4c589d35d306f8350129faf225b2bca394128c2c4442,识别、宿主及可执行程序封装,UPX 可执行文件压缩/还原，处理程序映像。,不是安装包文件表；不做通用脱壳功能。,本地版本资源及 upx 说明
+A,userdb.txt,1813,,,15cac46267af4776192a5fc6d2c742afde65a89810154571ab44f06b7b67c038,规则或配置数据,对应检测器、游戏/归档解释器、插件的配套数据,不算作新增格式,本地路径及配置
+A,utagedec.exe,47262,,,e24414054fbda857f888adae8895563b71d484067bab333a1b292bc6e6a88148,游戏与多媒体资源,UTAGE 游戏资源。,不做。,A/def/utage.ini
+A,uudeview.exe,134111,,,e829d5cfc000036388d7085c65fb8fb48fcd7308a30879745ab03556bcac2864,文档、邮件与数据转换,UU/XX/Base64 等编码内容解码。,不做独立文档格式；封装确有字段需要时局部实现。,A/def/uu.ini；本地作者说明
+A,vis.key,1689,,,5aafd5d9851d66bd0c101a0e82208dc682bb26f1689a47c6f3ec6dd146aca6bb,规则或配置数据,对应检测器、游戏/归档解释器、插件的配套数据,不算作新增格式,本地路径及配置
+A,VIS3Ext.exe,261120,2.2.6777.0 (vis3ext_restricted.180722-1857),Visionaire Engine 3/4 VIS extractor,82911ae63a53a41a37b3ded797f491f3a0fef470fbb9b0cb782069cf4f25e126,游戏与多媒体资源,Visionaire Engine 3/4 VIS 游戏资源；不是 Installer VISE。,不做。,本地 FileDescription；上游工具表
+A,WUN.exe,49152,,,f6c607c841e218bbccb7721d37fef93f7d68f115bf9bef2e6a7b1f5ca599422c,安装包与封装,Wise Installer 静态载荷提取；E_WISE.INI 提供配套信息。,低优先级；遇到实际近期样本再排期。,本地 ewise / wun 作者说明
+A,xor.exe,10752,,,d363eff713456c2249a9a7197cb0e2fd6b189a83ad7fb3a3d3386517b35a8ccc,识别、宿主及可执行程序封装,通用 XOR 字节变换辅助程序。,确有封装字段需要时在对应解析器内实现。,上游工具表；作者工具页
+A,zlib1.dll,107520,1.2.8,zlib data compression library,42967a768f341d9ce5174eb38a4d63754c3c41739e7d88f4e39cd7354c1fac71,配套库,zlib data compression library,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,dark\dark.exe,28672,3.11.2.4516,WiX Toolset Decompiler,b1daca50e4fbd7a6911f4552243c454d0b078f66f3ce1ff7806e1b76d4dc6962,安装包与封装,WiX 反编译工具；可提取 Burn Bundle 中的附带容器和载荷，也能处理 MSI 反编译。,优先新增 Burn 静态解析；不需要生成 WiX 工程。,本地版本资源；UniExtract 源码 TYPE_WIX；WiX 官方文档
+A,dark\winterop.dll,117760,3.11.2.4516,WiX Interop Library,27091dfb344097265cef8989035eea5a9b0c4746ff029b14fc421a87d1bfcd25,配套库,WiX Interop Library,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,dark\wix.dll,1753088,3.11.2.4516,Windows Installer XML,9717d47f5e1681f3e8bd3f193df6a8737d2104cecb80a5269bc4517911506db5,配套库,Windows Installer XML,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,file\bin\file.exe,45056,5.03.3414.16721,File: determine file type,e07a2c9c5199488b632bea07db82f58aec789329b116a4e84ee32b89f2db9617,识别、宿主及可执行程序封装,TrID 基于特征库判断文件类型；file/libmagic 使用 magic 规则。,做少量确定性探测，未知包保存诊断；不追求识别所有文件。,本地说明；A/def/registry.ini
+A,file\bin\magic1.dll,150016,5.03.3414.16721,Magic: determine file type,33cc607f0f289cd9ed50ba2e0b1490554e363324adfbdec42e1ffa2d7d4e1c86,配套库,Magic: determine file type,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,file\bin\regex2.dll,79360,2.7.2853.21853,Libregex: searches for and matches text strings,3a71bf90e8bddfb813b44f9cbcecf431311a7979c1debc976767b3e5e59031af,配套库,Libregex: searches for and matches text strings,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,file\bin\zlib1.dll,72192,1.2.3.2532,Zlib1: general purpose data compression / decompression library,f184377a93bdd583506a17935acf1b5055f3f5b23701b8d78e2e39113a1f510c,配套库,Zlib1: general purpose data compression / decompression library,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,file\contrib\file\5.03\file-5.03-GnuWin32.README,2417,,,9bc5feb8b6af41c8895d73d1900aec61149eee867f380cf6ad27ee2ae739a1de,文档或配套数据,说明、配置、清单、源码压缩包或 SFX 配套资源,不算作独立解包工具,本地路径
+A,file\contrib\file\5.03\file-5.03-src.zip,22327,,,b0372b16a8a88d1fe909b1de10183ad150d9d9bad520f4d63235ff951297f295,文档或配套数据,说明、配置、清单、源码压缩包或 SFX 配套资源,不算作独立解包工具,本地路径
+A,file\man\cat1\file.1.txt,18323,,,a9f3d14cc8c40219d976d878c7d0042bb9f640fcbe79198171bc1af8c7efc45a,文档或配套数据,说明、配置、清单、源码压缩包或 SFX 配套资源,不算作独立解包工具,本地路径
+A,file\man\cat1p\file.1p.txt,26815,,,968447f1b627ba6c09df3857e9b59c1d4e931a4c2776e43c6aa61641b9f3977b,文档或配套数据,说明、配置、清单、源码压缩包或 SFX 配套资源,不算作独立解包工具,本地路径
+A,file\man\cat3\libmagic.3.txt,6885,,,80d05b8b91c82e33255ac137ad0a0400b4cb7eb8409358041f6d4c0843bb568b,文档或配套数据,说明、配置、清单、源码压缩包或 SFX 配套资源,不算作独立解包工具,本地路径
+A,file\man\cat5\magic.5.txt,21045,,,500e9e561750f085a0efbffa7c3f881de9e625520b15989dab875b5ba4435fc6,文档或配套数据,说明、配置、清单、源码压缩包或 SFX 配套资源,不算作独立解包工具,本地路径
+A,file\manifest\file-5.03-bin.mft,1631,,,9fe898ba74b311d40eb7c5084f8ba7e7bbf51cd76a59632263565573cdd15558,文档或配套数据,说明、配置、清单、源码压缩包或 SFX 配套资源,不算作独立解包工具,本地路径
+A,file\manifest\file-5.03-bin.ver,42,,,a95278d809c34200dab4b2e0cf2b4e2cd184d9cd23bd08c875f9526b7630e4a4,文档或配套数据,说明、配置、清单、源码压缩包或 SFX 配套资源,不算作独立解包工具,本地路径
+A,file\manifest\file-5.03-dep.mft,118,,,d1602f5a0c532d6fd1f5e792fa2c57b05254093e7bac74eaf04273cb7ca7dc99,文档或配套数据,说明、配置、清单、源码压缩包或 SFX 配套资源,不算作独立解包工具,本地路径
+A,file\manifest\file-5.03-dep.ver,46,,,06b209d2554d819caee571dad9b8e8f0240355ecd9c4976ada017ee31fc3a595,文档或配套数据,说明、配置、清单、源码压缩包或 SFX 配套资源,不算作独立解包工具,本地路径
+A,file\share\misc\magic,536241,,,70bc0150b1db9d1f5e35ba67bfb54809aea0a4551052598548c933db63313939,规则或配置数据,对应检测器、游戏/归档解释器、插件的配套数据,不算作新增格式,本地路径及配置
+A,file\share\misc\magic.mgc,1751200,,,e3db34147853b2e1012f2e40f10147d6e2bf08c6eb1010b6f19bc2e46660224d,规则或配置数据,对应检测器、游戏/归档解释器、插件的配套数据,不算作新增格式,本地路径及配置
+A,GARbro\ArcFormats.dll,1977856,1.2.47.2109,ArcFormats,a9bd428a77a3be7714d07fc3fee00a7346dac4ae3e817d2a65d7afe9dedbfa3e,配套库,ArcFormats,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,GARbro\ArcFormats.dll.config,9586,,,39f69a31a9918b9508991cf67cd5e3c5310ba1460bc4a9a481732b42bb67af29,文档或配套数据,说明、配置、清单、源码压缩包或 SFX 配套资源,不算作独立解包工具,本地路径
+A,GARbro\GameRes.dll,104448,1.5.43.316,GameRes,0ce0e7450037632655df1295b5764a2830f2de03782424f5caa82b1e6398cbe3,配套库,GameRes,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,GARbro\GameRes.dll.config,1067,,,5ac8ef58fd332253733e98c06ebe74b2f7aadc6e7a2ae00d47f3c41ba5fce115,文档或配套数据,说明、配置、清单、源码压缩包或 SFX 配套资源,不算作独立解包工具,本地路径
+A,GARbro\GARbro.Console.exe,19968,1.0.0.0,GARbro.Console,7535777860356af94c66020acfc796152607672b7c030c864f573a6af37a4795,游戏与多媒体资源,多种游戏/视觉小说资源容器，ArcFormats.dll 和 Formats.dat 是配套。,不做游戏资源平台；安装包解出游戏文件即可。,本地版本资源；GARbro 作者项目
+A,GARbro\GARbro.Console.exe.config,184,,,80ac57288bc8d680765237f734b918ebbfe35820044c635c6b78f65ad21e6da9,文档或配套数据,说明、配置、清单、源码压缩包或 SFX 配套资源,不算作独立解包工具,本地路径
+A,GARbro\ICSharpCode.SharpZipLib.dll,196608,1.1.0.145,ICSharpCode.SharpZipLib,828ba5aaa720f43fa02afe60d50f7de1f6117cb2f83bdda63e183dd00cd3b454,配套库,ICSharpCode.SharpZipLib,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,GARbro\Microsoft.WindowsAPICodePack.dll,98304,1.1.2.0,Microsoft.WindowsAPICodePack,808e96f59e7dd2212eace049079d25545f6c9c3f05244ec9cdc539fda18d34d6,配套库,Microsoft.WindowsAPICodePack,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,GARbro\Microsoft.WindowsAPICodePack.Shell.dll,542208,1.1.0.0,Microsoft.WindowsAPICodePack.Shell,e6fa9d9e34ff3bf63ce782654b14e4b54a3abd1022c87bc099032c2948157672,配套库,Microsoft.WindowsAPICodePack.Shell,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,GARbro\NAudio.dll,479232,1.8.4.0,NAudio,afe31e250907a6f6fb8d6aebd79c576ef4d73ad61bc403de29cab8f4621de1d2,配套库,NAudio,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,GARbro\Net20.dll,5120,1.0.0.0,Net20,ad139f2d417b199cc96cc58a3ecdff3384885854738d95ea2112f4fc5b9b85c2,配套库,Net20,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,GARbro\NVorbis.dll,66048,0.8.6.0,NVorbis,dd049b810f39240a5405ff9eda8525c6b74065f1a032a1fb8350762bd1be9c3b,配套库,NVorbis,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,GARbro\System.IO.FileSystem.dll,22736,4.6.24705.01,System.IO.FileSystem,2d917d520488b56673e74ac9dc610a2488ae70a7ebbbbff097c2e855ba1ef590,配套库,System.IO.FileSystem,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,GARbro\System.Security.Cryptography.Algorithms.dll,39848,4.6.25815.03,System.Security.Cryptography.Algorithms,f9b760d6098ca0ec9ca7d6f38c54437200a312930f52ef5704e6e32413c7a217,配套库,System.Security.Cryptography.Algorithms,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,GARbro\System.Security.Cryptography.Primitives.dll,22816,4.6.24705.01,System.Security.Cryptography.Primitives,5a6c8f69a8dea8a775331273aaae707eee2a2743fb1498c3cc4dbab679125d11,配套库,System.Security.Cryptography.Primitives,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,GARbro\GameData\Formats.dat,1085001,,,cb01a54eaf275d9edfa967fd358b22a96a94f5845b22e4f622dc66ab30bcd0fe,规则或配置数据,对应检测器、游戏/归档解释器、插件的配套数据,不算作新增格式,本地路径及配置
+A,kgb\kgb2_console.exe,94208,"1, 0, 0, 2",KGB Archiver 2 Technology Preview console,08979b51587088655580a88980977eee64538fed97527d05be08450ce0668cdc,通用归档,KGB 归档，paq0–7.dll 为配套算法模块。,不做。,本地版本资源与 kgb 说明
+A,kgb\paq0.dll,7680,"1, 0, 0, 2",Part of KGB Archiver 2,66d86cf26a4a4f723caed0f6830597974a7d132120687d2f4fca5b0709dd27b3,配套库,Part of KGB Archiver 2,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,kgb\paq1.dll,24064,"1, 0, 0, 2",Part of KGB Archiver 2,f55739250231406f8a52418a541c8d024c9eab2dbc5da148f99a2ba838936cce,配套库,Part of KGB Archiver 2,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,kgb\paq2.dll,40960,"1, 0, 0, 2",Part of KGB Archiver 2,c51f8ea677afc2a9ddfa79bf4ad4ea8cec95375eeee6d13a893c2c365f97a884,配套库,Part of KGB Archiver 2,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,kgb\paq3.dll,40960,"1, 0, 0, 2",Part of KGB Archiver 2,2e0cf4d8cb1f5c00ef0984e291b310900e5d872db6cd4083dc45edfdd05f6c5b,配套库,Part of KGB Archiver 2,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,kgb\paq4.dll,30208,"1, 0, 0, 2",Part of KGB Archiver 2,ee5765236a433b7b7512eb23fb65d3ea248f534f167b5c80cd70cdec3d74d4d9,配套库,Part of KGB Archiver 2,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,kgb\paq5.dll,40960,"1, 0, 0, 2",Part of KGB Archiver 2,96b4a1ab4082ec275307c7fdd70ffeb3a3112463decbd2cc3c2a8d679d3e89f0,配套库,Part of KGB Archiver 2,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,kgb\paq6.dll,53248,"1, 0, 0, 2",Part of KGB Archiver 2,663d57295481490a727ef562ec4e27d4bb835e9a78b82488d6961b86735c4614,配套库,Part of KGB Archiver 2,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,kgb\paq7.dll,57344,"1, 0, 0, 2",Part of KGB Archiver 2,86ccf55d31a0dcd8dc090b3de53f2daa6b9cad59832b9d404d4ec06bbe99cf31,配套库,Part of KGB Archiver 2,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,lessmsi\LessIO.dll,19968,0.5.0,LessIO,c6f41c07e241a2a55e528f9c08a6e5bebbc5322203a8c620a69feec2b12e32a5,配套库,LessIO,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,lessmsi\lessmsi.core.dll,23552,1.0.10.18628,Less MSIérables (lessmsi) Core library,1c3f9c6512499103f872738ddcc3cdc5ce117f26918ea4be4640879be3811814,配套库,Less MSIérables (lessmsi) Core library,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,lessmsi\lessmsi.exe,29184,1.0.10.13880,Less MSIérables (lessmsi) CLI interface,e6f05f70f1f6f43abd2c1f81d824facba0e6ff353a8173792e787523749c162d,安装包与封装,Windows Installer MSI/MSM 内容提取；其中 MsiX 是旧工具名称，不是现代 MSIX 格式。,已有 MSI；优先补多 CAB、外置 CAB、松散源文件。,本地版本资源；lessmsi 上游
+A,lessmsi\lessmsi.exe.config,176,,,41719f373e4be04ba5c9c8b5a04809ba1a475066a4e86db9f7aa2b0b5a2e0fff,文档或配套数据,说明、配置、清单、源码压缩包或 SFX 配套资源,不算作独立解包工具,本地路径
+A,lessmsi\libmspackn.dll,13312,0.8,libmspack4n,b61024f136fb1ff3c448c669e35ab64bfc1c03eb6c60d470110ce310a6ea574b,配套库,libmspack4n,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,lessmsi\mspack.dll,134656,,,d5cef1f3490116d84d757607e72e60141fc692f868ad1601067da8c6ddd21bc9,配套库,配套库；具体职责以所属工具为准，未动态加载确认,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,lessmsi\wix.dll,1015808,2.0.2110.0,Windows Installer XML,30ca53d36550746974d1bfed78192407f65937603164b0dfb39352f8a31f8333,配套库,Windows Installer XML,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,lessmsi\wixcab.dll,188416,,,6bedfb95db4e38e7461dbfcebc25f7d5fe2498877564bba5495cf5b419676e42,配套库,配套库；具体职责以所属工具为准，未动态加载确认,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,modules\DiscUtils.dll,1021440,0.11.0.0,DiscUtils,770d8501040069f406565d2ef0afc5ebaf4e4a597e29e166ca1a926c4e4d7dc9,配套库,DiscUtils,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,modules\gentee.so,47104,,,2b4a4bbd80f6d29f70619b7390d4cbc2eb270f4b5e5fce3eab8e6a7fa1f839eb,Observer 插件,Gentee / CreateInstall 安装包,近期样本驱动的候选,本地 Observer 作者说明、observer.ini；文件存在不保证已加载
+A,modules\glib-2.0.dll,946176,2.28.8.0,GLib,e10476101494ab06aa2e8f89ea05016879fc28b73a78107f2aa88572bdbca812,配套库,GLib,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,modules\gmime.dll,244224,,,5d4930f405bbf503521defa4c3f5efcc7d5490c9cea49e0bad1ecb38dbf60c61,配套库,配套库；具体职责以所属工具为准，未动态加载确认,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,modules\gobject-2.0.dll,229888,2.28.8.0,GObject,61193f0c681dedb07cf14e85565daeee3bcc00516cb05d6313e174af368ee13a,配套库,GObject,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,modules\ishield.so,74752,,,6161df22bf56ad602af633eb96551c7f6140dde77b0ca5c6c94f52cd9c0f47ac,Observer 插件,InstallShield CAB/HDR/Z/部分 EXE,近期结构值得新增,本地 Observer 作者说明、observer.ini；文件存在不保证已加载
+A,modules\isoimg.so,37376,,,0a35f17f765b6f43586b9f4fd12c80d7fcd7925c72d332809e8c78a31ffc231e,Observer 插件,ISO 等光盘镜像,可选外层载体，后置,本地 Observer 作者说明、observer.ini；文件存在不保证已加载
+A,modules\libbz2.dll,57344,,bzip2 data compression library,18c8c32abb14238be3597002209efe72f99bda78f1a26db1f326680270d3a246,配套库,bzip2 data compression library,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,modules\mbox.so,18944,,,fbfa9db81609f57e96a396331ab1d03a31fc4541953ac5af0367a0b628ca0aae,Observer 插件,MBox 等邮件容器,范围外,本地 Observer 作者说明、observer.ini；文件存在不保证已加载
+A,modules\mime.so,16896,,,aa006a872f748d3fb836d775c4b2c12e3d9379a6e92738fa8e52d449e2541296,Observer 插件,EML/MHT 等 MIME 内容,范围外,本地 Observer 作者说明、observer.ini；文件存在不保证已加载
+A,modules\mpq.so,195584,,,93229274687dcab26673ef39f62b094ee86e81913794497089869e25a31ec622,Observer 插件,Blizzard MPQ 游戏容器,范围外,本地 Observer 作者说明、observer.ini；文件存在不保证已加载
+A,modules\msi.so,116736,,,b961483fd09ea462ee93bd07361273c7a55a27aa2b635a0a231e2f09d15f0e94,Observer 插件,MSI/MSM,增强现有 MSI,本地 Observer 作者说明、observer.ini；文件存在不保证已加载
+A,modules\msvcp100.dll,421200,10.00.40219.1,Microsoft® C Runtime Library,d769fafa2b3232de9fa7153212ba287f68e745257f1c00fafb511e7a02de7adf,配套库,Microsoft® C Runtime Library,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,modules\msvcr100.dll,773968,10.00.40219.1,Microsoft® C Runtime Library,60c06e0fa4449314da3a0a87c1a9d9577df99226f943637e06f61188e5862efa,配套库,Microsoft® C Runtime Library,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,modules\nsis.so,126464,,,4a395244d422444bdb021a5bc02788a96d8d6ca86cbe75b7bdb1e0fb7778d9db,Observer 插件,NSIS 安装包,已有；增强现有 NSIS,本地 Observer 作者说明、observer.ini；文件存在不保证已加载
+A,modules\pst.so,233472,,,13f6602a09feb9ef9823c108ff38209bd28d25406c5e5ab0922c112f240d7b98,Observer 插件,Outlook PST 邮件库,范围外,本地 Observer 作者说明、observer.ini；文件存在不保证已加载
+A,modules\sfact.so,44032,,,ce655638fe67ff2f66c96c9c026c75e1ef9edddf11baa644619fe9703fc7cd2b,Observer 插件,Setup Factory 安装包,近期样本驱动的候选,本地 Observer 作者说明、observer.ini；文件存在不保证已加载
+A,modules\udfimg.so,42496,,,30ec31ceb6a65a1ccf69fd310a893a4119d835dc611fb0956d8d847a68f127a1,Observer 插件,UDF 光盘镜像,可选外层载体，后置,本地 Observer 作者说明、observer.ini；文件存在不保证已加载
+A,modules\valve.so,89600,,,bf2bcf8ed7d1d2262b4d7c6efcdb7fe49b3c338e2d27ba1c5b354d07d13285e9,Observer 插件,Valve/Steam GCF、VPK、PAK、WAD、BSP 等,范围外,本地 Observer 作者说明、observer.ini；文件存在不保证已加载
+A,modules\vdisk.so,57344,,,514508dd0597ddf76de66666369ab68680cb0cdf0943f7fa5839744dafda4957,Observer 插件,虚拟磁盘镜像,范围外,本地 Observer 作者说明、observer.ini；文件存在不保证已加载
+A,modules\wcx.so,20480,,,d6f6d37d8203b417cef4c73405018468e623e0e538f13db211e67175a4300758,Observer 插件,Total Commander WCX 插件桥接,无需实现宿主,本地 Observer 作者说明、observer.ini；文件存在不保证已加载
+A,modules\wise.so,18944,,,1ca7160874f77fdc1fb6829739dd49a9cb713ffafcaf4eade6e2afe57c30372b,Observer 插件,Wise 安装包,低优先级,本地 Observer 作者说明、observer.ini；文件存在不保证已加载
+A,modules\zlib1.dll,69120,1.2.8,zlib data compression library,8e2618b4433e568a2a2c8ae6887a174ff7e2e658e6e1a4f63662b9aee8fb236b,配套库,zlib data compression library,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,Unp\Bzip2_1.unp,8192,,,30cd5ec7c6778fbd3d8ad922ee365f0766d1610833101c44c71b2f1f42500121,插件内部模块,Unp：解压方法或 Eschalon/Gentee/VISE 格式辅助模块；不是独立 EXE,参考相关格式时再核实具体接口,本地名称与 InstallExplorer 说明；未动态加载
+A,Unp\Bzip2_2.unp,16896,,,f7b420f1bcd3d0754f105323aa4a86ce1d46b78832fd934db101c27a748c1c0f,插件内部模块,Unp：解压方法或 Eschalon/Gentee/VISE 格式辅助模块；不是独立 EXE,参考相关格式时再核实具体接口,本地名称与 InstallExplorer 说明；未动态加载
+A,Unp\Bzip2_3.unp,6144,,,ff574a600fb1ae9db98e912762c5ff62dd054b336a4881986ed2d5d21ab1bd53,插件内部模块,Unp：解压方法或 Eschalon/Gentee/VISE 格式辅助模块；不是独立 EXE,参考相关格式时再核实具体接口,本地名称与 InstallExplorer 说明；未动态加载
+A,Unp\Eschalon.unp,4096,,,0ceb97c8c016d1a2592aa24a09f47db4748e709d9184151be21bcc7049ce683b,插件内部模块,Unp：解压方法或 Eschalon/Gentee/VISE 格式辅助模块；不是独立 EXE,参考相关格式时再核实具体接口,本地名称与 InstallExplorer 说明；未动态加载
+A,Unp\Gentee.unp,4096,,,429dfb2b761ee9107b02a5764f78b6e9894ffd4b7e22b3b50fb81b0257491bc8,插件内部模块,Unp：解压方法或 Eschalon/Gentee/VISE 格式辅助模块；不是独立 EXE,参考相关格式时再核实具体接口,本地名称与 InstallExplorer 说明；未动态加载
+A,Unp\inflate1.unp,9216,,,7c4ee80c3cc8017a8d36f0a0973593207227f815cebce397e326ac3483dcb5ce,插件内部模块,Unp：解压方法或 Eschalon/Gentee/VISE 格式辅助模块；不是独立 EXE,参考相关格式时再核实具体接口,本地名称与 InstallExplorer 说明；未动态加载
+A,Unp\inflate2.unp,15872,,,c5d514ac97f6da17db86bb4d8b9fbb31b1857d7c42928c309f3f91f9448e0096,插件内部模块,Unp：解压方法或 Eschalon/Gentee/VISE 格式辅助模块；不是独立 EXE,参考相关格式时再核实具体接口,本地名称与 InstallExplorer 说明；未动态加载
+A,Unp\inflate3.unp,8192,,,fa34b0390cfb60abdef02d5ce25f39fd6133bf068ca81a7159257ce13a50f17c,插件内部模块,Unp：解压方法或 Eschalon/Gentee/VISE 格式辅助模块；不是独立 EXE,参考相关格式时再核实具体接口,本地名称与 InstallExplorer 说明；未动态加载
+A,Unp\lzma.unp,4608,,,01275fa6c27d188ea7b656f79a2a0932ec352c080a72b42dd78843173655e6e3,插件内部模块,Unp：解压方法或 Eschalon/Gentee/VISE 格式辅助模块；不是独立 EXE,参考相关格式时再核实具体接口,本地名称与 InstallExplorer 说明；未动态加载
+A,Unp\pkware.unp,5120,,,f258b715c6f25d96869b49d7f0c9a379d39904b316e1fff9457332691c0ec7b0,插件内部模块,Unp：解压方法或 Eschalon/Gentee/VISE 格式辅助模块；不是独立 EXE,参考相关格式时再核实具体接口,本地名称与 InstallExplorer 说明；未动态加载
+A,Unp\vise.unp,8704,,,63f8f6ee57e49535d239bddaedc8bd2fd8ed6388fc89c83656cd46cf5e8e2460,插件内部模块,Unp：解压方法或 Eschalon/Gentee/VISE 格式辅助模块；不是独立 EXE,参考相关格式时再核实具体接口,本地名称与 InstallExplorer 说明；未动态加载
+A,x64\7z.dll,1679360,19.00,7z Plugin,34ad9bb80fe8bf28171e671228eb5b64a55caa388c31cb8c0df77c0136735891,配套库,7z Plugin,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,x64\7z.exe,468992,19.00,7-Zip Console,344f076bb1211cb02eca9e5ed2c0ce59bcf74ccbc749ec611538fa14ecb9aad2,通用归档,通用归档读取；完整 7-Zip 还支持许多安装器、镜像等容器。,借鉴识别和边界检查；本项目现有 7z SDK 子集不等于完整 7-Zip 能力。,本地版本资源；7-Zip 官方项目
+A,x64\bcm.exe,234496,,,d66bcc333dba424aae5d992a04899a17e7400b423e179d931ecbf4d2eb03d196,通用归档,BCM 压缩格式。,低优先级。,本地 bcm 说明；作者工具表
+A,x64\UnRAR.exe,419792,5.91.0,Command line RAR,90ca447b4bca0ae2b4b7b2590f99a8d59ff0b5ed442bb0f61bf14e8f6a17cec7,通用归档,RAR 和 RAR 自解压归档。,通用下载包的候选增强；使用原生归档基础库，无需自写 RAR 算法。,本地版本资源；上游工具表
+A,x64\zpaq.exe,1125376,,,7a94b4f1d6323a758c7b0b6344036f166bff0fd44f1c3c86f05b3688023496cb,通用归档,ZPAQ 归档/增量备份。,低优先级。,本地 zpaq 说明
+A,x86\7z.dll,1141248,19.00,7z Plugin,db2897eeea65401ee1bd8feeebd0dbae8867a27ff4575f12b0b8a613444a5ef7,配套库,7z Plugin,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+A,x86\7z.exe,292864,19.00,7-Zip Console,a20d93e7dc3711e8b8a8f63bd148ddc70de8c952de882c5495ac121bfedb749f,通用归档,通用归档读取；完整 7-Zip 还支持许多安装器、镜像等容器。,借鉴识别和边界检查；本项目现有 7z SDK 子集不等于完整 7-Zip 能力。,本地版本资源；7-Zip 官方项目
+A,x86\bcm.exe,172544,,,a0926143cea811c845ddbfaac8732ef2be59fe73506913472d2725f53c9800fa,通用归档,BCM 压缩格式。,低优先级。,本地 bcm 说明；作者工具表
+A,x86\UnRAR.exe,389072,5.91.0,Command line RAR,f48e1e02aff994e23d710fd3873fa69d85c1e614e059c74f4a34c326dc0c95f7,通用归档,RAR 和 RAR 自解压归档。,通用下载包的候选增强；使用原生归档基础库，无需自写 RAR 算法。,本地版本资源；上游工具表
+A,x86\zpaq.exe,1094656,,,a0f127a70943b0262060498c1723c795a8e2980f1acf0c42ee8c1dae72ae54b5,通用归档,ZPAQ 归档/增量备份。,低优先级。,本地 zpaq 说明
+B,AFPIunpack.exe,565276,,,8b683921377731905a81751765169718f06212eb7e1cb40d0b66c6baa3a5b60c,安装包与封装,Adobe Flash Player 安装器解包。,不纳入主线。,本地二进制静态自述 Adobe flash player installer unpack；未执行
+B,arc.exe,84480,5.21j.1926,Arc: create and extract files from DOS .ARC files,802695c1cba1bab7aa0c3531b40d769587a925201aee4f7d58d85b99f4f7ff33,通用归档,传统 DOS ARC 归档。,不做。,本地 FileDescription
+B,AspackDie.exe,13312,,,465e075688109b59ce08d12499751a6eff19cc825941e9d4dec9b792ae5220d5,识别、宿主及可执行程序封装,ASPack 可执行文件脱壳；配套 ForceLibrary.dll。,不做。,本地 aspackdie 说明；ForceLibrary 版本资源
+B,AspackDie22.exe,13312,,,d6da73a67fc3568b65a2f89fe9a87cc4b05f7b2b978bf1d73caa68215d75a00e,识别、宿主及可执行程序封装,ASPack 可执行文件脱壳；配套 ForceLibrary.dll。,不做。,本地 aspackdie 说明；ForceLibrary 版本资源
+B,Au3.bin,649216,"3, 3, 8, 1",,8378a324a838ef0ab3ceed73b8840d7b948c2607a35820a4d968894e1dfa2355,运行时辅助,AutoIt 3.3.8.1 运行时辅助文件；实际调用方式未核实,无需引入,本地版本资源
+B,bootimg.exe,4005373,,,66eeb385e0ccd0a4233ac2f95949d7a904dca8f62abc872ba0f767d85d6122e2,镜像与固件,Android boot image 拆分工具；按上游同名工具路由判断，本地具体版本未核实。,不做。,UniExtract 源码 TYPE_BOOTIMG 与本地文件名；用途对应关系为静态推断
+B,cdirip.exe,9216,,,203c7814bd3c5ce0f6c8353021fb26c0796ad490372ef1b80650d1abd4cc7609,镜像与固件,DiscJuggler CDI 光盘镜像拆分。,不纳入主线。,本地静态标识；本地格式表
+B,clit.exe,46080,,,e87bf25bf6251c9e5cbdf5154eed9bf45e3189501c6a6e9e6d6adea6bdb55078,文档、邮件与数据转换,分别反编译 WinHelp HLP、展开 Microsoft Reader LIT 电子书。,不做。,本地作者说明；A/def/lit.ini
+B,cmdTotal.exe,5632,,,140b89b4beb65f4b24464bc477a1fd8a2b4acba3927014f9fe3ad539bbe2948b,识别、宿主及可执行程序封装,命令行 WCX 插件宿主，调用指定插件列出/提取文件。,无需重做插件 ABI；沿用我们的格式模块接口。,本地静态 Usage 字符串
+B,daa2iso.exe,33792,,,d75498d5d7778ce42606a4c91f9d5cf3daaa6a96eff5eb71faefd9b969d0c28b,镜像与固件,分别把 DAA、UIF 镜像转换成 ISO。,不做专用转换器。,本地作者说明
+B,dbxplug.wcx,97792,1.0.9.11,Plugin for Windows Commander: Outlook Expres 5.X  DBX-File reader,0f6dfaf483982730a147d629e9ee4e813f680a1d2b26ed95eba254af44f1e5a3,WCX 插件,Outlook Express DBX 邮件库插件,按格式选择解析能力；不复制插件宿主,本地插件作者说明、版本资源及配置
+B,dgcac.exe,266240,,,9b8b4a8515bb29c75bdc380a1c1aef161fd13f316977d3ab50cfddaa41ad9e97,通用归档,DGCA / DGC 归档。,低优先级。,本地 FORMATS.md；二进制静态标识
+B,Dpx.dll,262544,6.1.7600.16385 (win7_rtm.090713-1255),Microsoft(R) Delta Package Expander,0a43165b69c5612a2f8455953deca6af7a41b87055d7b9e42e847a117a166898,配套库,Microsoft(R) Delta Package Expander,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+B,E_WISE_W.EXE,38400,,,f25cf0f24f9aa398fa54b0a3559d670db7c3a12f44340a2730d35584772354df,安装包与封装,Wise Installer 静态载荷提取；E_WISE.INI 提供配套信息。,低优先级；遇到实际近期样本再排期。,本地 ewise / wun 作者说明
+B,E_WISE.INI,1583,,,81607ec83cd1c1cd75bee81a1d76773a3174e9a3df71c3e0dcad4d9d0842e66e,规则或配置数据,对应检测器、游戏/归档解释器、插件的配套数据,不算作新增格式,本地路径及配置
+B,EnigmaVBUnpacker.exe,632320,0.6.3.0,EnigmaVBUnpacker - static Enigma Virtual Box unpacker,8b40745ffa5e1da06ae7c335e62822fa690007aea000a2ca15c059c13ed1fbd2,识别、宿主及可执行程序封装,Enigma Virtual Box 单文件虚拟文件系统的静态拆包。,可选扩展，排在常见安装包之后；提取完成不代表程序能脱离虚拟化运行。,本地 FileDescription；作者说明
+B,Exe2Aut.exe,134144,0.11,Tiny AutoIt3 Decompiler,a3629d5fe536229d60ae2f0f48d9e78e304c5bb30aa85b1b4983c244f6f17106,识别、宿主及可执行程序封装,AutoIt 编译脚本反编译。,不做源代码恢复；与安装包载荷提取区分。,本地 FileDescription
+B,Expand.exe,59280,6.1.7600.16385 (win7_rtm.090713-1255),LZ Expansion Utility,c65c613df6306a686452ec26d5c6ad8b73f55a5a1b97fda9f31255f3bfa3111c,安装包与封装,Windows 压缩文件/CAB 展开工具；本地携带的是 Windows 7 版本。,实现独立标准 CAB 入口；直接使用系统 FDI，已有基础可复用。,本地版本资源；Microsoft CAB 文档
+B,Expander.exe,413696,6.0.0.49,Aladdin StuffIt Expander,af9ef3f14e473ef005355bf6ba1a09a14da4d42e5f4142f87bff4e9bbb86d9fd,通用归档,前者是 The Unarchiver 命令行、多格式读取；本地路由用于 StuffIt。后者是旧 StuffIt Expander。,不因同样能解压就重做；StuffIt 不纳入 Windows 安装包主线。,A/def/sit.ini；本地版本资源；上游工具表
+B,extractMHT.exe,229180,1.0,extractMHT,862960370cd3b98ac3b4e16f5013f0f1bb665f795e4128b9ecc81cbfa2cfe193,文档、邮件与数据转换,MHT/MHTML 网页归档拆分。,不做。,本地版本资源与 MHTUnp 说明
+B,Extractor.exe,503808,,,504c6a3a0eab7d9b8a12c450bbb01bd9689328e0b1e83a9ed16204bd3709f50e,识别、宿主及可执行程序封装,h4sh3m Thinstall/ThinApp 依赖提取器；上游接法要先启动目标进程。,不采用该动态提取路径。,本地自述字符串；UniExtract 源码 TYPE_THINSTALL
+B,ForceLibrary.dll,12800,[ ForceLibrary 1.4 BETA ] by yoda,Making processes load your dlls >:-),a405bef4730c5317da59ac48bc44a4af24cc1911a0531d393d229233dd84f35b,配套库,Making processes load your dlls >:-),不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+B,helpdeco.exe,237056,,,9c5c58a524d557b9d7c1eabb2a5cbd7716e6586ec93df90089f1d1213b11c8ac,文档、邮件与数据转换,分别反编译 WinHelp HLP、展开 Microsoft Reader LIT 电子书。,不做。,本地作者说明；A/def/lit.ini
+B,i3comp.exe,119808,,,1bccbd7cbfee153f598604d3365c53fb8bac8b05cbf466b2fe56e031b8631c48,安装包与封装,InstallShield 3.x 的 DATA.Z / DATA.1 等旧归档及部分 SFX。,不纳入近期安装包主线。,STIX 本地作者说明；i3comp 静态字符串
+B,i5comp.exe,61440,,,392b8f1423cb6218c67186a83c19b535924e225adc31b4b9ffdec5eb96391f03,安装包与封装,InstallShield 5.x / 6.x 专有 CAB 的提取、维护工具。,参考数据结构；不专门重做这两个历史版本的完整工具。,i6comp 本地说明；i5comp 静态字符串
+B,i6comp.exe,133120,,,0ad0d2da58654abf442cff0e5e99464b026a6fc7cc4c77d567066ac9bc9f8462,安装包与封装,InstallShield 5.x / 6.x 专有 CAB 的提取、维护工具。,参考数据结构；不专门重做这两个历史版本的完整工具。,i6comp 本地说明；i5comp 静态字符串
+B,InstExpl.dll,41984,,,611bc56e85331eda5583e945e5e2c39d656914b9cb49b0000c216b00337a46c8,配套库,配套库；具体职责以所属工具为准，未动态加载确认,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+B,InstExpl.wcx,49152,"0, 9, 1, 0",InstallExplorer for Total Commander,6057a2b23bcf5ca7e0bdd9f183e7cf174ffdb346ce23f972f152d6e92700fd94,WCX 插件,InstallExplorer：Wise、VISE、Inno、Gentee、InstallShield、旧 NSIS、SetupFactory、Eschalon、MSI 的多格式插件,按格式选择解析能力；不复制插件宿主,本地插件作者说明、版本资源及配置
+B,IsXunpack.exe,25088,,,596a6aa37c437a37c398e6c25f72112509facf6b674f7e1e8501a9802ab9eb26,安装包与封装,部分 InstallShield 单 EXE 外壳：取出 CAB/HDR、setup 文件，未必已经取出应用。,参考外壳到载荷的分层设计；新版本必须另做样本验证。,本地 isxunpack_readme.txt
+B,jsMSIx.exe,184320,1.11.0704,MSI Unpacker - unpacks MSI/MSM files,edc6293d46c7a1d907a4b62b1d0ec097a83f829e33172516edaa2cb84c2c1427,安装包与封装,Windows Installer MSI/MSM 内容提取；其中 MsiX 是旧工具名称，不是现代 MSIX 格式。,已有 MSI；优先补多 CAB、外置 CAB、松散源文件。,本地版本资源；lessmsi 上游
+B,LessIO.dll,19968,1.0.34,LessIO,2a57766723c57547d185d570686216d55c114613c82305bad8099e635ab8395c,配套库,LessIO,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+B,lessmsi.core.dll,26112,2.10.4,Less MSIérables (lessmsi) Core library,46a08d09c80d84713c103b2f1382efb705eda8d186a8fd1462a7b427b0e92d0b,配套库,Less MSIérables (lessmsi) Core library,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+B,lessmsi.exe,30208,2.10.4,Less MSIérables (lessmsi) CLI interface,2dfa57909575af54fd241813fe8d21355949800dca733913a528bb11be3f7f2a,安装包与封装,Windows Installer MSI/MSM 内容提取；其中 MsiX 是旧工具名称，不是现代 MSIX 格式。,已有 MSI；优先补多 CAB、外置 CAB、松散源文件。,本地版本资源；lessmsi 上游
+B,libmspackn.dll,13312,0.9.10,libmspack4n,15a52767a8d8202b9516054375cfd9060e471611c278e65ad4bafcd0ee700a1c,配套库,libmspack4n,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+B,lzop.exe,131072,,,0de04c88c0820f981869b3a1c7eb1803318638537ad9d8afc5032ef3915e2597,通用归档,分别为 LZIP 和 LZO/lzop 压缩流。,安装器确有这种压缩方法时再接基础库；不单列首批格式。,本地说明；上游工具表
+B,MHTUnp.wcx,106496,"2, 0, 0, 0",MhtUnPack plugin for TotalCommander file manager,2bc9f929f11bc810da3f088385d57545f608221da3a0c33a98cb51374640a4ea,WCX 插件,MHT 网页归档插件,按格式选择解析能力；不复制插件宿主,本地插件作者说明、版本资源及配置
+B,Msdelta.dll,311184,6.1.7600.16385 (win7_rtm.090713-1255),Microsoft Patch Engine,c03e64d6ea1b3c77b09c0b2cb2b3f8a1b4a631ddccf25eeea35cbba82f26d84c,配套库,Microsoft Patch Engine,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+B,msi.wcx,97792,,,bcc34cb4bcdd8902d762a2e60a0c3793ae92814c6a742f82eb329fcea4518b67,WCX 插件,MSI/MSP 数据库内嵌 OLE 流浏览/提取；不能等同按安装目录完整还原应用,按格式选择解析能力；不复制插件宿主,本地插件作者说明、版本资源及配置
+B,MsiX.exe,139264,"1, 0, 0, 0",MSI Extractor,3598ad3754ce45e914688ab9ab2960f11f57e3f35d3ef6b6e60a3d0a1c64d097,安装包与封装,Windows Installer MSI/MSM 内容提取；其中 MsiX 是旧工具名称，不是现代 MSIX 格式。,已有 MSI；优先补多 CAB、外置 CAB、松散源文件。,本地版本资源；lessmsi 上游
+B,mspack.dll,167936,,,62e8f4154202cc9db867bb24097c8d669d58a0ee56be475f3eaf5ab1468207e0,配套库,配套库；具体职责以所属工具为准，未动态加载确认,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+B,Mspatcha.dll,41360,6.1.7600.16385 (win7_rtm.090713-1255),Microsoft File Patch Application API,8875c984bd97af7b0b64a3249f7039a028ee00c4175ec83112b90a49496de692,配套库,Microsoft File Patch Application API,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+B,mtee.exe,19456,,,221748edd4763571e395189772f166625f8e2b9429d1ee334228ef92f3f0c326,识别、宿主及可执行程序封装,复制命令行输出到日志等目的地。,已有日志功能，无需独立程序。,上游工具表与作者项目
+B,NBHextract.exe,35328,,,2e1adf481ac0e5b0c4abe9980a4740913a41eb88f8a5c37b2c15f0690096fc3d,镜像与固件,HTC NBH ROM 固件。,不做。,上游工具表与作者项目说明
+B,observer.ini,860,,,8e7e6cf9488f816e6bbc62ce95834301ba6597bf2b7cb4214d17ae47551e545f,规则或配置数据,对应检测器、游戏/归档解释器、插件的配套数据,不算作新增格式,本地路径及配置
+B,pdfdetach.exe,966144,,,060f4ddf444e4659ee7f3c6a835f653041fa59c618d36aa312275b2fd45371f8,文档、邮件与数据转换,分别提取 PDF 附件、图片、文本，转换 HTML、渲染 PNG。,不做；保持提取出的 PDF 原样。,本地说明与上游 Xpdf 工具表
+B,pdfimages.exe,1032192,,,4b699d3e9589b7dca7723bea31d853b8942f8e013e705f9dd6b86b878842c7b8,文档、邮件与数据转换,分别提取 PDF 附件、图片、文本，转换 HTML、渲染 PNG。,不做；保持提取出的 PDF 原样。,本地说明与上游 Xpdf 工具表
+B,pdftotext.exe,1078784,,,c0d52300fe1a9a27e39c1e2b65df0657fb8ddb34f5f5c1900271acb5a1f5b9d9,文档、邮件与数据转换,分别提取 PDF 附件、图片、文本，转换 HTML、渲染 PNG。,不做；保持提取出的 PDF 原样。,本地说明与上游 Xpdf 工具表
+B,PDunSIS.wcx,65536,"1, 0, 0, 0",PDunSIS,13518d6aac144bdb70fa0a98811d18eb1f09ca40b8892b5ad654d875afef7d49,WCX 插件,Symbian/EPOC SIS 安装包插件；不是 NSIS,按格式选择解析能力；不复制插件宿主,本地插件作者说明、版本资源及配置
+B,pea.exe,3137024,1.2.7,"Pea: pack, encrypt, authenticate",4c0ec55f80376f310f86e3f98ebd93e1030baff785ac9b330221813c95feb119,通用归档,PEA 压缩、加密和认证容器；不是完整 PeaZip 界面的全部后端。,低优先级。,本地版本资源及 pea 说明
+B,PEiD.exe,219136,,,e13171d50f45a79bc09b9e4b9ffa38eb02301aca94a1867a9bf8acccc3759030,识别、宿主及可执行程序封装,PE 文件、编译器和壳的识别；不是应用文件提取器。,参考识别特征；识别结果只能作为解析候选。,本地说明、版本资源
+B,RAIU.EXE,40960,,,befa024422b3fb6b5265bbd600806100e9734a3e593d8b1c9ebe8f1b031e5628,安装包与封装,Reflexive Arcade 游戏安装器的外层包装，通常还要接 Inno 提取。,不做历史专用分支；参考多层识别思路即可。,UniExtract 作者说明与源码
+B,SfxSplit.exe,58112,1.0.2.1020,SFX splitter,ff2f7ae9dc8f4a935b22946af3b3270713f9e4c5bbd6df61cfea0c71bfb03b87,安装包与封装,7z SFX 的模块、配置与归档拆分；SfxSplit 的作者信息指向 7zsfx。,已有 PE + ZIP/7z；补识别和精确边界，不重做一套压缩引擎。,本地版本资源、静态字符串；上游工具表
+B,sim_unpacker.exe,10240,1.0,Smart Install Maker unpacker,4c14c8f9cbd28b60606b89f084b18cd14bbd1edc72329bf47d269b56cf9c2036,安装包与封装,Smart Install Maker 安装包。,候选扩展；先借助标准 CAB 能力评估载荷。,本地 FileDescription；上游 simdec 项目
+B,STIX_D.EXE,47616,,,b1a011f84a0d80dcd06b225e636c4f76c7b75485e22e1fdde5b9cc2aa7969f84,安装包与封装,InstallShield 3.x 的 DATA.Z / DATA.1 等旧归档及部分 SFX。,不纳入近期安装包主线。,STIX 本地作者说明；i3comp 静态字符串
+B,stuffit5.engine-5.1.dll,983040,"5, 1, 6, 582",StuffIt Engine 5.1,9e13bc80e6281483ebc7e265b8053b6a232d036430ab5c3ce3cdac493e008429,配套库,StuffIt Engine 5.1,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+B,swfextract.exe,725155,,,ee8501b5d4888e63fa908d295093e648856a4163d353880ec2fb5a1996d2d5b0,游戏与多媒体资源,SWF 图片、音频等资源。,不做。,本地说明与上游工具表
+B,TotalObserver.wcx,138240,1.2.0.0,Total Commander Plugin that allows users to browse various file containers and extract content from them.,eab0e136c5deb7df2fc98e359d310c81109e7919dca4289101423362c76cbcc6,WCX 插件,Observer 模块的 Total Commander 宿主；实际格式由 modules 和配置决定,按格式选择解析能力；不复制插件宿主,本地插件作者说明、版本资源及配置
+B,TotalSQX.wcx,187904,2.11,Total SQX packer plug-in library,4aecc21b2307861d96e1ebea7465bbff25c0286fdff281da377a18362eb4835e,WCX 插件,SQX 归档插件；sqx20u.dll 和 sqx2_*.zzl 为配套,按格式选择解析能力；不复制插件宿主,本地插件作者说明、版本资源及配置
+B,trid.exe,108544,,,d8c91ee0720759d44aac1dc16f9b400da5fd259748aefbca5a549329396d2483,识别、宿主及可执行程序封装,TrID 基于特征库判断文件类型；file/libmagic 使用 magic 规则。,做少量确定性探测，未知包保存诊断；不追求识别所有文件。,本地说明；A/def/registry.ini
+B,triddefs.trd,8860690,,,f51a743ea06a8bc5ad543d55b5a13f7f63ccf0f5f9af8f2c1a74fa6acad0ce18,规则或配置数据,对应检测器、游戏/归档解释器、插件的配套数据,不算作新增格式,本地路径及配置
+B,UHARC04.EXE,100864,,,a45c6f7da7d9660ec4a60f2eaa15162ae3513fcb45fbbeb75b6a31df6bff697b,通用归档,UHARC 的不同历史版本。,不做。,本地 UHARC 说明；上游工具表
+B,uif2iso.exe,92160,,,b190b6b892c64f003a08525bcc5b58d58cb0145ab55c14ed62af4a35bc8ffcbe,镜像与固件,分别把 DAA、UIF 镜像转换成 ISO。,不做专用转换器。,本地作者说明
+B,unalz.exe,159744,,,4a35788e517e509202d11f0e7b4299f303de808727c20557a5625c8526f35f68,通用归档,ALZip 的 ALZ 归档。,低优先级。,A/def/alz.ini
+B,unarc.exe,333312,,,09ea4478b379a1839e21896a8b3fd82b4adf81c1b2b387795abefe5df3e57549,通用归档,FreeArc 归档；与下面 DOS ARC 同扩展名但格式不同。,低优先级，面向特定重打包样本再评估。,上游工具表；本地 freearc 说明
+B,unlzx.exe,45191,,,d924011d6937a4320e6bfd3c7b46e878d690b39cba9f06a204a4ca5776ce3d2b,通用归档,传统 LZX 归档，不能据此认为它是标准 CAB 的 LZX 接口。,不做独立格式专项。,本地 unlzx 说明
+B,Unpack.dll,2326016,,,4f4d50a6c43366a42c39733d79faf68c8414098931cddb9999b55764beded33a,配套库,配套库；具体职责以所属工具为准，未动态加载确认,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+B,unshield.exe,116224,,,6bb25fa42fbc9f43d5b60438e9c6073456f0760a603e4db4dd922d26f6e019eb,安装包与封装,InstallShield 专有 CAB/HDR 文件表、组件、文件组和跨卷载荷。,值得自研，列入第二批；以近期样本确定结构。,unshield 上游；InstallShield 2025 官方文档
+B,UNUHARC06.EXE,211456,,,8405b1d1bf605b1befec1c5ce151b1e9b1073b03760425fee57bbac5c5d7a894,通用归档,UHARC 的不同历史版本。,不做。,本地 UHARC 说明；上游工具表
+B,unzip.exe,204800,6.0,Info-ZIP's UnZip for Win32 console,2122557d350fd1c59fb0ef32125330bde673e9331eb9371b454c2ad2d82091ac,通用归档,ZIP 及部分 ZIP 自解压包。,已有 ZIP/ZIP64；无需再做另一个 ZIP 工具。,本地版本资源、unzip 说明
+B,unzoo.exe,46669,,,bfe350b25f4cfc69d23b71a084218092ba544c05bfc6facb97f1bee93109656c,通用归档,Zoo 归档。,不做。,上游工具表与本地格式表
+B,upx.exe,594432,5.0.2 (2025-07-20),UPX executable packer,970bf3a18ef0765aa4b0d2c137998fe7085fe8923d3248f985ee736410ee28b4,识别、宿主及可执行程序封装,UPX 可执行文件压缩/还原，处理程序映像。,不是安装包文件表；不做通用脱壳功能。,本地版本资源及 upx 说明
+B,userdb.txt,1258754,,,8c43ea558d50b86008b7d31c8f6921db495dddb68400e0c2a378b28ab2ab71ee,规则或配置数据,对应检测器、游戏/归档解释器、插件的配套数据,不算作新增格式,本地路径及配置
+B,uudeview.exe,134111,,,e829d5cfc000036388d7085c65fb8fb48fcd7308a30879745ab03556bcac2864,文档、邮件与数据转换,UU/XX/Base64 等编码内容解码。,不做独立文档格式；封装确有字段需要时局部实现。,A/def/uu.ini；本地作者说明
+B,winterop.dll,134656,3.14.1.8722,WiX Interop Library,5ee45a965aa6bd6c00c795bdb394b9a8d911fbc8961ef62e55014f53efe64f9f,配套库,WiX Interop Library,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+B,wix.dll,1015808,2.0.2110.0,Windows Installer XML,30ca53d36550746974d1bfed78192407f65937603164b0dfb39352f8a31f8333,配套库,Windows Installer XML,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+B,wixcab.dll,188416,,,6bedfb95db4e38e7461dbfcebc25f7d5fe2498877564bba5495cf5b419676e42,配套库,配套库；具体职责以所属工具为准，未动态加载确认,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+B,WUN.exe,50176,,,3a34960132a5c3538232762023dff2db51e7451522ba240d5fcd6cf7fd4b1db1,安装包与封装,Wise Installer 静态载荷提取；E_WISE.INI 提供配套信息。,低优先级；遇到实际近期样本再排期。,本地 ewise / wun 作者说明
+B,xace.exe,367616,2.6.0.0,XAce Plus,c5255ba491cc22c8c8cdf6826051c2529292072d5784dada854298a5ff5dd349,通用归档,ACE 归档，两套工具。,不做历史格式专项。,本地 xace 版本资源；上游 acefile 工具表
+B,xor.exe,10752,,,d363eff713456c2249a9a7197cb0e2fd6b189a83ad7fb3a3d3386517b35a8ccc,识别、宿主及可执行程序封装,通用 XOR 字节变换辅助程序。,确有封装字段需要时在对应解析器内实现。,上游工具表；作者工具页
+B,ZD50149.DLL,45056,"5, 0, 149, 0",zdata,224811cd7eb11615ddd359626f95638e53d15397798d30bca72e8abca13f8b82,配套库,zdata,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+B,ZD55131.DLL,53248,"5, 50, 131, 0",ZDATAI51.DLL,07ec112a4a0f6957d51e281d795047766ddb224e54619b6b8ee7e63f69843bc8,配套库,ZDATAI51.DLL,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+B,zpaq.exe,1094656,,,a0f127a70943b0262060498c1723c795a8e2980f1acf0c42ee8c1dae72ae54b5,通用归档,ZPAQ 归档/增量备份。,低优先级。,本地 zpaq 说明
+B,7z\7z.dll,1367552,25.01,7z Plugin,da6a32556222eb17459578a68711598db6b5fcdf2a22a6be5a93723c51ddc812,配套库,7z Plugin,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+B,7z\7z.exe,352768,25.01,7-Zip Console,9c481175506f215d78f7f2df917c09aa08b3057b4f74d919a80a68198e3fd67e,通用归档,通用归档读取；完整 7-Zip 还支持许多安装器、镜像等容器。,借鉴识别和边界检查；本项目现有 7z SDK 子集不等于完整 7-Zip 能力。,本地版本资源；7-Zip 官方项目
+B,7z\Codecs\brotli\libbrotlicommon.dll,136192,,,1004ebb5f0412be7065d6a545f84e8f9d55a94f7135606ae311ee9809e2c4efc,配套库,配套库；具体职责以所属工具为准，未动态加载确认,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+B,7z\Codecs\brotli\libbrotlidec.dll,44032,,,d143038dba2cbc426357ed801837fe5ff5c328e85a2367f2b880f04b6e1e4601,配套库,配套库；具体职责以所属工具为准，未动态加载确认,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+B,7z\Codecs\brotli\libbrotlienc.dll,567808,,,2cddcce55648fcfd0382b64c5ed98dc4c787a8fbdb2333e3613b777ef0b0c1f6,配套库,配套库；具体职责以所属工具为准，未动态加载确认,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+B,7z\Formats\lzip.ini,47,,,36fd21380026e04f6be9a2f852c8253249c302680c44bdb55b46a017837f9e7e,文档或配套数据,说明、配置、清单、源码压缩包或 SFX 配套资源,不算作独立解包工具,本地路径
+B,die\diec.exe,2129408,3.10.0.0,Detect It Easy(DiE),580f794c4eb458bf1f4e5c4c9d765a4d407be0bc3ffb1e46ad4f8a694a0a4739,识别、宿主及可执行程序封装,Detect It Easy 命令行识别器；检测文件格式、编译器、安装器和壳。,参考针对安装器的少量签名与结构验证，不移植整套规则引擎。,本地版本资源与 die/db
+B,die\Qt5Core.dll,5381616,5.15.2.0,C++ Application Development Framework,4f8dc460162407cfccb1be6ef9cce45c4449de838aeffa3fd33378f01a3f9cc4,配套库,C++ Application Development Framework,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+B,die\Qt5Script.dll,1162224,5.15.2.0,C++ Application Development Framework,9b3413014a291f6f35cbc683334a59d260991de9268c19a2a90339923395558d,配套库,C++ Application Development Framework,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+B,exeinfope\exeinfope.exe,4344320,0.0.9.3,ExEinfo PE - Win32 exe identifier,eb5fece72341d48461ae23a6816f30c23dc1317a2c6871e29a7a1a1f7b76d59f,识别、宿主及可执行程序封装,PE 文件、编译器和壳的识别；不是应用文件提取器。,参考识别特征；识别结果只能作为解析候选。,本地说明、版本资源
+B,exeinfope\exeinfopeRUN.cfg,332,,,60cceee5091ed9bdfa255f9c7630c7bdf08b3a003fcbe61cff813629234a3e49,规则或配置数据,对应检测器、游戏/归档解释器、插件的配套数据,不算作新增格式,本地路径及配置
+B,exeinfope\Ext_Detector.dll,171008,0.7.7.4,Exeinfope non exe detector library by A.S.L,abfebb972d52444dc0cd00766985f888a59c8a03a520c0d150d10c50b53f93ae,配套库,Exeinfope non exe detector library by A.S.L,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+B,exeinfope\userdb.txt,1258754,,,8c43ea558d50b86008b7d31c8f6921db495dddb68400e0c2a378b28ab2ab71ee,规则或配置数据,对应检测器、游戏/归档解释器、插件的配套数据,不算作新增格式,本地路径及配置
+B,kgb\kgb2_console.exe,94208,"1, 0, 0, 2",KGB Archiver 2 Technology Preview console,08979b51587088655580a88980977eee64538fed97527d05be08450ce0668cdc,通用归档,KGB 归档，paq0–7.dll 为配套算法模块。,不做。,本地版本资源与 kgb 说明
+B,kgb\paq0.dll,7680,"1, 0, 0, 2",Part of KGB Archiver 2,66d86cf26a4a4f723caed0f6830597974a7d132120687d2f4fca5b0709dd27b3,配套库,Part of KGB Archiver 2,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+B,kgb\paq1.dll,24064,"1, 0, 0, 2",Part of KGB Archiver 2,f55739250231406f8a52418a541c8d024c9eab2dbc5da148f99a2ba838936cce,配套库,Part of KGB Archiver 2,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+B,kgb\paq2.dll,40960,"1, 0, 0, 2",Part of KGB Archiver 2,c51f8ea677afc2a9ddfa79bf4ad4ea8cec95375eeee6d13a893c2c365f97a884,配套库,Part of KGB Archiver 2,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+B,kgb\paq3.dll,40960,"1, 0, 0, 2",Part of KGB Archiver 2,2e0cf4d8cb1f5c00ef0984e291b310900e5d872db6cd4083dc45edfdd05f6c5b,配套库,Part of KGB Archiver 2,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+B,kgb\paq4.dll,30208,"1, 0, 0, 2",Part of KGB Archiver 2,ee5765236a433b7b7512eb23fb65d3ea248f534f167b5c80cd70cdec3d74d4d9,配套库,Part of KGB Archiver 2,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+B,kgb\paq5.dll,40960,"1, 0, 0, 2",Part of KGB Archiver 2,96b4a1ab4082ec275307c7fdd70ffeb3a3112463decbd2cc3c2a8d679d3e89f0,配套库,Part of KGB Archiver 2,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+B,kgb\paq6.dll,53248,"1, 0, 0, 2",Part of KGB Archiver 2,663d57295481490a727ef562ec4e27d4bb835e9a78b82488d6961b86735c4614,配套库,Part of KGB Archiver 2,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+B,kgb\paq7.dll,57344,"1, 0, 0, 2",Part of KGB Archiver 2,86ccf55d31a0dcd8dc090b3de53f2daa6b9cad59832b9d404d4ec06bbe99cf31,配套库,Part of KGB Archiver 2,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+B,modules\gentee.so,47104,,,2b4a4bbd80f6d29f70619b7390d4cbc2eb270f4b5e5fce3eab8e6a7fa1f839eb,Observer 插件,Gentee / CreateInstall 安装包,近期样本驱动的候选,本地 Observer 作者说明、observer.ini；文件存在不保证已加载
+B,modules\glib-2.0.dll,946176,2.28.8.0,GLib,e10476101494ab06aa2e8f89ea05016879fc28b73a78107f2aa88572bdbca812,配套库,GLib,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+B,modules\gmime.dll,244224,,,5d4930f405bbf503521defa4c3f5efcc7d5490c9cea49e0bad1ecb38dbf60c61,配套库,配套库；具体职责以所属工具为准，未动态加载确认,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+B,modules\gobject-2.0.dll,229888,2.28.8.0,GObject,61193f0c681dedb07cf14e85565daeee3bcc00516cb05d6313e174af368ee13a,配套库,GObject,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+B,modules\ishield.so,74752,,,6161df22bf56ad602af633eb96551c7f6140dde77b0ca5c6c94f52cd9c0f47ac,Observer 插件,InstallShield CAB/HDR/Z/部分 EXE,近期结构值得新增,本地 Observer 作者说明、observer.ini；文件存在不保证已加载
+B,modules\isoimg.so,37376,,,0a35f17f765b6f43586b9f4fd12c80d7fcd7925c72d332809e8c78a31ffc231e,Observer 插件,ISO 等光盘镜像,可选外层载体，后置,本地 Observer 作者说明、observer.ini；文件存在不保证已加载
+B,modules\libbz2.dll,57344,,bzip2 data compression library,18c8c32abb14238be3597002209efe72f99bda78f1a26db1f326680270d3a246,配套库,bzip2 data compression library,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+B,modules\mbox.so,18944,,,fbfa9db81609f57e96a396331ab1d03a31fc4541953ac5af0367a0b628ca0aae,Observer 插件,MBox 等邮件容器,范围外,本地 Observer 作者说明、observer.ini；文件存在不保证已加载
+B,modules\mime.so,16896,,,aa006a872f748d3fb836d775c4b2c12e3d9379a6e92738fa8e52d449e2541296,Observer 插件,EML/MHT 等 MIME 内容,范围外,本地 Observer 作者说明、observer.ini；文件存在不保证已加载
+B,modules\mpq.so,195584,,,93229274687dcab26673ef39f62b094ee86e81913794497089869e25a31ec622,Observer 插件,Blizzard MPQ 游戏容器,范围外,本地 Observer 作者说明、observer.ini；文件存在不保证已加载
+B,modules\msi.so,116736,,,b961483fd09ea462ee93bd07361273c7a55a27aa2b635a0a231e2f09d15f0e94,Observer 插件,MSI/MSM,增强现有 MSI,本地 Observer 作者说明、observer.ini；文件存在不保证已加载
+B,modules\msvcp100.dll,421200,10.00.40219.1,Microsoft® C Runtime Library,d769fafa2b3232de9fa7153212ba287f68e745257f1c00fafb511e7a02de7adf,配套库,Microsoft® C Runtime Library,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+B,modules\msvcr100.dll,773968,10.00.40219.1,Microsoft® C Runtime Library,60c06e0fa4449314da3a0a87c1a9d9577df99226f943637e06f61188e5862efa,配套库,Microsoft® C Runtime Library,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+B,modules\pdf.so,1094656,,,01eb265bbb6502b5d2093c4e76d87ad78c070947cc9784c61d1d316ccdb7e4dc,Observer 插件,PDF 内嵌文件,范围外,本地 Observer 作者说明、observer.ini；文件存在不保证已加载
+B,modules\pst.so,233472,,,13f6602a09feb9ef9823c108ff38209bd28d25406c5e5ab0922c112f240d7b98,Observer 插件,Outlook PST 邮件库,范围外,本地 Observer 作者说明、observer.ini；文件存在不保证已加载
+B,modules\relic.so,24576,,,1aec704b0fd373187a32375ebb22f8a94414face9ccf7fbb9eed6895462b4992,Observer 插件,Relic BIG/SGA 游戏容器,范围外,本地 Observer 作者说明、observer.ini；文件存在不保证已加载
+B,modules\sfact.so,44032,,,ce655638fe67ff2f66c96c9c026c75e1ef9edddf11baa644619fe9703fc7cd2b,Observer 插件,Setup Factory 安装包,近期样本驱动的候选,本地 Observer 作者说明、observer.ini；文件存在不保证已加载
+B,modules\udfimg.so,42496,,,30ec31ceb6a65a1ccf69fd310a893a4119d835dc611fb0956d8d847a68f127a1,Observer 插件,UDF 光盘镜像,可选外层载体，后置,本地 Observer 作者说明、observer.ini；文件存在不保证已加载
+B,modules\valve.so,89600,,,bf2bcf8ed7d1d2262b4d7c6efcdb7fe49b3c338e2d27ba1c5b354d07d13285e9,Observer 插件,Valve/Steam GCF、VPK、PAK、WAD、BSP 等,范围外,本地 Observer 作者说明、observer.ini；文件存在不保证已加载
+B,modules\vp.so,11264,,,074044d0f463498f674b47f50af504a69101056975c330bff1e0ab029d38e88e,Observer 插件,Volition Pack / FreeSpace VP,范围外,本地 Observer 作者说明、observer.ini；文件存在不保证已加载
+B,modules\wise.so,18944,,,1ca7160874f77fdc1fb6829739dd49a9cb713ffafcaf4eade6e2afe57c30372b,Observer 插件,Wise 安装包,低优先级,本地 Observer 作者说明、observer.ini；文件存在不保证已加载
+B,modules\x23cat.so,25088,,,6c80eb8b4f2e8dd1e8e494faa3d8ef536af68c03115427871c43cba0a9e1aba2,Observer 插件,Egosoft X 系列 CAT/PCK/PBD/PBB,范围外,本地 Observer 作者说明、observer.ini；文件存在不保证已加载
+B,modules\zlib1.dll,69120,1.2.8,zlib data compression library,8e2618b4433e568a2a2c8ae6887a174ff7e2e658e6e1a4f63662b9aee8fb236b,配套库,zlib data compression library,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+B,Unp\Bzip2_1.unp,8192,,,30cd5ec7c6778fbd3d8ad922ee365f0766d1610833101c44c71b2f1f42500121,插件内部模块,Unp：解压方法或 Eschalon/Gentee/VISE 格式辅助模块；不是独立 EXE,参考相关格式时再核实具体接口,本地名称与 InstallExplorer 说明；未动态加载
+B,Unp\Bzip2_2.unp,16896,,,f7b420f1bcd3d0754f105323aa4a86ce1d46b78832fd934db101c27a748c1c0f,插件内部模块,Unp：解压方法或 Eschalon/Gentee/VISE 格式辅助模块；不是独立 EXE,参考相关格式时再核实具体接口,本地名称与 InstallExplorer 说明；未动态加载
+B,Unp\Bzip2_3.unp,6144,,,ff574a600fb1ae9db98e912762c5ff62dd054b336a4881986ed2d5d21ab1bd53,插件内部模块,Unp：解压方法或 Eschalon/Gentee/VISE 格式辅助模块；不是独立 EXE,参考相关格式时再核实具体接口,本地名称与 InstallExplorer 说明；未动态加载
+B,Unp\Eschalon.unp,4096,,,0ceb97c8c016d1a2592aa24a09f47db4748e709d9184151be21bcc7049ce683b,插件内部模块,Unp：解压方法或 Eschalon/Gentee/VISE 格式辅助模块；不是独立 EXE,参考相关格式时再核实具体接口,本地名称与 InstallExplorer 说明；未动态加载
+B,Unp\Gentee.unp,4096,,,429dfb2b761ee9107b02a5764f78b6e9894ffd4b7e22b3b50fb81b0257491bc8,插件内部模块,Unp：解压方法或 Eschalon/Gentee/VISE 格式辅助模块；不是独立 EXE,参考相关格式时再核实具体接口,本地名称与 InstallExplorer 说明；未动态加载
+B,Unp\inflate1.unp,9216,,,7c4ee80c3cc8017a8d36f0a0973593207227f815cebce397e326ac3483dcb5ce,插件内部模块,Unp：解压方法或 Eschalon/Gentee/VISE 格式辅助模块；不是独立 EXE,参考相关格式时再核实具体接口,本地名称与 InstallExplorer 说明；未动态加载
+B,Unp\inflate2.unp,15872,,,c5d514ac97f6da17db86bb4d8b9fbb31b1857d7c42928c309f3f91f9448e0096,插件内部模块,Unp：解压方法或 Eschalon/Gentee/VISE 格式辅助模块；不是独立 EXE,参考相关格式时再核实具体接口,本地名称与 InstallExplorer 说明；未动态加载
+B,Unp\inflate3.unp,8192,,,fa34b0390cfb60abdef02d5ce25f39fd6133bf068ca81a7159257ce13a50f17c,插件内部模块,Unp：解压方法或 Eschalon/Gentee/VISE 格式辅助模块；不是独立 EXE,参考相关格式时再核实具体接口,本地名称与 InstallExplorer 说明；未动态加载
+B,Unp\lzma.unp,4608,,,01275fa6c27d188ea7b656f79a2a0932ec352c080a72b42dd78843173655e6e3,插件内部模块,Unp：解压方法或 Eschalon/Gentee/VISE 格式辅助模块；不是独立 EXE,参考相关格式时再核实具体接口,本地名称与 InstallExplorer 说明；未动态加载
+B,Unp\pkware.unp,5120,,,f258b715c6f25d96869b49d7f0c9a379d39904b316e1fff9457332691c0ec7b0,插件内部模块,Unp：解压方法或 Eschalon/Gentee/VISE 格式辅助模块；不是独立 EXE,参考相关格式时再核实具体接口,本地名称与 InstallExplorer 说明；未动态加载
+B,Unp\vise.unp,8704,,,63f8f6ee57e49535d239bddaedc8bd2fd8ed6388fc89c83656cd46cf5e8e2460,插件内部模块,Unp：解压方法或 Eschalon/Gentee/VISE 格式辅助模块；不是独立 EXE,参考相关格式时再核实具体接口,本地名称与 InstallExplorer 说明；未动态加载
+B,wix\dark.exe,28672,3.14.1.8722,WiX Toolset Decompiler,a5717db404e5b7cf10c40272d3a206bbe39a579fdb1dd378ba20a0c7419078e7,安装包与封装,WiX 反编译工具；可提取 Burn Bundle 中的附带容器和载荷，也能处理 MSI 反编译。,优先新增 Burn 静态解析；不需要生成 WiX 工程。,本地版本资源；UniExtract 源码 TYPE_WIX；WiX 官方文档
+B,wix\Microsoft.Deployment.Resources.dll,61200,3.14.1.8722, ,fd5d4edca143ef5fad46236b9f6acab4d3530505e137bdccde8aa0a3fb3a2557,配套库, ,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+B,wix\Microsoft.Deployment.WindowsInstaller.dll,188176,3.14.1.8722, ,791da16b0df6956e88b04dab8b543b99dc2abd9af24aa25208fe5a0981e811b3,配套库, ,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+B,wix\winterop.dll,134656,3.14.1.8722,WiX Interop Library,5ee45a965aa6bd6c00c795bdb394b9a8d911fbc8961ef62e55014f53efe64f9f,配套库,WiX Interop Library,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+B,wix\wix.dll,1757184,3.14.1.8722,Windows Installer XML,a2c897a03f9f4795426ee058ea386a6891acb9a8179b77060515a6ba6525e242,配套库,Windows Installer XML,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+B,x86\sqx20u.dll,430698,6.00.5250,CxSqx Data Compression Engine,26b8cb45e05a627e3cf13682dece9eccf9121b0eb4c7e646c99df22530e21c42,配套库,CxSqx Data Compression Engine,不按 DLL 数量计格式；保留本项目原生基础库边界,本地文件版本资源/路径
+B,x86\sfx\sqx2_inst.zzl,92160,6.00.4580                              ,Squeez Self Extractor                  ,5a05a00bb322275330dcc7637de9f82c41dfbf8b26fca5726ba8b6eef043e234,文档或配套数据,说明、配置、清单、源码压缩包或 SFX 配套资源,不算作独立解包工具,本地路径
+B,x86\sfx\sqx2_list.zzl,98816,6.00.4580                              ,Squeez Self Extractor                  ,d0d75219e65a983aa8116ab9b597f43998a198300f0dbcf6f943669aec5a99fc,文档或配套数据,说明、配置、清单、源码压缩包或 SFX 配套资源,不算作独立解包工具,本地路径
+B,x86\sfx\sqx2_std.zzl,91136,6.00.4580                              ,Squeez Self Extractor                  ,ff7ab3436f499578d99f9a460dc6d0ff01d45c2b14cb0fb1cde74f32ba256f62,文档或配套数据,说明、配置、清单、源码压缩包或 SFX 配套资源,不算作独立解包工具,本地路径

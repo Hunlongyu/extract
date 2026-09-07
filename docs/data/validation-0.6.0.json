@@ -1,0 +1,94 @@
+{
+  "version": "0.6.0",
+  "date": "2026-09-07",
+  "debugCtest": "8/8 passed",
+  "releaseCtest": "8/8 passed",
+  "logPolicy": {
+    "fileBytes": 2097152,
+    "directoryBytes": 10485760,
+    "retentionDays": 30,
+    "maxFiles": 200,
+    "format": "UTF-8 JSON Lines",
+    "primary": "<executable directory>/log",
+    "fallback": "%LOCALAPPDATA%/Extract/log"
+  },
+  "logValidation": [
+    "rotation",
+    "age retention",
+    "directory byte and file count limits",
+    "shipping 10 MiB default with 14 MiB old logs",
+    "active-file protection",
+    "foreign-file protection",
+    "ACL write denial fallback",
+    "junction rejection",
+    "runtime segment creation fallback",
+    "both destinations unavailable",
+    "concurrent sessions",
+    "UTF-8 and control-character escaping",
+    "oversized field truncation",
+    "message-builder exception isolation",
+    "batch failure identity",
+    "nested failure parent and child identity",
+    "Burn missing external payload",
+    "job summary log location",
+    "list stdout JSON compatibility"
+  ],
+  "executable": {
+    "bytes": 816640,
+    "sha256": "435b7fe7596ef92b13a35668a3ebdcd2d4bb6813f840560bf55b76702e8e2007"
+  },
+  "userInstallers": [
+    {
+      "name": "ECHO-NEXT-Setup-26.8.2.exe",
+      "inputSha256": "131ca4727757e6c9a366013feb0dd782946a9e2ab200afc27e73a47444b22698",
+      "exitCode": 0,
+      "primaryOutput": "app-64_extracted",
+      "totalFiles": 441,
+      "totalBytes": 1159296535,
+      "unchangedFileContentsSince051": true,
+      "comparedFiles": 441
+    },
+    {
+      "name": "Pebble_0.1.4_x64-setup.exe",
+      "inputSha256": "5f4054c93cd3933a930daedf8b2dd3848b677617b2f5df0148de349cf670d44e",
+      "exitCode": 0,
+      "primaryOutput": "app",
+      "totalFiles": 7,
+      "totalBytes": 16212862,
+      "unchangedFileContentsSince051": true,
+      "comparedFiles": 7
+    },
+    {
+      "name": "Textify.exe",
+      "inputSha256": "cef497c5237f4b10b09fd4d45b051f3777f9705debb2bb6bf7dcf7ffe400b01e",
+      "exitCode": 0,
+      "primaryOutput": "app",
+      "totalFiles": 6,
+      "totalBytes": 236025,
+      "unchangedFileContentsSince051": true,
+      "comparedFiles": 6
+    },
+    {
+      "name": "vic-diary-2.0.0-setup.exe",
+      "inputSha256": "4f375a152ad4ee4ece439c8927f4150e1517ff9713ad45de2e4cd9bec9de8221",
+      "exitCode": 0,
+      "primaryOutput": "app-64_extracted",
+      "totalFiles": 100,
+      "totalBytes": 328953160,
+      "unchangedFileContentsSince051": true,
+      "comparedFiles": 100
+    },
+    {
+      "name": "XnViewMP_v1.11.6.0_setup_x64_mefcl.exe",
+      "inputSha256": "c497589599950fbe7ee034d51d0890b5c8c3b474f927267bddca89ed6562856a",
+      "exitCode": 0,
+      "primaryOutput": "XnViewMP-win-x64_extracted/app",
+      "totalFiles": 1083,
+      "totalBytes": 251326796,
+      "unchangedFileContentsSince051": true,
+      "comparedFiles": 1083
+    }
+  ],
+  "installerOrExtractedApplicationExecuted": false,
+  "toastVisualAcceptance": false
+}

@@ -1,20 +1,20 @@
 # 技术设计
 
-日期：2026-09-05。设计状态：工程骨架已初始化；以下解析、worker、输出及通知设计尚未实施。
+日期：2026-09-07。0.5.0 已实现 MSI 多媒体、标准 CAB、Burn 首批结构、选定 Inno/NSIS 结构、ZIP/7z、递归展开、统一输出和系统通知；工作进程与硬超时仍为后续设计。最新模块与边界见 [MSI/CAB/Burn 实现](13-msi-cab-burn.md)及 README。
 
 ## 1. 结构
 
 ```text
 Extract.exe：Win32 参数入口 / 任务控制 / 系统通知
-    └─ 本项目工作进程：相同 EXE 的内部 worker 模式
+    └─ 当前顺序执行；后续隔离到相同 EXE 的内部 worker 模式
         └─ extract_core：本项目 C++20 核心
-            ├─ MSI / Inno / NSIS 安装包处理器
-            ├─ MSIX / Burn / Velopack 等后续处理器
+            ├─ MSI / Inno / NSIS / Burn 安装包处理器
+            ├─ MSIX / Velopack 等后续处理器
             ├─ 通用归档与压缩基础库
             └─ 有边界的输入流 / 文件计划 / 校验 / 安全写入
 ```
 
-安装包解析逻辑编入自己的核心库，工作进程不调用第三方解包程序。使用本项目进程隔离解析崩溃并实现硬超时，不建立通用插件 ABI、常驻服务或数据库。
+安装包解析逻辑编入自己的核心库。首版在主进程顺序执行；规划中的 worker 使用本项目进程隔离解析崩溃并实现硬超时，不调用第三方解包程序，不建立通用插件 ABI、常驻服务或数据库。
 
 自研主程序和解析模块统一使用 C++20，允许底层 C 基础库；工程默认 C 标准为 C17，第三方源码需要不同标准时在其目标单独设置。不为混合语言而刻意拆分自研模块。Win32 程序可以使用 Windows 自带的 COM / WinRT 通知接口，无需 .NET、AutoIt、Qt 或 Windows App SDK。
 
@@ -71,22 +71,26 @@ PE 定位器解析 PE32 与 PE32+，检查节和目录边界。不能仅用“�
 
 MSI 的本项目实现分为“读取系统数据库记录”和“解析安装包语义”两层。通过 `MsiOpenDatabaseW(..., MSIDBOPEN_READONLY, ...)`、查询与流读取 API 获得数据；本项目完成关联、文件计划及提取。只读数据库模式由系统提供，不调用任何安装动作。[API 模式说明](https://learn.microsoft.com/en-us/windows/win32/api/msiquery/nf-msiquery-msiopendatabasea)
 
-主要流程：
+0.5.0 已实现内嵌/外置的多个独立 CAB、松散文件与混合源。跨卷续接、管理映像、MST/MSP 和安装动作仍不支持。处理流程：
 
 1. 读取 File、Component、Directory、Media、Summary Information，必要时读取 MsiFileHash。
 2. File 关联 Component，再关联 Directory；解析短名/长名、源/目标目录规则与根标识，构建输出树。[File 表](https://learn.microsoft.com/en-us/windows/win32/msi/file-table)、[Directory 表](https://learn.microsoft.com/en-us/windows/win32/msi/directory-table)
 3. 根据文件压缩标志与摘要中的默认压缩状态区分 CAB 和松散文件。
 4. 结合 Sequence 与 Media.LastSequence 定位媒体；`#` 开头的 Cabinet 从内部流读取，其余从允许的同目录媒体集合读取。[Media 表](https://learn.microsoft.com/en-us/windows/win32/msi/media-table)
-5. 使用 FDI 解码 CAB，在回调中把成员标识关联到 File 条目，交给统一写入器；松散文件按 source 布局读取。处理跨 CAB 文件与缺失下一卷。
+5. 自行解析 CAB 文件表并按成员标识关联到 File 条目，FDI 受控回调只写入规划后的路径；松散文件按 source 布局和长短源名称标志读取。跨卷文件拒绝，缺失本地来源给出具体文件名。
 6. 比较预期清单、大小和可用校验；保存目录及条件映射，不执行 CostFinalize、CustomAction、脚本或 `msiexec /a`。
 
 参考入口：[lessmsi 的 Wixtracts.cs](https://github.com/activescott/lessmsi/blob/master/src/LessMsi.Core/Msi/Wixtracts.cs)。参考其数据关系，用 C++ 实现模块，不把 C# 程序作为运行依赖。
 
-首版提取 File 表静态描述的源文件，不模拟安装选择条件、DuplicateFiles 动作、补丁或 MST 变换；这些区别写入结果。系统目录属性映射到输出树里的逻辑目录，未知属性保留标识。
+当前提取 File 表静态描述的源文件，不模拟安装选择条件、DuplicateFiles 动作、补丁或 MST 变换，也不导出 Binary 辅助流。空 File 表的配置型 MSI 输出零文件清单和说明。系统目录属性映射到输出树里的逻辑目录，未知属性保留标识。
+
+共享 CAB 层还服务于独立 `.cab`、PE 附加区 CAB 与 Burn；校验标准 Microsoft CAB 1.3 的头部、文件表、计数、编码和数据边界。多个独立 CAB 与跨卷续接是不同能力，InstallShield 私有 CAB 也不是此格式。
 
 FDI 的部分接口使用窄字符。适配层用受控 ASCII 标识映射到真实宽字符句柄/流，避免将中文源路径直接损失转换；跨卷回调也必须走同一映射。[FDICopy](https://learn.microsoft.com/en-us/windows/win32/api/fdi/nf-fdi-fdicopy)
 
 ## 6. Inno 模块
+
+0.2.0 已实现精确数据版本 6.5.2、6.6.1、6.7.0、7.0.0.3 的内嵌静态载荷；五种压缩与 solid 已通过生产方生成的已知文件对照。当前源码为 `formats/pe.cpp`、`formats/inno.cpp`、`codecs/stream.cpp`。外置卷、加密和其它结构仍按以下总体设计继续开发。
 
 主要格式依据为生产方稳定版的结构定义和读取流程；innoextract 用作另一种实现的对照。先核对当前 6.7 与 7.1，再按样本回补 6.2–6.6，目标不是把所有历史版本分支搬进来。
 
@@ -105,6 +109,8 @@ Inno 7 加入 64 位安装器和扩展长度路径，且允许更大的 LZMA 字
 ## 7. NSIS 与 Electron 模块
 
 目标是近期 NSIS 3.x Unicode 安装包，同时覆盖真实 Electron-builder 使用的变体。主线 NSIS 支持不能自动等同于 Electron/NSIS 支持。
+
+0.3.0 已实现本节第 1–5 项的受限版本；0.3.1 增加安装包递归展开和 Inno 6.5.0。0.4.0 增加 ZIP/7z/SFX 与 Electron 的 `app-64.7z` 载荷提取。NSIS 目录通过显式赋值和控制流合流传播，分支值不一致、动态赋值或内部函数改变目录时保守回退；完整 StrCpy 另保留基本块内传播。插件任意修改变量的副作用不模拟。Solid 缓存受目录锁保护，CRC 与逐文件摘要分别记录。真实样本和限制见 [常见封装验收](11-common-wrappers.md)。
 
 1. 解析 first header、块索引、压缩头与固实/非固实数据区。
 2. 适配安装器的 Deflate、bzip2、LZMA 流细节；不能假设和普通 ZIP/独立 bzip2 文件包装一致。
@@ -127,6 +133,8 @@ Inno 7 加入 64 位安装器和扩展长度路径，且允许更大的 LZMA 字
 
 自己的模块定位 bundle 元数据、附加容器和载荷，恢复载荷名称；已有 MSI/Inno/NSIS 处理器再处理内层。按结构分别覆盖近期版本，不能只识别产品名。分离的外置容器只能从允许媒体位置读取；远程载荷只记录缺失。
 
+0.5.0 实现 `.wixburn` 布局版本 2 和 CAB 容器，分别计算 UX、原始引擎签名、附加容器与最终 PE 证书的边界。XmlLite 禁止 DTD，解析 v3/v4 命名空间；清单 `SourcePath` 关联 CAB 内部编号，`FilePath` 规划逻辑输出，容器和载荷分别验证 SHA-1/256/512。缺失外置来源设置 `contentComplete=false`；实际存在但损坏的来源失败并回滚本层。详情见 [本轮实现记录](13-msi-cab-burn.md)。
+
 参考生产方提取实现与容器代码，不能运行 bundle 的 `/layout` 或其它安装参数作为解析替代。[Burn 文档](https://docs.firegiant.com/wix/tools/burn/)、[提取工具说明](https://docs.firegiant.com/wix/tools/wixexe/)
 
 ### Velopack / Squirrel
@@ -139,11 +147,15 @@ Inno 7 加入 64 位安装器和扩展长度路径，且允许更大的 LZMA 字
 
 输出根和父目录需要检查 reparse point，创建文件时避免跟随被替换的目录链接；仅做字符串前缀比较不足以判定落盘范围。尽可能保持输入与输出句柄控制，不使用一次性检查后无限信任路径的方式。
 
-已知嵌套处理默认受根任务共享预算约束：深度 3、子包数 16；字典内存、总展开字节、文件数和总耗时设可配置上限，默认值通过样本实测决定。子包身份和内容摘要用于去重，不能靠改名字无限递归。所有原始内层包保留，子结果有父链。
+嵌套处理由 `core/tree.cpp` 实现：0.5.0 最多 4 层、32 个包（均含根层），各层累计 8 GiB / 10000 个文件。包数上限从 16 扩至 32，以容纳 Burn 的多组件安装链；其余累计上限不变。原始内层包计入预算，按 SHA-256 检查活动链；MSI/Burn 因外置来源可能不同，不复用只按输入包摘要缓存的结果。每层提交后释放输入和 Solid 缓存，再处理子包。打开子包后复核摘要，防止层间替换。所有原始内层包保留，报告保存父子关系、累计输出和子状态；内层失败使祖先报告 partial，不删除已经成功提交的外层。预算目前是固定值，配置化、硬超时及进程内存限制仍待实现。
 
 完成后同卷提交结果目录；目录名被并发占用则换序号，不覆盖。部分结果单独标记，失败清理只处理本任务拥有的临时目录。散列与块校验的可用性分别记录，不能用文件数一致代替数据完整性。
 
 ## 10. 工作进程、结果与通知
+
+0.5.1 将原始路径还原状态与完成条件分开：`Entry.path_resolved` 保留逐文件事实，已按结构识别的卸载器记为 `is_uninstaller`。`Catalog.required_paths_resolved()` 仅排除这些卸载器的路径问题；内容完整性与子包状态仍独立参与最终判定。识别使用已提取文件的包头，且在输入句柄保护下复核上层记录的摘要。报告保留 `pathsResolved=false`，但允许卸载辅助文件之外的路径均已还原时 `requiredPathsResolved=true`。没有逐文件原因的处理器继续保守地保留未完成状态。
+
+最终目录选择在辅助文件分类后进行；仅有卸载器的 app 目录不会盖过已完成的内层应用目录。详情见 [卸载器与完成状态](14-uninstaller-completion.md)。
 
 父进程使用 `CreateProcessW` 启动自己的内部 worker 模式，以显式句柄传入任务；worker 只读取允许的输入和写入计划内输出。内部协议有版本与长度检查，普通文件参数不能被当成协议命令。
 
@@ -151,11 +163,11 @@ worker 纳入 Job Object，父进程关闭或超时后回收；Job 用于生命�
 
 统一状态包含 Complete、OuterOnly、Partial、Unsupported、ExternalRequired、Corrupt、IoError、Timeout、InternalError。进程退出码按批次聚合，详细状态保存在记录中；通知失败不会改变已经正确完成的解包结果。
 
-系统通知通过 Windows COM/WinRT 与 WRL 实现当前用户注册。点击参数只携带任务 ID 和固定动作，回调只打开任务记录中的目录；转义通知文本，支持程序退出后的激活。[微软 C++ 通知示例](https://github.com/microsoft/Windows-classic-samples/blob/main/Samples/DesktopToasts/CPP/DesktopToastsSample.cpp)
+系统通知已通过 Windows COM/WinRT 与 WRL 实现。当前采用 AUMID、占位 CLSID 快捷方式和当前用户 URI 协议注册；没有 COM LocalServer32。`hunlongyu-extract://job/<GUID>` 只允许固定任务标识，激活后打开任务记录中的目录；文本经过 XML 转义。程序退出后由系统启动新的 Extract 进程。[微软 C++ 通知接口示例](https://github.com/microsoft/Windows-classic-samples/blob/main/Samples/DesktopToasts/CPP/DesktopToastsSample.cpp)
 
 ## 11. 构建与依赖
 
-CMake 按实施进度增加核心、应用和测试目标。当前只有 Win32 应用及自研编译选项目标；解析核心和测试目标随实际功能加入。自有 C++ 固定 C++20，默认 C 标准为 C17；依赖库独立设编译选项，避免把第三方告警策略强加到整个项目。
+CMake 当前包含 `Extract`、`extract_core`、路径测试、日志探针与各格式集成测试；通知激活探针单独手动构建，避免普通测试修改用户注册。自有 C++ 固定 C++20，默认 C 标准为 C17；依赖库独立设编译选项，避免把第三方告警策略强加到整个项目。0.6.0 的详细日志模块随 `extract_core` 编译，目录回退、大小轮转和保留策略见 [日志实现](15-logging.md)。
 
 MSVC 使用 `vswhere.exe -prerelease` 或 Insiders 的 `vcvars64.bat` 发现/初始化环境，不固定 MSVC 版本子目录。主程序为 Windows 子系统，Unicode、`asInvoker` 与长路径清单；启用基本编译和链接保护。
 

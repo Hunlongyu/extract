@@ -1,10 +1,16 @@
 # 开发计划与验收
 
-更新日期：2026-09-05。方案：本项目原生解析安装包，允许使用 C/C++ 基础库。
+更新日期：2026-09-07。方案：本项目原生解析安装包，允许使用 C/C++ 基础库。
 
-当前进度：已初始化 CMake/Win32 工程、版本资源、构建脚本和 Git 所需配置。仅完成 M1 的构建与启动基础部分，M0 格式原型及 M1 解包闭环仍待开发，不能据此标记 M1 完成。
+0.5.1：卸载器作为非必需的辅助文件，已识别卸载器的路径问题不再影响解包完成状态；单一内层应用优先作为通知打开目标。见 [完成状态优化](14-uninstaller-completion.md)。
+
+0.5.0 最新进度：MSI 扩展到内嵌/外置多 CAB、松散和混合源，新增独立 CAB、CAB SFX 与 Burn 首批结构。真实 Python Burn 内的 22 个 MSI 已完成 File 表处理；包外载荷缺失如实报告 partial。详见 [本轮实现与验收](13-msi-cab-burn.md)。0.4.0 的 ZIP/7z/SFX 与 Electron/Tauri 功能继续保留，5 个用户安装包完成回归。下文保留分阶段目标，实际支持范围以 README 和验收记录为准。
+
+已完成首批 MSI、Inno、NSIS、ZIP/7z/CAB 和 Burn 静态解包及递归处理。M1 的 worker/硬超时、跨卷续接、其它 Inno 结构/外置卷，以及 MSIX/APPX、Velopack/Squirrel 专用语义仍待实现。历史阶段证据见 [MSI 报告](06-msi-first-slice.md)、[Inno 报告](07-inno-implementation.md)、[NSIS 报告](09-nsis-implementation.md)和 [嵌套提取](10-nested-extraction.md)。
 
 ## 1. 交付目标
+
+0.2.1 样本反馈补充：Textify 使用的 `6.1.0 (u)` 结构已实现，官方 6.2.2 生成包纳入测试；6.3/6.4 及其它未列出的结构仍待适配，详见 [兼容修复记录](08-textify-compatibility.md)。
 
 交付无主界面的 Windows 便携解包工具。用户拖入安装包后，由本项目模块完成识别、文件规划、解压与校验，右下角系统通知结果。
 

@@ -2,7 +2,11 @@
 param(
     [ValidateSet('Debug', 'Release')]
     [string]$Configuration = 'Release',
-    [switch]$Install
+    [switch]$Install,
+    [switch]$Test,
+    [string]$NsisCompiler,
+    [string]$SevenZipTestTool,
+    [switch]$Fresh
 )
 
 $ErrorActionPreference = 'Stop'
@@ -48,11 +52,27 @@ if (Test-Path -LiteralPath (Join-Path $ninjaDirectory 'ninja.exe')) {
 $preset = 'win-x64-' + $Configuration.ToLowerInvariant()
 Push-Location -LiteralPath $projectRoot
 try {
-    & $cmakePath --preset $preset
+    $configureArguments = @('--preset', $preset)
+    if ($Fresh) { $configureArguments += '--fresh' }
+    if ($NsisCompiler) {
+        $resolvedCompiler = (Resolve-Path -LiteralPath $NsisCompiler -ErrorAction Stop).Path
+        $configureArguments += "-DEXTRACT_NSIS_COMPILER=$resolvedCompiler"
+    }
+    if ($SevenZipTestTool) {
+        $resolvedArchiveTool = (Resolve-Path -LiteralPath $SevenZipTestTool -ErrorAction Stop).Path
+        $configureArguments += "-DEXTRACT_7Z_TEST_TOOL=$resolvedArchiveTool"
+    }
+    & $cmakePath @configureArguments
     if ($LASTEXITCODE -ne 0) { throw 'CMake 配置失败。' }
 
     & $cmakePath --build --preset $preset --parallel
     if ($LASTEXITCODE -ne 0) { throw '编译失败。' }
+
+    if ($Test) {
+        $ctestPath = Join-Path (Split-Path -Parent $cmakePath) 'ctest.exe'
+        & $ctestPath --test-dir (Join-Path $projectRoot "out/build/$preset") --output-on-failure
+        if ($LASTEXITCODE -ne 0) { throw '测试失败。' }
+    }
 
     if ($Install) {
         & $cmakePath --install (Join-Path $projectRoot "out/build/$preset")

@@ -1,0 +1,142 @@
+{
+  "version": "0.5.1",
+  "date": "2026-09-07",
+  "debugCtest": "7/7 passed",
+  "releaseCtest": "7/7 passed",
+  "finalArchiveTestsBothBuilds": "passed",
+  "userInstallers": [
+    {
+      "name": "ECHO-NEXT-Setup-26.8.2.exe",
+      "inputSha256": "131ca4727757e6c9a366013feb0dd782946a9e2ab200afc27e73a47444b22698",
+      "exitCode": 0,
+      "primaryOutput": "app-64_extracted",
+      "totalFiles": 441,
+      "totalBytes": 1159296535,
+      "layers": [
+        {
+          "format": "NSIS",
+          "files": 11,
+          "bytes": 265069932,
+          "status": "complete",
+          "unresolved": [
+            "_unresolved/nsis-2323/Uninstall ECHO NEXT.exe"
+          ]
+        },
+        {
+          "format": "7z",
+          "files": 430,
+          "bytes": 894226603,
+          "status": "complete",
+          "unresolved": []
+        }
+      ]
+    },
+    {
+      "name": "Pebble_0.1.4_x64-setup.exe",
+      "inputSha256": "5f4054c93cd3933a930daedf8b2dd3848b677617b2f5df0148de349cf670d44e",
+      "exitCode": 0,
+      "primaryOutput": "app",
+      "totalFiles": 7,
+      "totalBytes": 16212862,
+      "layers": [
+        {
+          "format": "NSIS",
+          "files": 7,
+          "bytes": 16212862,
+          "status": "complete",
+          "unresolved": []
+        }
+      ]
+    },
+    {
+      "name": "Textify.exe",
+      "inputSha256": "cef497c5237f4b10b09fd4d45b051f3777f9705debb2bb6bf7dcf7ffe400b01e",
+      "exitCode": 0,
+      "primaryOutput": "app",
+      "totalFiles": 6,
+      "totalBytes": 236025,
+      "layers": [
+        {
+          "format": "Inno Setup",
+          "files": 6,
+          "bytes": 236025,
+          "status": "complete",
+          "unresolved": []
+        }
+      ]
+    },
+    {
+      "name": "vic-diary-2.0.0-setup.exe",
+      "inputSha256": "4f375a152ad4ee4ece439c8927f4150e1517ff9713ad45de2e4cd9bec9de8221",
+      "exitCode": 0,
+      "primaryOutput": "app-64_extracted",
+      "totalFiles": 100,
+      "totalBytes": 328953160,
+      "layers": [
+        {
+          "format": "NSIS",
+          "files": 10,
+          "bytes": 67694225,
+          "status": "complete",
+          "unresolved": [
+            "_unresolved/nsis-1965/Uninstall vic-diary.exe"
+          ]
+        },
+        {
+          "format": "7z",
+          "files": 90,
+          "bytes": 261258935,
+          "status": "complete",
+          "unresolved": []
+        }
+      ]
+    },
+    {
+      "name": "XnViewMP_v1.11.6.0_setup_x64_mefcl.exe",
+      "inputSha256": "c497589599950fbe7ee034d51d0890b5c8c3b474f927267bddca89ed6562856a",
+      "exitCode": 0,
+      "primaryOutput": "XnViewMP-win-x64_extracted/app",
+      "totalFiles": 1083,
+      "totalBytes": 251326796,
+      "layers": [
+        {
+          "format": "NSIS",
+          "files": 3,
+          "bytes": 60469400,
+          "status": "complete",
+          "unresolved": []
+        },
+        {
+          "format": "Inno Setup",
+          "files": 1080,
+          "bytes": 190857396,
+          "status": "complete",
+          "unresolved": []
+        }
+      ]
+    }
+  ],
+  "sourceAndOutputHashesUnchangedFrom050": true,
+  "successJobRecordsVerified": [
+    {
+      "name": "ECHO-NEXT-Setup-26.8.2.exe",
+      "job": "AAE00B00-2C37-4197-96A9-11E7E04A9006"
+    },
+    {
+      "name": "Pebble_0.1.4_x64-setup.exe",
+      "job": "3BAC39C0-ADD6-45C0-8DAA-0B8ED1A1D813"
+    },
+    {
+      "name": "Textify.exe",
+      "job": "C9597DCE-3607-4066-A889-FD5A9F401350"
+    },
+    {
+      "name": "vic-diary-2.0.0-setup.exe",
+      "job": "91D32C16-51DD-4816-9097-BD8493BABBF3"
+    },
+    {
+      "name": "XnViewMP_v1.11.6.0_setup_x64_mefcl.exe",
+      "job": "F3A6F6B0-7DAC-44DF-BFEF-3EF7DC11975D"
+    }
+  ]
+}
