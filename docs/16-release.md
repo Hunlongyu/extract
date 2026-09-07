@@ -33,7 +33,7 @@ x86 的可用地址空间较小，大型 7z 固实块可能无法映射；优先
 3. x86 / x64 运行全部 9 个现有 CTest，要求无失败、无跳过。NSIS 3.11 测试编译器下载后验证固定 SHA-256，Inno 编译器和 7-Zip 使用 runner 镜像预装工具，均只生成惰性测试数据。
 4. ARM64 在 x64 runner 上交叉编译，关闭测试目标；目前未设置 ARM64 实机运行测试。这不等于已验证 ARM64 上的提取和通知行为。
 5. `package-release.ps1` 检查全部 C/C++ 编译命令使用 `/MT`、EXE 机器类型、GUI 子系统、内置版本及普通/延迟导入的系统 DLL 白名单，再复制单文件产物并计算摘要。
-6. 所有架构成功后，发布 job 才获得 `contents: write` 权限。下载并验证三个构建产物、合并许可和摘要；使用 `gh release create --verify-tag --draft` 上传。
+6. 所有架构成功后，发布 job 才获得 `contents: write` 权限。下载并验证三个构建产物、合并许可和摘要；读取 `docs/releases/vX.Y.Z.md` 的双语发布说明，使用 `gh release create --verify-tag --draft --notes-file` 上传。缺少发布说明时拒绝创建 Release。
 7. 回读全部 Release 资产，核对数量及 SHA-256 后取消草稿状态。失败时保留草稿，避免把不完整版本正式发布。
 
 不覆盖已有 Release（包括草稿），也不强制改写标签。失败重试前先检查日志和远程状态；已有草稿需要确认其内容并处理后，才能重跑。单个构建产物只保留 7 天，正式 Release 资产不受此临时保留期限影响。
@@ -48,7 +48,7 @@ runner 的 ARM64 编译组件依据 [GitHub Windows 2025 镜像清单](https://g
 ./scripts/build.ps1 -Architecture arm64 -Configuration Release -WithoutTests
 
 # 以下标签只是本地版本校验参数，不会创建 Git 标签；必须与当前 CMake 版本一致。
-./scripts/package-release.ps1 -Architecture x64 -Tag v0.6.0
+./scripts/package-release.ps1 -Architecture x64 -Tag v0.6.1
 ```
 
 构建输出位于 `out/build/win-<架构>-release/bin/Extract.exe`。加 `-Install` 可生成含双语 README、logo 和许可的便携目录；与 GitHub 的单 EXE 下载方式兼容。
@@ -56,7 +56,7 @@ runner 的 ARM64 编译组件依据 [GitHub Windows 2025 镜像清单](https://g
 具备三个架构的产物后，可把三个 EXE 及对应 `.sha256` 文件放在同一目录，执行：
 
 ```powershell
-./scripts/publish-release.ps1 -Tag v0.6.0 -AssetDirectory out/release-assets -PrepareOnly
+./scripts/publish-release.ps1 -Tag v0.6.1 -AssetDirectory out/release-assets -PrepareOnly
 ```
 
 `-PrepareOnly` 只做本地校验和整理。没有此参数时，脚本要求标签 push 的 GitHub Actions 环境，不接受普通本地调用。

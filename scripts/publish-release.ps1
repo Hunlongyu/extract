@@ -37,9 +37,14 @@ if ($PrepareOnly) { Write-Host '已准备并校验 3 个 EXE、许可和校验�
 if ($env:GITHUB_ACTIONS -ne 'true' -or $env:GITHUB_EVENT_NAME -ne 'push' -or $env:GITHUB_REF -cne "refs/tags/$Tag") {
     throw '发布仅允许在版本标签 push 触发的 GitHub Actions 中进行。本地检查使用 -PrepareOnly。'
 }
+$notesPath = Join-Path $root "docs/releases/$Tag.md"
+if (-not (Test-Path -LiteralPath $notesPath -PathType Leaf) -or
+    [string]::IsNullOrWhiteSpace((Get-Content -LiteralPath $notesPath -Raw))) {
+    throw '缺少本次版本的发布说明，拒绝创建 Release。'
+}
 & gh release view $Tag --json tagName 2>$null | Out-Null
 if ($LASTEXITCODE -eq 0) { throw '此标签已有 Release（包括草稿），拒绝覆盖。请检查既有发布后处理。' }
-& gh release create $Tag @assets --verify-tag --draft --title "Extract $Tag" --generate-notes
+& gh release create $Tag @assets --verify-tag --draft --title "Extract $Tag" --notes-file $notesPath
 if ($LASTEXITCODE -ne 0) { throw '创建 Release 草稿或上传资产失败；请检查远程草稿。' }
 
 # 上传后重新下载核对，三架构完整才公开；失败保留草稿供排查。
