@@ -41,11 +41,13 @@ struct Allocator {
         reinterpret_cast<Allocator*>(const_cast<ISzAlloc*>(p))->release(pointer);
     }
     static void* z_alloc(void* p, unsigned count, unsigned size) noexcept {
+        if (size && count > (std::numeric_limits<std::size_t>::max)() / size) return nullptr;
         return static_cast<Allocator*>(p)->allocate(static_cast<std::size_t>(count) * size);
     }
     static void z_free(void* p, void* pointer) noexcept { static_cast<Allocator*>(p)->release(pointer); }
     static void* bz_alloc(void* p, int count, int size) noexcept {
         if (count < 0 || size < 0) return nullptr;
+        if (size && static_cast<unsigned>(count) > (std::numeric_limits<std::size_t>::max)() / static_cast<unsigned>(size)) return nullptr;
         return static_cast<Allocator*>(p)->allocate(static_cast<std::size_t>(count) * static_cast<unsigned>(size));
     }
 };

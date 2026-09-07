@@ -7,7 +7,7 @@ int wmain(int argc, wchar_t** argv) {
     extract::log::Options options;
     options.primary = argv[1]; options.fallback = argv[2];
     options.file_bytes = std::stoull(argv[3]); options.directory_bytes = std::stoull(argv[4]);
-    options.max_files = std::stoull(argv[5]); options.retention_days = static_cast<unsigned>(std::stoul(argv[6]));
+    options.max_files = std::stoul(argv[5]); options.retention_days = static_cast<unsigned>(std::stoul(argv[6]));
     const auto records = std::stoul(argv[7]);
     const std::wstring_view mode(argv[8]);
     const auto pause = std::stoul(argv[9]);

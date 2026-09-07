@@ -96,6 +96,24 @@ def main():
         path.write_bytes(data)
         return path
 
+    # A tiny valid 7z header declaring a >4 GiB Copy block. List only: never
+    # allocate/decode its deliberately absent payload. x86 must reject before
+    # narrowing the block size to size_t; 64-bit builds can represent this size.
+    large_name = b'\x00' + 'large.bin\x00'.encode('utf-16-le')
+    large_header = (bytes.fromhex('0104060001090100070b01000101000c') + b'\xff'
+                    + struct.pack('<Q', 2**32 + 1) + bytes.fromhex('0000050111')
+                    + bytes([len(large_name)]) + large_name + b'\x00\x00')
+    large_start = struct.pack('<QQI', 1, len(large_header), zlib.crc32(large_header))
+    large_archive = (b'7z\xbc\xaf\x27\x1c\x00\x04' + struct.pack('<I', zlib.crc32(large_start))
+                     + large_start + b'\x00' + large_header)
+    large_path = write('large-block-metadata.7z', large_archive)
+    listed = subprocess.run([str(exe), '--list', str(large_path)], capture_output=True,
+                            timeout=30, env=environment)
+    machine = struct.unpack_from('<H', stub, pe + 4)[0]
+    expected_code = 223 if machine == 0x14c else 0
+    check(listed.returncode == expected_code, '7z block size narrowed on current architecture')
+    results.append({'name': large_path.name, 'exitCode': expected_code, 'mode': 'list'})
+
     for method in (zipfile.ZIP_STORED, zipfile.ZIP_DEFLATED, zipfile.ZIP_BZIP2):
         run(write(f'method-{method}.zip', zip_bytes(method)))
     run(write('descriptor.zip', zip_bytes(stream=True)))

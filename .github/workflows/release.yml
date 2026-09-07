@@ -1,0 +1,91 @@
+name: Release Windows
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: pwsh
+
+jobs:
+  build:
+    runs-on: windows-2025
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        architecture: [x86, x64, arm64]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Validate release version
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          if ($env:RELEASE_TAG -cnotmatch '^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$') { throw 'Invalid release tag' }
+          $source = Get-Content CMakeLists.txt -Raw
+          if ($source -notmatch 'project\(Extract VERSION ([0-9]+\.[0-9]+\.[0-9]+) LANGUAGES' -or "v$($Matches[1])" -cne $env:RELEASE_TAG) { throw 'Tag and project version differ' }
+      - name: Build and test
+        env:
+          TARGET_ARCH: ${{ matrix.architecture }}
+        run: |
+          if ($env:TARGET_ARCH -eq 'arm64') {
+            ./scripts/build.ps1 -Architecture arm64 -Configuration Release -WithoutTests -Fresh
+          } else {
+            # 工具仅用于生成惰性测试包；不运行生成的安装器，不随产品发布。
+            $nsisZip = Join-Path $env:RUNNER_TEMP nsis-3.11.zip
+            Invoke-WebRequest 'https://github.com/tauri-apps/binary-releases/releases/download/nsis-3.11/nsis-3.11.zip' -OutFile $nsisZip
+            if ((Get-FileHash $nsisZip).Hash.ToLowerInvariant() -cne 'c7d27f780ddb6cffb4730138cd1591e841f4b7edb155856901cdf5f214394fa1') { throw 'NSIS checksum mismatch' }
+            $nsisRoot = Join-Path $env:RUNNER_TEMP nsis-fixtures
+            Expand-Archive $nsisZip -DestinationPath $nsisRoot
+            $nsis = Join-Path $nsisRoot 'nsis-3.11/Bin/makensis.exe'
+            $sevenZip = (Get-Command 7z.exe -ErrorAction Stop).Source
+            if (-not (Test-Path (Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6/ISCC.exe'))) { throw 'Inno test compiler missing' }
+            ./scripts/build.ps1 -Architecture $env:TARGET_ARCH -Configuration Release -Test -Fresh -NsisCompiler $nsis -SevenZipTestTool $sevenZip
+            # 缺少 Python 或测试工具造成的跳过不能作为发布通过依据。
+            [xml]$tests = Get-Content "out/build/win-$($env:TARGET_ARCH)-release/test-results.xml"
+            if ([int]$tests.testsuite.tests -ne 8 -or [int]$tests.testsuite.skipped -ne 0 -or [int]$tests.testsuite.failures -ne 0) { throw 'All eight integration tests must pass without skips' }
+          }
+      - name: Verify standalone executable and package
+        env:
+          TARGET_ARCH: ${{ matrix.architecture }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: ./scripts/package-release.ps1 -Architecture $env:TARGET_ARCH -Tag $env:RELEASE_TAG -OutputDirectory out/release-assets
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: windows-${{ matrix.architecture }}
+          path: out/release-assets/*
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    needs: build
+    runs-on: windows-2025
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: windows-*
+          path: out/release-assets
+          merge-multiple: true
+      - name: Assemble and publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: ./scripts/publish-release.ps1 -Tag $env:RELEASE_TAG -AssetDirectory out/release-assets

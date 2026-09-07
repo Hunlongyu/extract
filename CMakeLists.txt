@@ -12,6 +12,15 @@ endif()
 
 enable_language(RC)
 
+# Ninja 的目标架构来自 MSVC 环境，防止预设目录名与实际编译器不一致。
+if(EXTRACT_TARGET_ARCHITECTURE)
+    set(extract_compiler_arch "${CMAKE_CXX_COMPILER_ARCHITECTURE_ID}")
+    string(TOLOWER "${extract_compiler_arch}" extract_compiler_arch)
+    if(NOT extract_compiler_arch STREQUAL EXTRACT_TARGET_ARCHITECTURE)
+        message(FATAL_ERROR "Requested ${EXTRACT_TARGET_ARCHITECTURE}, but compiler targets ${extract_compiler_arch}. Use scripts/build.ps1 -Architecture or the matching vcvars environment.")
+    endif()
+endif()
+
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
@@ -185,7 +194,8 @@ if(BUILD_TESTING)
 endif()
 
 install(TARGETS Extract RUNTIME DESTINATION .)
-install(FILES README.md DESTINATION .)
+install(FILES README.md README.zh-CN.md DESTINATION .)
+install(FILES resources/logo.png DESTINATION resources)
 install(DIRECTORY docs/ DESTINATION docs FILES_MATCHING PATTERN "*.md" PATTERN "*.csv" PATTERN "*.json")
 install(FILES third_party/README.md DESTINATION third_party)
 install(FILES third_party/lzma/LICENSE.txt DESTINATION third_party/lzma)

@@ -147,7 +147,7 @@ struct InnoPackage::Impl {
         require(loader_version == 1 || loader_version == 2, Status::unsupported,
                 L"尚未支持 Inno loader 版本：" + std::to_wstring(loader_version));
         const bool loader64 = loader_version == 2;
-        require(table_bytes.size() == (loader64 ? 64 : 44), Status::corrupt, L"Inno loader 偏移表长度错误。");
+        require(table_bytes.size() == (loader64 ? 64U : 44U), Status::corrupt, L"Inno loader 偏移表长度错误。");
         const auto declared_size = loader64 ? table.u64() : table.u32();
         table.skip(loader64 ? 16 : 12);
         metadata_offset = loader64 ? table.u64() : table.u32();

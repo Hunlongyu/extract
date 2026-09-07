@@ -4,7 +4,7 @@
 
 ## 工具链与构建
 
-自有代码使用 C++20，基础库使用 C17 编译。目标为 Windows x64，使用 MSVC、Windows SDK、CMake 3.25+ 和 Ninja；MSI 开发测试要求 PowerShell 7（`pwsh`），Inno 测试另需 Python 3.10+ 与官方 ISCC。基础库静态链接，发布程序不依赖这些开发工具。
+自有代码使用 C++20，基础库使用 C17 编译。支持 Windows x86、x64、ARM64 构建预设，默认 x64，使用 MSVC、Windows SDK、CMake 3.25+ 和 Ninja；MSI 开发测试要求 PowerShell 7（`pwsh`），Inno 测试另需 Python 3.10+ 与官方 ISCC。CRT 和基础库静态链接，发布程序不依赖这些开发工具。
 
 在仓库根目录执行：
 
@@ -13,7 +13,7 @@
 .\scripts\build.ps1 -Configuration Release -Test -Install
 ```
 
-脚本通过 `vswhere -prerelease` 发现包含 x64 C++ 工具的 Visual Studio，以 `vcvars64.bat` 初始化当前进程环境，优先使用 Visual Studio 的 CMake/Ninja。它不会修改用户或系统环境变量，也不固定 MSVC 版本目录。`-Test` 运行 CTest；`-Install` 生成便携目录。需要重建错误的 CMake 缓存时加 `-Fresh`，使用 CMake `--fresh` 重新探测工具链；不要在未初始化 MSVC 的终端直接用预设重配已有缓存。
+脚本通过 `vswhere -prerelease` 发现包含目标架构 C++ 工具的 Visual Studio，以 `vcvarsall.bat` 初始化当前进程环境，优先使用 Visual Studio 的 CMake/Ninja。它不会修改用户或系统环境变量，也不固定 MSVC 版本目录。`-Architecture x86|x64|arm64` 选择架构，各架构使用独立的构建及安装目录，配置时核对编译器的真实架构。`-Test` 运行 CTest 并写入 `test-results.xml`；`-Install` 生成便携目录。ARM64 交叉编译需安装 MSVC ARM64 工具和 Windows SDK，使用 `-WithoutTests`，不在 x64 主机上运行 ARM64 测试。需要重建错误的 CMake 缓存时加 `-Fresh`；不要在未初始化 MSVC 的终端直接用预设重配已有缓存。详见 [发布流程](16-release.md)。
 
 链接保留 `/guard:cf`，并使用 `/INCREMENTAL:NO` 完整生成 CFG 目标表。本机 MSVC 预览工具链曾在增量链接后遗漏 CAB 析构跳板，触发 `0xC0000409 / FAST_FAIL_GUARD_ICALL_CHECK_FAILURE`；完整链接后同一回归包恢复预期的 299 部分完成，不关闭 CFG 来绕过检查。
 

@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <mutex>
+#include <limits>
 
 namespace extract::formats {
 namespace {
@@ -57,7 +58,7 @@ struct BudgetAllocator {
     std::size_t used = 0, limit;
     explicit BudgetAllocator(std::size_t maximum) : api{allocate, release}, limit(maximum) {}
     static BudgetAllocator& self(ISzAllocPtr p) { return *reinterpret_cast<BudgetAllocator*>(const_cast<ISzAlloc*>(p)); }
-    struct alignas(std::max_align_t) Allocation { std::size_t size; };
+    union Allocation { std::max_align_t alignment; std::size_t size; };
     static void* allocate(ISzAllocPtr p, std::size_t size) noexcept {
         auto& a = self(p);
         if (!size || size > a.limit - a.used) return nullptr;
@@ -193,6 +194,8 @@ struct ArchivePackage::Impl {
         for (std::uint32_t folder = 0; folder < db.db.NumFolders; ++folder) {
             const auto size = SzAr_GetFolderUnpackSize(&db.db, folder);
             require(size <= max_output_bytes - expanded, Status::limit_exceeded, L"7z 固实块累计展开超过 8 GiB。");
+            require(size <= (std::numeric_limits<std::size_t>::max)(), Status::limit_exceeded,
+                L"7z 固实块超过当前程序架构的地址空间范围，请使用 x64 或 ARM64 版本。");
             expanded += size;
         }
         for (std::uint32_t i = 0; i < db.NumFiles; ++i) {

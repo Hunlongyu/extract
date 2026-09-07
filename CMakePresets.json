@@ -27,7 +27,8 @@
       "displayName": "Windows x64 Debug (MSVC)",
       "inherits": "windows-msvc",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug"
+        "CMAKE_BUILD_TYPE": "Debug",
+        "EXTRACT_TARGET_ARCHITECTURE": "x64"
       }
     },
     {
@@ -35,6 +36,43 @@
       "displayName": "Windows x64 Release (MSVC)",
       "inherits": "windows-msvc",
       "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "EXTRACT_TARGET_ARCHITECTURE": "x64"
+      }
+    },
+    {
+      "name": "win-x86-debug",
+      "displayName": "Windows x86 Debug (MSVC)",
+      "inherits": "windows-msvc",
+      "cacheVariables": {
+        "EXTRACT_TARGET_ARCHITECTURE": "x86",
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "win-x86-release",
+      "displayName": "Windows x86 Release (MSVC)",
+      "inherits": "windows-msvc",
+      "cacheVariables": {
+        "EXTRACT_TARGET_ARCHITECTURE": "x86",
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "win-arm64-debug",
+      "displayName": "Windows arm64 Debug (MSVC)",
+      "inherits": "windows-msvc",
+      "cacheVariables": {
+        "EXTRACT_TARGET_ARCHITECTURE": "arm64",
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "win-arm64-release",
+      "displayName": "Windows arm64 Release (MSVC)",
+      "inherits": "windows-msvc",
+      "cacheVariables": {
+        "EXTRACT_TARGET_ARCHITECTURE": "arm64",
         "CMAKE_BUILD_TYPE": "Release"
       }
     }
@@ -47,6 +85,22 @@
     {
       "name": "win-x64-release",
       "configurePreset": "win-x64-release"
+    },
+    {
+      "name": "win-x86-debug",
+      "configurePreset": "win-x86-debug"
+    },
+    {
+      "name": "win-x86-release",
+      "configurePreset": "win-x86-release"
+    },
+    {
+      "name": "win-arm64-debug",
+      "configurePreset": "win-arm64-debug"
+    },
+    {
+      "name": "win-arm64-release",
+      "configurePreset": "win-arm64-release"
     }
   ]
 }
