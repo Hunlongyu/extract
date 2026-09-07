@@ -16,3 +16,7 @@
 *.7z binary
 *.msi binary
 *.exe binary
+
+# 保留随附基础库及许可证的原始字节与换行。
+third_party/** -text
+third_party/README.md text eol=lf
