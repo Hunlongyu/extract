@@ -66,7 +66,12 @@ void save_report(const fs::path& directory, const Catalog& catalog) {
         const auto bytes = platform::utf8(catalog_json(catalog, true));
         platform::write_all(file.get(), std::as_bytes(std::span(bytes)));
         if (!FlushFileBuffers(file.get())) platform::io_failure(L"无法保存递归解包报告");
-        const auto result = platform::rename_in_place(file.get(), L"_extract-report.json", true);
+        DWORD result = ERROR_SUCCESS;
+        for (unsigned attempt = 0; attempt < 21; ++attempt) {
+            result = platform::rename_in_place(file.get(), L"_extract-report.json", true);
+            if (result != ERROR_ACCESS_DENIED && result != ERROR_SHARING_VIOLATION) break;
+            if (attempt != 20) Sleep(100); // 大批量写入时，索引器可能短暂占用上一份报告。
+        }
         if (result != ERROR_SUCCESS) platform::io_failure(L"无法提交递归解包报告", result);
     } catch (...) {
         file.reset(); DeleteFileW(platform::extended_path(temporary).c_str()); throw;
@@ -89,9 +94,11 @@ struct Context {
             return L"format=" + planned.format + L"; depth=" + std::to_wstring(depth) + L"; sha256=" + hash +
                 L"; files=" + std::to_wstring(planned.files.size()) + L"; bytes=" + std::to_wstring(planned.total_size);
         });
-        require(planned.total_size <= max_output_bytes - reserved_bytes &&
-            planned.files.size() <= max_entries - reserved_files, Status::limit_exceeded, L"所有层的累计输出超过 8 GiB 或 10000 个文件。");
-        reserved_bytes += planned.total_size; reserved_files += planned.files.size();
+        reserved_bytes = checked_size_sum(reserved_bytes, planned.total_size);
+        require(planned.files.size() <= (std::numeric_limits<std::size_t>::max)() - reserved_files,
+            Status::limit_exceeded, L"文件统计超过当前程序架构的表示范围。");
+        reserved_files += planned.files.size();
+        platform::ensure_disk_space(parent.empty() ? planned.input.parent_path() : parent, planned.total_size);
         ++package_count;
         active.insert(hash);
         struct ActiveGuard {
@@ -132,8 +139,11 @@ struct Context {
             try {
                 Kind kind;
                 {
-                    io::Input input(path, max_output_bytes);
-                    kind = probe(input.bytes(), archive);
+                    io::Input input(path);
+                    std::array<std::byte, 8> header{};
+                    input.read(0, std::span(header).first(static_cast<std::size_t>((std::min)(input.size(), std::uint64_t{8}))));
+                    kind = starts(std::span<const std::byte>(header), std::array<unsigned char, 8>{0xd0,0xcf,0x11,0xe0,0xa1,0xb1,0x1a,0xe1})
+                        ? Kind::msi : probe(input.bytes(), archive);
                     if (kind == Kind::uninstaller)
                         require(platform::sha256(path) == entry.sha256, Status::corrupt, L"卸载辅助文件在提取后被修改。");
                 }

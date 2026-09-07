@@ -54,7 +54,7 @@ jobs:
             ./scripts/build.ps1 -Architecture $env:TARGET_ARCH -Configuration Release -Test -Fresh -NsisCompiler $nsis -SevenZipTestTool $sevenZip
             # 缺少 Python 或测试工具造成的跳过不能作为发布通过依据。
             [xml]$tests = Get-Content "out/build/win-$($env:TARGET_ARCH)-release/test-results.xml"
-            if ([int]$tests.testsuite.tests -ne 8 -or [int]$tests.testsuite.skipped -ne 0 -or [int]$tests.testsuite.failures -ne 0) { throw 'All eight integration tests must pass without skips' }
+            if ([int]$tests.testsuite.tests -ne 9 -or [int]$tests.testsuite.skipped -ne 0 -or [int]$tests.testsuite.failures -ne 0) { throw 'All nine tests must pass without skips' }
           }
       - name: Verify standalone executable and package
         env:

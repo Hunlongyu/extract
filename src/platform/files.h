@@ -33,6 +33,7 @@ bool equal_name(std::wstring_view left, std::wstring_view right);
 std::wstring unique_id();
 std::string utf8(std::wstring_view text);
 void write_all(HANDLE file, std::span<const std::byte> bytes);
+void ensure_disk_space(const fs::path& directory, std::uint64_t bytes);
 std::wstring sha256(const fs::path& path);
 std::wstring sha1(const fs::path& path);
 std::wstring sha512(const fs::path& path);

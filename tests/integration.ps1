@@ -1,4 +1,4 @@
-param([Parameter(Mandatory)][string]$Executable, [Parameter(Mandatory)][string]$WorkRoot)
+param([Parameter(Mandatory)][string]$Executable, [Parameter(Mandatory)][string]$WorkRoot, [switch]$LargeCab)
 $ErrorActionPreference = 'Stop'
 trap { Write-Error (($_ | Out-String) + $_.ScriptStackTrace) -ErrorAction Continue; exit 1 }
 $Executable = [IO.Path]::GetFullPath($Executable)
@@ -227,6 +227,28 @@ try {
 
     $external = Variant 'external' { param($db) Sql $db 'UPDATE `Media` SET `Cabinet` = ?' @('payload.cab') }
     Run-App @('--quiet',$external) 0 | Out-Null
+    if ($LargeCab) {
+        # 合法 CAB 尾部填充，不增加展开量；同时跨过旧 MSI/CAB 输入阈值。
+        $largeCabPath = Join-Path $root 'large-padded.cab'
+        [IO.File]::Copy($cabinet, $largeCabPath)
+        $largeCabSize = 513L * 1024 * 1024
+        $stream = [IO.File]::Open($largeCabPath, [IO.FileMode]::Open, [IO.FileAccess]::Write)
+        try {
+            $stream.SetLength($largeCabSize)
+            $stream.Position = 8
+            $lengthBytes = [BitConverter]::GetBytes([uint32]$largeCabSize)
+            $stream.Write($lengthBytes, 0, $lengthBytes.Length)
+        } finally { $stream.Dispose() }
+        $largeEmbedded = Variant 'large-embedded' { param($db) Embed-Cab $db $largeCabPath -Update }
+        Assert ((Get-Item $largeEmbedded).Length -gt 512L * 1024 * 1024) 'Large MSI fixture too small.'
+        Run-App @('--quiet',$largeEmbedded) 0 | Out-Null
+        Check-Content 'large-embedded'
+        $largeExternal = Variant 'large-external' { param($db) Sql $db 'UPDATE `Media` SET `Cabinet` = ?' @('large-padded.cab') }
+        Run-App @('--quiet',$largeExternal) 0 | Out-Null
+        Check-Content 'large-external'
+        Write-Output 'PASS: MSI >512 MiB and embedded/external CAB >512 MiB, payload hashes verified.'
+        return # 扩展模式只运行大流用例；普通 CTest 独立覆盖余下反例。
+    }
     Check-Content 'external'
     $cab1 = Make-Cab 'part1.cab' @('F2','F1')
     $cab2 = Make-Cab 'part2.cab' @('F4','F3') 'LZX'

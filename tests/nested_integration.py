@@ -77,12 +77,12 @@ SectionEnd
     def report(path):
         return json.loads((path / '_extract-report.json').read_text(encoding='utf-8'))
 
-    def run(path, code=0):
+    def run(path, code=0, timeout=90):
         target = root / ('result-' + uuid.uuid4().hex)
         target.mkdir()
         digest = hashlib.sha256(path.read_bytes()).digest()
         result = subprocess.run([str(executable), '--quiet', '--output', str(target), str(path)],
-                                capture_output=True, timeout=90, env=environment)
+                                capture_output=True, timeout=timeout, env=environment)
         check(result.returncode == code, f'{path.name}: expected {code}, got {result.returncode}: {result.stderr!r}')
         check(not list(cache.iterdir()), 'temporary cache residue')
         check(hashlib.sha256(path.read_bytes()).digest() == digest, 'input mutated')
@@ -213,17 +213,17 @@ Section
     check(layer['nestedPackages'][0]['status'] == 'limit', 'depth limit propagation')
 
     many = nsis('many-files', [(f'f{i}.bin', root / 'payload.bin') for i in range(10000)], app=True)
-    output, data, _ = run(nsis('file-budget', [('child.exe', many)]), 299)
-    check(data['nestedPackages'][0]['status'] == 'limit' and data['treeFileCount'] == 1, 'shared file limit')
-    check(len(list(output.rglob('_extract-report.json'))) == 1, 'file limit must precede child writes')
+    output, data, _ = run(nsis('large-file-count', [('child.exe', many)]), timeout=300)
+    check(data['nestedPackages'][0]['status'] == 'complete' and data['treeFileCount'] == 10001, 'large nested file count')
+    check(len(list(output.rglob('_extract-report.json'))) == 2, 'large child must be extracted')
 
     parsed = Inno(inner)
-    struct.pack_into('<Q', parsed.blocks[1], parsed.size_offset, 8 * 1024**3)
+    struct.pack_into('<Q', parsed.blocks[1], parsed.size_offset, 9 * 1024**3)
     large = root / 'large.exe'
     large.write_bytes(parsed.rebuild())
-    _, data, _ = run(nsis('byte-budget', [('child.exe', large)]), 299)
-    check(data['nestedPackages'][0]['status'] == 'limit', 'shared byte limit')
-    check('所有层' in data['nestedPackages'][0]['message'], 'aggregate budget, not decoder failure')
+    _, data, _ = run(nsis('truncated-large-child', [('child.exe', large)]), 299)
+    check(data['nestedPackages'][0]['status'] == 'failed', 'truncated large child must fail')
+    check('所有层' not in data['nestedPackages'][0]['message'], 'removed aggregate byte ceiling')
 
     children = [(f'child{i}.exe', inno(f'unique-{i}', content=f'payload-{i}'.encode())) for i in range(32)]
     _, data, _ = run(nsis('package-budget', children), 299)

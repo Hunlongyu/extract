@@ -2,6 +2,7 @@
 #include "platform/log.h"
 #include "codecs/cab.h"
 #include "platform/files.h"
+#include "io/temporary.h"
 
 #include <msi.h>
 #include <msiquery.h>
@@ -49,13 +50,11 @@ void rows(MSIHANDLE database, const wchar_t* sql, const std::function<void(MSIHA
     MsiHandle view;
     check(MsiDatabaseOpenViewW(database, sql, &view.value), L"打开 MSI 查询失败");
     check(MsiViewExecute(view.value, 0), L"执行 MSI 查询失败");
-    std::size_t count = 0;
     for (;;) {
         MsiHandle record;
         const auto result = MsiViewFetch(view.value, &record.value);
         if (result == ERROR_NO_MORE_ITEMS) break;
         check(result, L"读取 MSI 记录失败");
-        require(++count <= max_entries, Status::limit_exceeded, L"MSI 表记录数量超限。");
         visit(record.value);
     }
 }
@@ -115,8 +114,7 @@ struct MsiPackage::Impl {
         if (!input) platform::io_failure(L"无法打开安装包");
         LARGE_INTEGER input_size{};
         if (!GetFileSizeEx(input.get(), &input_size)) platform::io_failure(L"无法读取安装包大小");
-        require(input_size.QuadPart >= 0 && static_cast<std::uint64_t>(input_size.QuadPart) <= max_package_bytes,
-                Status::limit_exceeded, L"MSI 文件上限为 512 MiB。");
+        require(input_size.QuadPart >= 0, Status::corrupt, L"MSI 文件大小无效。");
         FILE_ATTRIBUTE_TAG_INFO attributes{};
         if (!GetFileInformationByHandleEx(input.get(), FileAttributeTagInfo, &attributes, sizeof(attributes))) platform::io_failure(L"无法检查安装包");
         require((attributes.FileAttributes & (FILE_ATTRIBUTE_REPARSE_POINT | FILE_ATTRIBUTE_DIRECTORY)) == 0,
@@ -250,7 +248,7 @@ struct MsiPackage::Impl {
             }
             sources.push_back({std::move(source), compressed});
             entry.size = static_cast<std::uint64_t>(size);
-            require(entry.size <= max_output_bytes - catalog.total_size, Status::limit_exceeded, L"预计展开大小超过 8 GiB 上限。");
+            require(entry.size <= max_file_bytes - catalog.total_size, Status::limit_exceeded, L"预计展开大小超出 64 位文件范围。");
             catalog.total_size += entry.size;
             catalog.files.push_back(std::move(entry));
         });
@@ -269,7 +267,7 @@ struct MsiPackage::Impl {
         plan_paths(catalog);
     }
 
-    std::vector<std::byte> cabinet_bytes(const std::wstring& name) {
+    std::unique_ptr<io::TemporaryFile> cabinet_bytes(const std::wstring& name) {
         MsiHandle view, parameter, record;
         check(MsiDatabaseOpenViewW(database.value, L"SELECT `Data` FROM `_Streams` WHERE `Name` = ?", &view.value), L"打开内嵌流查询失败");
         parameter.value = MsiCreateRecord(1);
@@ -277,14 +275,13 @@ struct MsiPackage::Impl {
         check(MsiRecordSetStringW(parameter.value, 1, name.c_str()), L"设置 CAB 流名称失败");
         check(MsiViewExecute(view.value, parameter.value), L"查询 CAB 流失败");
         check(MsiViewFetch(view.value, &record.value), L"内嵌 CAB 流不存在");
-        std::vector<std::byte> result;
+        auto result = std::make_unique<io::TemporaryFile>(L"msi-cab-cache");
         std::array<std::byte, 65536> chunk{};
         for (;;) {
             DWORD count = static_cast<DWORD>(chunk.size());
             check(MsiRecordReadStream(record.value, 1, reinterpret_cast<char*>(chunk.data()), &count), L"读取 CAB 数据失败");
             if (count == 0) break;
-            require(count <= max_cabinet_bytes - result.size(), Status::limit_exceeded, L"MSI 单个内嵌 CAB 上限为 256 MiB。");
-            result.insert(result.end(), chunk.begin(), chunk.begin() + count);
+            result->append(std::span(chunk).first(count));
         }
         return result;
     }
@@ -295,20 +292,18 @@ MsiPackage::~MsiPackage() = default;
 const Catalog& MsiPackage::catalog() const { return impl_->catalog; }
 fs::path MsiPackage::extract(const fs::path& parent) {
     io::Output output(parent.empty() ? impl_->catalog.input.parent_path() : parent, impl_->catalog.input.stem().wstring());
-    std::uint64_t external_cab_bytes = 0;
     for (const auto& media : impl_->media) {
         if (media.cabinet.empty()) continue;
         log::Scope media_step(L"msi.cabinet");
         log::write(log::Level::info, L"msi.media", media.cabinet);
-        std::vector<std::byte> embedded;
+        std::unique_ptr<io::TemporaryFile> embedded;
         std::unique_ptr<io::Input> external;
         io::Bytes bytes;
-        if (media.cabinet[0] == L'#') { embedded = impl_->cabinet_bytes(media.cabinet.substr(1)); bytes = embedded; }
+        if (media.cabinet[0] == L'#') { embedded = impl_->cabinet_bytes(media.cabinet.substr(1)); bytes = embedded->bytes(); }
         else {
-            try { external = std::make_unique<io::Input>(impl_->catalog.input.parent_path() / media.cabinet, max_cabinet_bytes); }
+            try { external = std::make_unique<io::Input>(impl_->catalog.input.parent_path() / media.cabinet); }
             catch (const Failure& e) { throw Failure(e.status, L"读取 MSI 外置 CAB 失败：" + media.cabinet + L"；" + e.message, e.native_code); }
-            bytes = external->bytes(); external_cab_bytes += bytes.size();
-            require(external_cab_bytes <= max_package_bytes, Status::limit_exceeded, L"MSI 外置 CAB 累计超过 512 MiB。");
+            bytes = external->bytes();
         }
         const auto members = codecs::cab_members(bytes);
         require(members.size() == media.files.size(), Status::corrupt, L"CAB 文件数与对应 MSI 媒体不符。");
@@ -329,9 +324,9 @@ fs::path MsiPackage::extract(const fs::path& parent) {
         auto& entry = impl_->catalog.files[i];
         log::Scope step(L"msi.loose_file", nullptr, &source.path);
         try {
-            io::Input input(impl_->catalog.input.parent_path() / source.path, max_output_bytes);
-            require(input.bytes().size() == entry.size, Status::corrupt, L"松散源文件大小与 File 表不符。");
-            { auto file = output.create_file(entry.path); platform::write_all(file.get(), input.bytes());
+            io::Input input(impl_->catalog.input.parent_path() / source.path);
+            require(input.size() == entry.size, Status::corrupt, L"松散源文件大小与 File 表不符。");
+            { auto file = output.create_file(entry.path); input.copy_to(file.get());
               if (!FlushFileBuffers(file.get())) platform::io_failure(L"保存松散源文件失败"); }
             codecs::verify_file(entry, output.full_path(entry.path));
         } catch (const Failure& e) { throw Failure(e.status, L"读取 MSI 松散源文件失败：" + source.path.wstring() + L"；" + e.message, e.native_code); }

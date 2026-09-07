@@ -137,6 +137,11 @@ if(BUILD_TESTING)
     set(EXTRACT_NSIS_COMPILER "" CACHE FILEPATH "Official makensis.exe used only to generate test fixtures")
     set(EXTRACT_7Z_TEST_TOOL "" CACHE FILEPATH "Official 7zr.exe used only to generate archive test fixtures")
     if(Python3_Interpreter_FOUND)
+        add_test(NAME large_integration COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/large_integration.py"
+            --executable "$<TARGET_FILE:Extract>"
+            --work-root "${CMAKE_CURRENT_BINARY_DIR}/large-fixtures")
+        set_tests_properties(large_integration PROPERTIES TIMEOUT 600)
         add_test(NAME log_integration COMMAND "${Python3_EXECUTABLE}"
             "${CMAKE_CURRENT_SOURCE_DIR}/tests/log_integration.py"
             --probe "$<TARGET_FILE:extract_log_probe>"

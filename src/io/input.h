@@ -32,17 +32,22 @@ inline Bytes slice(Bytes bytes, std::uint64_t start, std::uint64_t length) {
 
 class Input {
 public:
-    explicit Input(const fs::path& path, std::uint64_t limit = max_package_bytes);
+    explicit Input(const fs::path& path);
     ~Input();
     Input(const Input&) = delete;
     Input& operator=(const Input&) = delete;
     const fs::path& path() const { return path_; }
-    Bytes bytes() const { return {view_, size_}; }
+    std::uint64_t size() const { return size_; }
+    void read(std::uint64_t offset, std::span<std::byte> destination) const;
+    void copy_to(HANDLE destination) const;
+    Bytes bytes() const;
+    void unmap() const;
 private:
     fs::path path_;
     std::vector<platform::Handle> ancestors_;
-    platform::Handle file_, mapping_;
-    const std::byte* view_ = nullptr;
-    std::size_t size_ = 0;
+    platform::Handle file_;
+    mutable platform::Handle mapping_;
+    mutable const std::byte* view_ = nullptr;
+    std::uint64_t size_ = 0;
 };
 } // namespace extract::io

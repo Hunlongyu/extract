@@ -104,6 +104,7 @@ public:
     explicit MappedFolder(std::size_t size) : output_(temporary(), L"7z-cache"), size_(size) {
         file_ = output_.create_file(L"folder.bin", true);
         if (!size) return;
+        platform::ensure_disk_space(output_.full_path(L"folder.bin").parent_path(), size);
         LARGE_INTEGER length{}; length.QuadPart = static_cast<LONGLONG>(size);
         if (!SetFilePointerEx(file_.get(), length, nullptr, FILE_BEGIN) || !SetEndOfFile(file_.get())) platform::io_failure(L"无法分配 7z 磁盘缓存");
         mapping_ = platform::Handle(CreateFileMappingW(file_.get(), nullptr, PAGE_READWRITE, 0, 0, nullptr));
@@ -181,19 +182,18 @@ struct ArchivePackage::Impl {
         if (location->offset) catalog.notes.push_back(L"PE 自解压外壳附加区偏移：" + std::to_wstring(location->offset));
     }
     void add(Entry file) {
-        require(catalog.files.size() < max_entries && file.size <= max_output_bytes - catalog.total_size,
-            Status::limit_exceeded, L"归档文件数或总输出超过上限。");
+        require(file.size <= max_file_bytes - catalog.total_size,
+            Status::limit_exceeded, L"归档总输出大小溢出。");
         catalog.total_size += file.size; catalog.files.push_back(std::move(file));
     }
     void read_seven(std::size_t offset) {
         catalog.format = L"7z"; catalog.format_version = L"0.x";
         seven = std::make_unique<Seven>(input.bytes().subspan(offset));
         const auto& db = seven->database;
-        require(db.NumFiles <= max_entries && db.db.NumFolders <= max_entries, Status::limit_exceeded, L"7z 文件或固实块数量超限。");
         std::uint64_t expanded = 0;
         for (std::uint32_t folder = 0; folder < db.db.NumFolders; ++folder) {
             const auto size = SzAr_GetFolderUnpackSize(&db.db, folder);
-            require(size <= max_output_bytes - expanded, Status::limit_exceeded, L"7z 固实块累计展开超过 8 GiB。");
+            require(size <= max_file_bytes - expanded, Status::limit_exceeded, L"7z 固实块累计展开超出 64 位文件范围。");
             require(size <= (std::numeric_limits<std::size_t>::max)(), Status::limit_exceeded,
                 L"7z 固实块超过当前程序架构的地址空间范围，请使用 x64 或 ARM64 版本。");
             expanded += size;
@@ -304,7 +304,8 @@ void ArchivePackage::Impl::read_zip(std::size_t archive_offset) {
         require(on_disk == count, Status::unsupported, L"当前不支持 ZIP64 分卷。");
         central_size = tail.u64(); central_offset = tail.u64(); central_end = offset;
     }
-    require(count <= max_entries && central_size <= metadata_limit, Status::limit_exceeded, L"ZIP 文件数量或中央目录大小超过上限。");
+    require(central_size <= metadata_limit, Status::limit_exceeded, L"ZIP 中央目录元数据超过内存预算。");
+    require(count <= central_size / 46, Status::corrupt, L"ZIP 条目数量超出实际中央目录范围。");
     require(central_size <= central_end, Status::corrupt, L"ZIP 中央目录长度越界。");
     const auto central_start = central_end - central_size;
     require(central_offset <= central_start, Status::corrupt, L"ZIP 中央目录偏移无效。");

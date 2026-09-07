@@ -8,11 +8,14 @@
 #include "io/input.h"
 #include "platform/log.h"
 #include <map>
+#include <algorithm>
 
 namespace extract {
 namespace {
 template<class T>
-std::unique_ptr<Package> parse(const fs::path& path, std::wstring_view format) {
+std::unique_ptr<Package> parse(const io::Input& input, std::wstring_view format) {
+    const auto& path = input.path();
+    input.unmap(); // 保留文件读锁，但不同时占用探测和解析两份大映射。
     log::Scope step(L"package.parse", &path);
     log::write(log::Level::info, L"format.candidate", format);
     try {
@@ -31,20 +34,23 @@ std::unique_ptr<Package> parse(const fs::path& path, std::wstring_view format) {
 std::unique_ptr<Package> open_package(const fs::path& path) {
     log::Scope step(L"package.detect", &path);
     io::Input input(path);
-    const auto bytes = input.bytes();
+    std::array<std::byte, 8> header{};
+    const auto header_size = static_cast<std::size_t>((std::min)(input.size(), std::uint64_t{8}));
+    input.read(0, std::span(header).first(header_size));
     constexpr std::array<unsigned char, 8> compound{0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1};
-    bool msi = bytes.size() >= compound.size();
-    for (std::size_t i = 0; msi && i < compound.size(); ++i) msi = std::to_integer<unsigned char>(bytes[i]) == compound[i];
-    if (msi) return parse<formats::MsiPackage>(input.path(), L"MSI");
+    bool msi = header_size >= compound.size();
+    for (std::size_t i = 0; msi && i < compound.size(); ++i) msi = std::to_integer<unsigned char>(header[i]) == compound[i];
+    if (msi) return parse<formats::MsiPackage>(input, L"MSI");
+    const auto bytes = input.bytes();
     if (bytes.size() >= 2 && bytes[0] == std::byte{'M'} && bytes[1] == std::byte{'Z'}) {
-        if (formats::burn_probe(bytes)) return parse<formats::BurnPackage>(input.path(), L"WiX Burn");
-        if (formats::nsis_probe(bytes)) return parse<formats::NsisPackage>(input.path(), L"NSIS");
-        if (formats::archive_probe(bytes)) return parse<formats::ArchivePackage>(input.path(), L"ZIP/7z");
-        if (formats::cab_probe(bytes)) return parse<formats::CabPackage>(input.path(), L"CAB");
-        return parse<formats::InnoPackage>(input.path(), L"Inno Setup (PE fallback probe)");
+        if (formats::burn_probe(bytes)) return parse<formats::BurnPackage>(input, L"WiX Burn");
+        if (formats::nsis_probe(bytes)) return parse<formats::NsisPackage>(input, L"NSIS");
+        if (formats::archive_probe(bytes)) return parse<formats::ArchivePackage>(input, L"ZIP/7z");
+        if (formats::cab_probe(bytes)) return parse<formats::CabPackage>(input, L"CAB");
+        return parse<formats::InnoPackage>(input, L"Inno Setup (PE fallback probe)");
     }
-    if (formats::cab_probe(bytes)) return parse<formats::CabPackage>(input.path(), L"CAB");
-    if (formats::archive_probe(bytes)) return parse<formats::ArchivePackage>(input.path(), L"ZIP/7z");
+    if (formats::cab_probe(bytes)) return parse<formats::CabPackage>(input, L"CAB");
+    if (formats::archive_probe(bytes)) return parse<formats::ArchivePackage>(input, L"ZIP/7z");
     throw Failure(Status::unsupported, L"当前支持 MSI、CAB、WiX Burn、NSIS Unicode、受支持版本的 Inno Setup、ZIP/7z 及其 SFX。");
 }
 

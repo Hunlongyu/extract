@@ -199,7 +199,7 @@ struct InnoPackage::Impl {
         for (std::size_t i = 0; i < counts.size(); ++i) {
             if (legacy && i == 7) continue; // 此布局没有 ISSigKey 表
             counts[i] = reader.u32();
-            require(counts[i] <= max_entries, Status::limit_exceeded, L"Inno 表条目数超过 10,000。");
+            require(counts[i] <= (i == 9 ? location_data.size() : metadata.size()), Status::corrupt, L"Inno 表条目数超过实际元数据范围。");
         }
         if (version7) reader.skip(4); // CompiledCodeVersion
         reader.skip(legacy ? 74 : (modern ? 65 : (schema == Schema::v661 ? 55 : (schema == Schema::v650 ? 38 : 46))));
@@ -275,8 +275,8 @@ struct InnoPackage::Impl {
             } else location.flags = records.u8();
             require((location.flags & ~31u) == 0, Status::corrupt, L"Inno 文件位置标志无效。");
             require((location.flags & 8) == 0, Status::unsupported, L"当前不支持 Inno 加密文件。");
-            require(location.suboffset <= max_output_bytes && location.size <= max_output_bytes - location.suboffset,
-                    Status::limit_exceeded, L"Inno 数据块展开超过 8 GiB。");
+            require(location.suboffset <= max_file_bytes && location.size <= max_file_bytes - location.suboffset,
+                    Status::limit_exceeded, L"Inno 数据块展开超出 64 位文件范围。");
             locations.push_back(std::move(location));
         }
         for (std::size_t i = 0; i < catalog.files.size(); ++i) {
@@ -286,7 +286,7 @@ struct InnoPackage::Impl {
             file.size = location.size;
             if (legacy) file.expected_sha1 = location.hash;
             else file.expected_sha256 = location.hash;
-            require(file.size <= max_output_bytes - catalog.total_size, Status::limit_exceeded, L"Inno 总输出超过 8 GiB。");
+            require(file.size <= max_file_bytes - catalog.total_size, Status::limit_exceeded, L"Inno 总输出超出 64 位文件范围。");
             catalog.total_size += file.size;
         }
         const auto payload = io::slice(input.bytes(), payload_offset, metadata_offset - payload_offset);
@@ -309,7 +309,7 @@ struct InnoPackage::Impl {
         for (auto& [start, chunk] : chunks) {
             require(start >= input_end, Status::corrupt, L"Inno 压缩数据块互相重叠。");
             input_end = start + 4 + chunk.packed;
-            require(chunk.expanded <= max_output_bytes - expanded_total, Status::limit_exceeded, L"Inno 数据块累计展开超过 8 GiB。");
+            require(chunk.expanded <= max_file_bytes - expanded_total, Status::limit_exceeded, L"Inno 数据块累计展开超出 64 位文件范围。");
             expanded_total += chunk.expanded;
             std::stable_sort(chunk.locations.begin(), chunk.locations.end(), [&](auto a, auto b) {
                 if (locations[a].suboffset != locations[b].suboffset) return locations[a].suboffset < locations[b].suboffset;

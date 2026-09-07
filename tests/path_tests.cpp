@@ -1,4 +1,6 @@
 #include "io/output.h"
+#include "io/input.h"
+#include <winioctl.h>
 #include "core/package.h"
 #include <array>
 #include <cstdio>
@@ -37,6 +39,38 @@ int wmain(int count, wchar_t** arguments) {
             }
         }
         fs::create_directories(root);
+        {
+            // 稀疏文件仅占少量磁盘块，验证 x86/x64 都能以 64 位偏移读取。
+            const auto path = root / L"large-offset.bin";
+            platform::Handle file(CreateFileW(platform::extended_path(path).c_str(), GENERIC_WRITE,
+                0, nullptr, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, nullptr));
+            require(static_cast<bool>(file), Status::internal_error, L"无法创建大文件测试。");
+            DWORD unused = 0;
+            require(DeviceIoControl(file.get(), FSCTL_SET_SPARSE, nullptr, 0, nullptr, 0, &unused, nullptr) != FALSE,
+                Status::internal_error, L"测试磁盘不支持稀疏文件。");
+            LARGE_INTEGER offset{}; offset.QuadPart = 5LL * 1024 * 1024 * 1024;
+            require(SetFilePointerEx(file.get(), offset, nullptr, FILE_BEGIN) != FALSE, Status::internal_error, L"大文件定位失败。");
+            const std::array<std::byte, 4> expected{std::byte{1}, std::byte{2}, std::byte{3}, std::byte{4}};
+            platform::write_all(file.get(), expected); file.reset();
+            {
+                io::Input input(path);
+                require(input.size() == static_cast<std::uint64_t>(offset.QuadPart) + 4, Status::internal_error, L"大文件大小截断。");
+                std::array<std::byte, 4> actual{};
+                input.read(static_cast<std::uint64_t>(offset.QuadPart), actual);
+                require(actual == expected, Status::internal_error, L"大文件高位偏移读取错误。");
+                bool rejected = false;
+                try { input.read(input.size() - 1, actual); } catch (const Failure& e) { rejected = e.status == Status::corrupt; }
+                require(rejected, Status::internal_error, L"读取越界未拒绝。");
+            }
+            fs::remove(path);
+            bool rejected = false;
+            try { (void)checked_size_sum(max_file_bytes, 1); } catch (const Failure&) { rejected = true; }
+            require(rejected, Status::internal_error, L"64 位累计溢出未拒绝。");
+            rejected = false;
+            try { platform::ensure_disk_space(root, max_file_bytes); }
+            catch (const Failure& e) { rejected = e.native_code == ERROR_DISK_FULL; }
+            require(rejected, Status::internal_error, L"实际磁盘空间检查未拒绝不可能的申请。");
+        }
         {
             io::Output output(root, L"guard");
             auto file = output.create_file(L"sub/file.txt");

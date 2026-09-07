@@ -9,6 +9,8 @@
 
 namespace extract::codecs {
 std::vector<CabMember> cab_members(io::Bytes bytes) {
+    require(bytes.size() <= static_cast<std::uint64_t>((std::numeric_limits<long>::max)()),
+        Status::unsupported, L"此 CAB 超出 Windows FDI 的有符号 32 位定位范围。");
     io::Reader r(bytes);
     require(r.u32() == 0x4643534d, Status::corrupt, L"CAB 标识损坏。");
     require(r.u32() == 0, Status::corrupt, L"CAB 保留字段无效。");
@@ -22,7 +24,6 @@ std::vector<CabMember> cab_members(io::Bytes bytes) {
     r.skip(4); // setID 和集合编号；无跨卷标志时可独立提取。
     require((flags & ~7u) == 0, Status::unsupported, L"未知 CAB 标志。");
     require((flags & 3) == 0, Status::unsupported, L"暂不支持跨卷 CAB；需要前后卷续接。");
-    require(files <= max_entries && folders <= max_entries, Status::limit_exceeded, L"CAB 条目数量超限。");
     std::uint8_t folder_reserve = 0;
     if (flags & 4) {
         const auto header_reserve = r.u16(); folder_reserve = r.u8(); r.skip(1); r.skip(header_reserve);
@@ -42,9 +43,9 @@ std::vector<CabMember> cab_members(io::Bytes bytes) {
         const auto size = table.u32(); const auto offset = table.u32(); const auto folder = table.u16();
         table.skip(4); const auto attributes = table.u16();
         require(folder < folders, Status::unsupported, L"CAB 文件依赖其它卷或目录编号无效。");
-        require(static_cast<std::uint64_t>(offset) + size <= max_output_bytes && size <= max_output_bytes - total,
-                Status::limit_exceeded, L"CAB 展开大小超过预算。");
-        total += size;
+        require(static_cast<std::uint64_t>(offset) + size <= (std::numeric_limits<std::uint32_t>::max)(),
+                Status::unsupported, L"CAB 文件超出格式的 32 位偏移范围。");
+        total = checked_size_sum(total, size);
         std::string name;
         for (;;) {
             const auto c = table.u8(); if (!c) break;
@@ -138,7 +139,8 @@ long DIAMONDAPI seek(INT_PTR id, long distance, int origin) noexcept {
         require(origin >= 0 && origin <= 2, Status::corrupt, L"CAB 读取定位无效。");
         const auto base = origin == SEEK_SET ? 0 : (origin == SEEK_CUR ? position : current->bytes.size());
         const auto target = static_cast<std::int64_t>(base) + distance;
-        require(target >= 0 && static_cast<std::uint64_t>(target) <= current->bytes.size(), Status::corrupt, L"CAB 读取越界。");
+        require(target >= 0 && target <= (std::numeric_limits<long>::max)() &&
+            static_cast<std::uint64_t>(target) <= current->bytes.size(), Status::corrupt, L"CAB 读取越界。");
         position = static_cast<std::size_t>(target); return static_cast<long>(position);
     } catch (...) { current->error = std::current_exception(); return -1; }
 }

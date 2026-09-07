@@ -15,7 +15,20 @@ extern "C" NTSYSAPI NTSTATUS NTAPI NtSetInformationFile(
 
 namespace extract::platform {
 [[noreturn]] void io_failure(const std::wstring& operation, DWORD code) {
-    throw Failure(Status::io_error, operation + L"（系统错误 " + std::to_wstring(code) + L"）", code);
+    const auto reason = code == ERROR_DISK_FULL || code == ERROR_HANDLE_DISK_FULL ? L"；磁盘可用空间不足" :
+        (code == ERROR_NOT_ENOUGH_MEMORY || code == ERROR_OUTOFMEMORY || code == ERROR_COMMITMENT_LIMIT ? L"；系统内存或地址空间不足" : L"");
+    throw Failure(Status::io_error, operation + reason + L"（系统错误 " + std::to_wstring(code) + L"）", code);
+}
+
+void ensure_disk_space(const fs::path& directory, std::uint64_t bytes) {
+    if (!bytes) return;
+    ULARGE_INTEGER available{};
+    if (!GetDiskFreeSpaceExW(extended_path(directory).c_str(), &available, nullptr, nullptr)) io_failure(L"无法查询目标磁盘可用空间");
+    log::detail(log::Level::info, L"disk.space", [&] {
+        return directory.wstring() + L"; required=" + std::to_wstring(bytes) + L"; available=" + std::to_wstring(available.QuadPart);
+    });
+    if (bytes > available.QuadPart) io_failure(L"磁盘空间不足：" + directory.wstring() +
+        L"；预计需要 " + std::to_wstring(bytes) + L" 字节，可用 " + std::to_wstring(available.QuadPart) + L" 字节", ERROR_DISK_FULL);
 }
 
 fs::path absolute_path(const fs::path& path) {

@@ -122,4 +122,4 @@ The detailed developer documents below are currently in Chinese.
 - [Roadmap](docs/04-roadmap-and-acceptance.md) — planned formats and features.
 - [Third-party libraries and licenses](third_party/README.md) — versions, sources, and attribution.
 
-Only regular files on local drives are supported. Each input package is limited to **512 MiB**; each root task is limited to **10,000 files, 8 GiB of output, 32 packages, and 4 nesting levels**. See the developer documents for complete format-specific limits.
+Only regular files on local drives are supported. There is **no fixed package-size, total-output-size, or file-count ceiling**. Extraction checks available disk space and integer ranges; actual format, decoder, memory, and address-space limits still apply. Metadata and parser work budgets remain in place. Automatic nested extraction is limited to **32 packages and 4 levels**, with cycle detection. See [large packages and resource handling](docs/17-large-packages.md).

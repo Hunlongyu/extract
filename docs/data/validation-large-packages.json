@@ -1,0 +1,64 @@
+{
+  "date": "2026-09-07",
+  "version": "0.6.0",
+  "scope": "Static extraction only; no installer or payload execution",
+  "architectures": [
+    {
+      "architecture": "x64",
+      "build": "Release",
+      "tests": 9,
+      "failures": 0,
+      "skipped": 0,
+      "testSeconds": 265.0,
+      "binaryBytes": 822784,
+      "binarySha256": "971df03580e30cdb732872625674c128fa1a0c6fd93d9901dbc43b394f2dcc1d",
+      "portableCopyMatches": true,
+      "staticCrtAndPeChecks": "passed",
+      "largeMsiAndEmbeddedExternalCab": "passed: 513 MiB CAB, MSI >512 MiB, output hashes verified"
+    },
+    {
+      "architecture": "x86",
+      "build": "Release",
+      "tests": 9,
+      "failures": 0,
+      "skipped": 0,
+      "testSeconds": 185.0,
+      "binaryBytes": 723456,
+      "binarySha256": "ebdc340d16cd36c97b80e8270a6109c6b9f82af28e9a65a9ba167979462f8131",
+      "portableCopyMatches": true,
+      "staticCrtAndPeChecks": "passed",
+      "largeMsiAndEmbeddedExternalCab": "passed: 513 MiB CAB, MSI >512 MiB, output hashes verified"
+    }
+  ],
+  "x64LargeOutputStress": [
+    {
+      "package": "over-512-MiB.zip",
+      "inputBytes": 537919628,
+      "outputBytes": 537919488,
+      "files": 1,
+      "exitCode": 0
+    },
+    {
+      "package": "over-10000-files.zip",
+      "inputBytes": 1040126,
+      "outputBytes": 0,
+      "files": 10001,
+      "exitCode": 0
+    },
+    {
+      "package": "over-8-GiB.zip",
+      "inputBytes": 109870225,
+      "outputBytes": 8590983168,
+      "files": 1,
+      "exitCode": 0
+    }
+  ],
+  "arm64": "Not built or run locally: MSVC ARM64 component unavailable",
+  "workflow": "actionlint passed; no release tag created or pushed",
+  "notes": [
+    "Final x64/x86 suites were run serially after concurrent stress exposed transient report sharing and timeouts.",
+    "Reports now retry transient access/sharing failures; the known large nested fixture has a 300-second test timeout.",
+    "The large output case compared extracted content SHA-256 with the incrementally generated expected content.",
+    "Existing parsers still require contiguous mappings for some formats; this is not unlimited-size support."
+  ]
+}

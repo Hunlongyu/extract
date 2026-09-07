@@ -85,7 +85,6 @@ Manifest read_manifest(io::Bytes bytes) {
             }
             xml_ok(moved); xml_ok(reader->MoveToElement());
             auto& list = ux ? result.ux : (container ? result.containers : result.payloads);
-            require(list.size() < max_entries, Status::limit_exceeded, L"Burn 载荷数量超限。");
             list.push_back(std::move(attrs));
         }
         parents.resize(depth); parents.push_back(name);
@@ -142,8 +141,7 @@ struct BurnPackage::Impl {
     std::vector<std::unique_ptr<io::Input>> external_inputs;
     struct Loose { io::Bytes bytes; std::size_t entry; };
     std::vector<Loose> loose;
-    std::uint64_t external_bytes = 0;
-    std::size_t member_count = 0, member_name_bytes = 0;
+    std::size_t member_name_bytes = 0;
     static constexpr std::size_t missing = SIZE_MAX;
 
     io::Input* external(const fs::path& relative) {
@@ -162,13 +160,11 @@ struct BurnPackage::Impl {
         }
         require(external_inputs.size() < 128, Status::limit_exceeded, L"Burn 外置文件数量超过 128。");
         auto value = std::make_unique<io::Input>(path);
-        require(value->bytes().size() <= max_package_bytes - external_bytes, Status::limit_exceeded, L"Burn 外置载荷累计超过 512 MiB。");
-        external_bytes += value->bytes().size();
         auto* result = value.get(); external_inputs.push_back(std::move(value)); return result;
     }
     std::size_t add_entry(const fs::path& path, std::uint64_t size, const std::wstring& source, const std::wstring& hash = {}) {
         platform::validate_relative(path);
-        require(catalog.files.size() < max_entries && size <= max_output_bytes - catalog.total_size, Status::limit_exceeded, L"Burn 输出预算超限。");
+        require(size <= max_file_bytes - catalog.total_size, Status::limit_exceeded, L"Burn 输出预算超限。");
         Entry entry; entry.id = L"burn-" + std::to_wstring(catalog.files.size());
         entry.path = entry.original_path = path; entry.size = size; entry.source_expression = source;
         if (!hash.empty()) {
@@ -183,8 +179,6 @@ struct BurnPackage::Impl {
         require(containers.size() < 128, Status::limit_exceeded, L"Burn 容器数量超过 128。");
         auto members = codecs::cab_members(bytes);
         const auto size = members.size();
-        require(size <= max_entries - member_count, Status::limit_exceeded, L"Burn 容器成员总数超限。");
-        member_count += size;
         for (const auto& member : members) {
             require(member.name.size() <= 8 * 1024 * 1024 - member_name_bytes, Status::limit_exceeded, L"Burn CAB 文件名元数据超过 8 MiB。");
             member_name_bytes += member.name.size();

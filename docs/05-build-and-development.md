@@ -25,7 +25,7 @@ NSIS 测试使用官方 `makensis.exe` 生成惰性包，参数示例：
 
 此参数存入 `EXTRACT_NSIS_COMPILER` CMake 缓存；未指定时测试查找 `Program Files (x86)/NSIS/Bin/makensis.exe`。缺少编译器时对应 CTest 标记 skipped，不代表格式回归通过。编译器与测试样本不随产品分发。
 
-归档测试另外使用已核对来源的官方 LZMA SDK `7zr.exe`，生成已知内容的 7z 和 SFX 数据。通过 `-SevenZipTestTool` 设置 `EXTRACT_7Z_TEST_TOOL` 后添加 `archive_integration`；未提供时该项不注册，不能算完整归档回归。0.5.0 新增不依赖安装器编译器的 `cab_burn_integration`，0.6.0 新增 `log_integration`；工具齐备时共 8 项 CTest：
+归档测试另外使用已核对来源的官方 LZMA SDK `7zr.exe`，生成已知内容的 7z 和 SFX 数据。通过 `-SevenZipTestTool` 设置 `EXTRACT_7Z_TEST_TOOL` 后添加 `archive_integration`；未提供时该项不注册，不能算完整归档回归。0.5.0 新增不依赖安装器编译器的 `cab_burn_integration`，0.6.0 新增 `log_integration`；新增大包与多文件回归 `large_integration`；工具齐备时共 9 项 CTest：
 
 ```powershell
 .\scripts\build.ps1 -Configuration Release -Test -Install `

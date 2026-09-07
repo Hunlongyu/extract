@@ -127,6 +127,12 @@ int run() {
             extract::platform::write_diagnostic(input.wstring() + L"：" + failure.message + L"\r\n", true);
             summary += L"失败：" + input.wstring() + L"\r\n原因：" + failure.message + L"\r\n\r\n";
             if (first_error == ERROR_SUCCESS) first_error = extract::exit_code(failure.status);
+        } catch (const std::bad_alloc& error) {
+            extract::log::exception(L"input.out_of_memory", error);
+            const auto message = input.wstring() + L"：系统内存或地址空间不足；32 位程序可改用 x64 或 ARM64 版本。\r\n";
+            extract::platform::write_diagnostic(message, true);
+            summary += L"失败：" + message + L"\r\n";
+            if (first_error == ERROR_SUCCESS) first_error = ERROR_NOT_ENOUGH_MEMORY;
         } catch (const std::exception& error) {
             extract::log::exception(L"input.failed", error);
             extract::platform::write_diagnostic(input.wstring() + L"：内部错误。\r\n", true);

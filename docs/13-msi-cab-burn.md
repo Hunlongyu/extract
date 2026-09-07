@@ -91,7 +91,7 @@ python tests/verify-burn.py --executable out/build/win-x64-release/bin/Extract.e
 
 多个独立 CAB 已支持；一个文件跨 CAB 续接仍不支持。MSI 管理安装映像、MST/MSP、Media.Source 的属性/URL 重定位、安装动作和 Binary 辅助流导出未实现。CAB SFX 只扫描 PE 附加区起始 64 KiB 内的标准 CAB，不覆盖任意私有封装。
 
-输入包限 512 MiB；MSI 单个 CAB 限 256 MiB、外置 CAB 累计 512 MiB。Burn 限 128 个容器、8 MiB XML、128 个实际外置输入且合计 512 MiB。CAB 文件名元数据累计 8 MiB、FDI 分配 64 MiB。全树输出仍受 8 GiB / 10000 文件限制。工作进程与硬超时、MSIX/APPX 专用校验和现代更新框架继续作为后续工作。
+2026-09-07 取消输入包 512 MiB、MSI 单个 CAB 256 MiB、外置 CAB 累计 512 MiB 及全树 8 GiB / 10000 文件限制；MSI 内嵌 CAB 分块写入临时磁盘缓存，松散文件流式复制。Burn 外置输入取消累计字节阈值，仍限 128 个容器、8 MiB XML 和 128 个实际外置输入。CAB 文件名元数据累计 8 MiB、FDI 分配 64 MiB；CAB 定位仍受 FDI 有符号 32 位接口约束。详见 [资源处理](17-large-packages.md)。工作进程与硬超时、MSIX/APPX 专用校验和现代更新框架继续作为后续工作。
 
 构建和自动提取验证不等于软件可便携运行，也不代替干净 Windows 环境中的 Explorer 拖拽和通知横幅人工验收。
 

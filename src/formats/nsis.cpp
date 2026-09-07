@@ -2,6 +2,7 @@
 #include "platform/log.h"
 #include "codecs/stream.h"
 #include "io/output.h"
+#include "io/temporary.h"
 #include <algorithm>
 #include <map>
 #include <set>
@@ -64,37 +65,20 @@ std::vector<Compression> candidates(io::Bytes bytes) {
 // --list 同样需要读取文件块长度；此缓存析构时按本任务创建清单删除。
 class SolidData {
 public:
-    SolidData(Compression method, io::Bytes input) : output_(temporary_parent(), L"nsis-cache") {
+    SolidData(Compression method, io::Bytes input) : file_(L"nsis-cache") {
         log::Scope step(L"nsis.decode_solid_cache");
-        file_ = output_.create_file(L"stream.bin", true);
         codecs::Stream stream(method, input);
         std::array<std::byte, 65536> buffer{};
         for (;;) {
             const auto size = stream.read(buffer);
             if (!size) break;
-            require(size <= max_output_bytes + metadata_limit + 4 - size_, Status::limit_exceeded, L"NSIS Solid 数据展开超过上限。");
-            platform::write_all(file_.get(), std::span(buffer).first(size)); size_ += size;
+            file_.append(std::span(buffer).first(size));
         }
-        require(size_ > 0, Status::corrupt, L"NSIS Solid 数据为空。");
-        // 保留 CREATE_NEW 得到的原始句柄，始终拒绝其它写入/删除打开；只建立只读映射。
-        mapping_ = platform::Handle(CreateFileMappingW(file_.get(), nullptr, PAGE_READONLY, 0, 0, nullptr));
-        if (!mapping_) platform::io_failure(L"无法映射 NSIS Solid 缓存");
-        view_ = static_cast<const std::byte*>(MapViewOfFile(mapping_.get(), FILE_MAP_READ, 0, 0, static_cast<SIZE_T>(size_)));
-        if (!view_) platform::io_failure(L"无法读取 NSIS Solid 缓存映射");
+        require(!file_.bytes().empty(), Status::corrupt, L"NSIS Solid 数据为空。");
     }
-    ~SolidData() { if (view_) UnmapViewOfFile(view_); }
-    io::Bytes bytes() const { return {view_, static_cast<std::size_t>(size_)}; }
+    io::Bytes bytes() { return file_.bytes(); }
 private:
-    static fs::path temporary_parent() {
-        std::wstring path(32768, L'\0');
-        const auto size = GetTempPathW(static_cast<DWORD>(path.size()), path.data());
-        if (size == 0 || size >= path.size()) platform::io_failure(L"无法获取 NSIS 缓存目录");
-        path.resize(size); return fs::path(path).lexically_normal();
-    }
-    io::Output output_;
-    platform::Handle file_, mapping_;
-    const std::byte* view_ = nullptr;
-    std::uint64_t size_ = 0;
+    io::TemporaryFile file_;
 };
 
 struct Value {
@@ -204,7 +188,6 @@ struct NsisPackage::Impl {
         }
         const auto data = io::slice(compressed, data_start, compressed.size() - data_start);
         for (std::uint64_t offset = 0; offset < data.size();) {
-            require(payloads.size() < max_entries * 4, Status::limit_exceeded, L"NSIS 数据块过多。");
             const auto packed = u32(data, offset), size = packed & 0x7fffffffU;
             require(!solid || (packed & 0x80000000U) == 0, Status::corrupt, L"NSIS Solid 内部块长度无效。");
             const auto bytes = io::slice(data, offset + 4, size);
@@ -217,14 +200,14 @@ struct NsisPackage::Impl {
             auto& payload = payloads.at(file_offsets[i]);
             if (measured.insert(file_offsets[i]).second) measure(payload);
             catalog.files[i].size = payload.size;
-            require(payload.size <= max_output_bytes - catalog.total_size, Status::limit_exceeded, L"NSIS 文件总输出超过 8 GiB。");
+            require(payload.size <= max_file_bytes - catalog.total_size, Status::limit_exceeded, L"NSIS 文件总输出超出 64 位文件范围。");
             catalog.total_size += payload.size;
         }
         require(!catalog.files.empty(), Status::unsupported, L"NSIS 包没有可提取的内嵌文件指令。");
         plan_paths(catalog);
         catalog.notes.push_back(L"静态提取所有 File 指令；不执行条件、安装操作或插件，不生成卸载器或脚本写入的文件。");
         catalog.notes.push_back(L"files 记录本层文件；提取时会继续展开已识别的内嵌安装包，结果记录在 nestedPackages。--list 只列本层。");
-        catalog.notes.push_back(solid ? L"Solid 压缩；使用有大小上限的临时磁盘缓存。" : L"逐块压缩或不压缩。");
+        catalog.notes.push_back(solid ? L"Solid 压缩；使用临时磁盘缓存，按实际磁盘空间和地址空间检查。" : L"逐块压缩或不压缩。");
     }
 
     void parse_header(bool wide) {
@@ -235,7 +218,7 @@ struct NsisPackage::Impl {
             blocks[2].offset >= blocks[1].offset && blocks[3].offset >= blocks[2].offset &&
             blocks[4].offset > blocks[3].offset && blocks[5].offset >= blocks[4].offset && blocks[5].offset <= header.size(),
             Status::unsupported, L"NSIS 块布局不属于受支持的 Unicode 3.x 格式。");
-        require(blocks[2].count > 0 && blocks[2].count <= instruction_limit && blocks[1].count <= max_entries,
+        require(blocks[2].count > 0 && blocks[2].count <= instruction_limit,
             Status::limit_exceeded, L"NSIS 指令或区段数量超出上限。");
         require(blocks[3].offset - blocks[2].offset == static_cast<std::uint64_t>(blocks[2].count) * 28,
             Status::corrupt, L"NSIS 指令表长度不一致。");
@@ -379,7 +362,6 @@ struct NsisPackage::Impl {
                     catalog.files[duplicate->second].conditions += L", " + std::to_wstring(i);
                     continue;
                 }
-                require(catalog.files.size() < max_entries, Status::limit_exceeded, L"NSIS 文件条目超过 10000。");
                 Entry file; file.id = L"nsis-" + std::to_wstring(i);
                 file.source_expression = value.text;
                 file.conditions = L"File instruction " + std::to_wstring(i) + L"; runtime conditions not evaluated";
@@ -530,7 +512,7 @@ struct NsisPackage::Impl {
                 for (;;) {
                     const auto size = stream.read(buffer);
                     if (!size) break;
-                    require(size <= max_output_bytes - total, Status::limit_exceeded, L"NSIS 单文件展开超过 8 GiB。");
+                    require(size <= max_file_bytes - total, Status::limit_exceeded, L"NSIS 单文件展开超出 64 位文件范围。");
                     total += size;
                 }
                 payload.size = total; payload.method = candidate; method = candidate; return;

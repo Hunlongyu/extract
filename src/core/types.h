@@ -7,6 +7,7 @@
 #include <exception>
 #include <filesystem>
 #include <optional>
+#include <limits>
 #include <string>
 #include <utility>
 #include <vector>
@@ -74,10 +75,12 @@ struct Catalog {
     bool required_paths_resolved() const;
 };
 
-inline constexpr std::size_t max_entries = 10000;
-inline constexpr std::uint64_t max_package_bytes = 512ULL * 1024 * 1024;
-inline constexpr std::size_t max_cabinet_bytes = 256ULL * 1024 * 1024;
-inline constexpr std::uint64_t max_output_bytes = 8ULL * 1024 * 1024 * 1024;
+// Windows 文件位置采用有符号 64 位整数；这不是产品的包大小预算。
+inline constexpr std::uint64_t max_file_bytes = (std::numeric_limits<std::int64_t>::max)();
+inline std::uint64_t checked_size_sum(std::uint64_t total, std::uint64_t size) {
+    require(total <= max_file_bytes && size <= max_file_bytes - total, Status::corrupt, L"声明的累计大小超出 64 位文件范围。");
+    return total + size;
+}
 
 std::wstring catalog_json(const Catalog& catalog, bool extracted);
 int exit_code(Status status) noexcept;

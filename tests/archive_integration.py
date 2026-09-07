@@ -101,7 +101,7 @@ def main():
     # narrowing the block size to size_t; 64-bit builds can represent this size.
     large_name = b'\x00' + 'large.bin\x00'.encode('utf-16-le')
     large_header = (bytes.fromhex('0104060001090100070b01000101000c') + b'\xff'
-                    + struct.pack('<Q', 2**32 + 1) + bytes.fromhex('0000050111')
+                    + struct.pack('<Q', 9 * 1024**3) + bytes.fromhex('0000050111')
                     + bytes([len(large_name)]) + large_name + b'\x00\x00')
     large_start = struct.pack('<QQI', 1, len(large_header), zlib.crc32(large_header))
     large_archive = (b'7z\xbc\xaf\x27\x1c\x00\x04' + struct.pack('<I', zlib.crc32(large_start))
@@ -203,7 +203,7 @@ def main():
     checked = subprocess.run([str(packer), 't', str(independent)], capture_output=True, timeout=30)
     check(checked.returncode == 0, f'independent format fixture invalid: {checked.stdout!r}')
     run(independent, {'file.txt': b'independent fixture'})
-    run(write('7z-over-budget.7z', stored_seven(size=9 * 1024**3)), None, 223)
+    run(write('7z-integer-overflow.7z', stored_seven(size=1 << 63)), None, 223)
     run(write('7z-unsafe.7z', stored_seven(name='../outside.txt')), None, 5)
     run(write('7z-symlink.7z', stored_seven(attr=0xa1ff << 16)), None, 5)
     run(write('7z-reparse.7z', stored_seven(attr=0x400)), None, 5)

@@ -292,7 +292,7 @@ Test=Known custom message
     mutate('odd-utf16', lambda p: struct.pack_into('<I', p.blocks[0], 0, 3))
     mutate('location-length', lambda p: p.blocks[1].pop())
     mutate('file-hash', lambda p: p.blocks[1].__setitem__(p.hash_offset, p.blocks[1][p.hash_offset] ^ 1))
-    mutate('oversized-output', lambda p: struct.pack_into('<Q', p.blocks[1], p.size_offset, 9 * 1024**3), 223)
+    mutate('output-integer-overflow', lambda p: struct.pack_into('<Q', p.blocks[1], p.size_offset, 1 << 63), 223)
     mutate('chunk-offset', lambda p: struct.pack_into('<I' if p.short_offset else '<Q', p.blocks[1], 8, 2**32 - 1 if p.short_offset else 2**64 - 1))
     mutate('external-volume', lambda p: struct.pack_into('<I', p.blocks[1], 0, 1), 50)
     mutate('encrypted-location', lambda p: p.blocks[1].__setitem__(p.flag_offset, p.blocks[1][p.flag_offset] | p.encrypted_flag), 50)
