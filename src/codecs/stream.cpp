@@ -203,11 +203,14 @@ void Stream::finish() {
     require(impl_->read(extra) == 0, Status::corrupt, L"压缩流包含超出文件清单的数据。");
 }
 std::vector<std::byte> decode_bounded(Compression method, io::Bytes input, std::size_t limit) {
+    progress::Scope stage(progress::Phase::preparing, input.size(), L"正在解压目录元数据，按压缩数据读取量");
     Stream decoder(method, input);
+    std::uint64_t consumed = 0;
     std::vector<std::byte> output;
     std::array<std::byte, 65536> chunk{};
     for (;;) {
         const auto size = decoder.read(chunk);
+        progress::advance(decoder.consumed() - consumed); consumed = decoder.consumed();
         if (!size) break;
         require(size <= limit - output.size(), Status::limit_exceeded, L"解压后的元数据超过大小上限。");
         output.insert(output.end(), chunk.begin(), chunk.begin() + size);

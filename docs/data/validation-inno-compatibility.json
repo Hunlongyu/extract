@@ -1,0 +1,276 @@
+{
+  "scope": "Local unreleased Inno compatibility changes; no installer execution",
+  "configuration": "Release /MT",
+  "matrix": [
+    {
+      "version": [
+        6,
+        0,
+        5
+      ],
+      "matrixPackages": 10,
+      "invalidCases": 33,
+      "extractInvocations": 64,
+      "architecture": "x64",
+      "passed": true
+    },
+    {
+      "version": [
+        6,
+        2,
+        2
+      ],
+      "matrixPackages": 10,
+      "invalidCases": 33,
+      "extractInvocations": 64,
+      "architecture": "x64",
+      "passed": true
+    },
+    {
+      "version": [
+        6,
+        3,
+        3
+      ],
+      "matrixPackages": 10,
+      "invalidCases": 34,
+      "extractInvocations": 65,
+      "architecture": "x64",
+      "passed": true
+    },
+    {
+      "version": [
+        6,
+        4,
+        1
+      ],
+      "matrixPackages": 10,
+      "invalidCases": 33,
+      "extractInvocations": 62,
+      "architecture": "x64",
+      "passed": true
+    },
+    {
+      "version": [
+        6,
+        4,
+        2
+      ],
+      "matrixPackages": 10,
+      "invalidCases": 33,
+      "extractInvocations": 62,
+      "architecture": "x64",
+      "passed": true
+    },
+    {
+      "version": [
+        6,
+        4,
+        3
+      ],
+      "matrixPackages": 10,
+      "invalidCases": 32,
+      "extractInvocations": 61,
+      "architecture": "x64",
+      "passed": true
+    },
+    {
+      "version": [
+        6,
+        6,
+        0
+      ],
+      "matrixPackages": 10,
+      "invalidCases": 33,
+      "extractInvocations": 62,
+      "architecture": "x64",
+      "passed": true
+    },
+    {
+      "version": [
+        6,
+        7,
+        3
+      ],
+      "matrixPackages": 10,
+      "invalidCases": 33,
+      "extractInvocations": 62,
+      "architecture": "x64",
+      "passed": true
+    },
+    {
+      "version": [
+        6,
+        0,
+        5
+      ],
+      "matrixPackages": 10,
+      "invalidCases": 33,
+      "extractInvocations": 64,
+      "architecture": "x86",
+      "passed": true
+    },
+    {
+      "version": [
+        6,
+        2,
+        2
+      ],
+      "matrixPackages": 10,
+      "invalidCases": 33,
+      "extractInvocations": 64,
+      "architecture": "x86",
+      "passed": true
+    },
+    {
+      "version": [
+        6,
+        3,
+        3
+      ],
+      "matrixPackages": 10,
+      "invalidCases": 34,
+      "extractInvocations": 65,
+      "architecture": "x86",
+      "passed": true
+    },
+    {
+      "version": [
+        6,
+        4,
+        1
+      ],
+      "matrixPackages": 10,
+      "invalidCases": 33,
+      "extractInvocations": 62,
+      "architecture": "x86",
+      "passed": true
+    },
+    {
+      "version": [
+        6,
+        4,
+        2
+      ],
+      "matrixPackages": 10,
+      "invalidCases": 33,
+      "extractInvocations": 62,
+      "architecture": "x86",
+      "passed": true
+    },
+    {
+      "version": [
+        6,
+        4,
+        3
+      ],
+      "matrixPackages": 10,
+      "invalidCases": 32,
+      "extractInvocations": 61,
+      "architecture": "x86",
+      "passed": true
+    },
+    {
+      "version": [
+        6,
+        6,
+        0
+      ],
+      "matrixPackages": 10,
+      "invalidCases": 33,
+      "extractInvocations": 62,
+      "architecture": "x86",
+      "passed": true
+    },
+    {
+      "version": [
+        6,
+        7,
+        3
+      ],
+      "matrixPackages": 10,
+      "invalidCases": 33,
+      "extractInvocations": 62,
+      "architecture": "x86",
+      "passed": true
+    }
+  ],
+  "totalExtractInvocations": 1004,
+  "otherRegressionTests": {
+    "x64": [
+      "path_policy",
+      "msi_integration",
+      "progress_integration"
+    ],
+    "x86": [
+      "path_policy",
+      "msi_integration",
+      "progress_integration"
+    ]
+  },
+  "officialCompilerAssets": [
+    {
+      "name": "innosetup-6.0.5.exe",
+      "url": "https://github.com/jrsoftware/issrc/releases/download/is-6_0_5/innosetup-6.0.5.exe",
+      "digest": "sha256:ae6823b523df87e9441789e51845434e4e0e70aac0b88afe80f94f20f4b98acb"
+    },
+    {
+      "name": "innosetup-6.2.2.exe",
+      "url": "https://github.com/jrsoftware/issrc/releases/download/is-6_2_2/innosetup-6.2.2.exe",
+      "digest": "sha256:8117d10d00a2ad33a1390978ea3872861c330e087914410a6377b22c4c5b8563"
+    },
+    {
+      "name": "innosetup-6.3.3.exe",
+      "url": "https://github.com/jrsoftware/issrc/releases/download/is-6_3_3/innosetup-6.3.3.exe",
+      "digest": "sha256:0bcb2a409dea17e305a27a6b09555cabe600e984f88570ab72575cd7e93c95e6"
+    },
+    {
+      "name": "innosetup-6.4.1.exe",
+      "url": "https://github.com/jrsoftware/issrc/releases/download/is-6_4_1/innosetup-6.4.1.exe",
+      "digest": "sha256:f41760e1f1ae15d2089bb6ab162e21720b92ae7506ed70667b39200063d68e34"
+    },
+    {
+      "name": "innosetup-6.4.2.exe",
+      "url": "https://github.com/jrsoftware/issrc/releases/download/is-6_4_2/innosetup-6.4.2.exe",
+      "digest": "sha256:238e2cf82c212a3879a050e02d787283c54bcb72d5cb6070830942de56627d5b"
+    },
+    {
+      "name": "innosetup-6.4.3.exe",
+      "url": "https://github.com/jrsoftware/issrc/releases/download/is-6_4_3/innosetup-6.4.3.exe",
+      "digest": "sha256:f3c42116542c4cc57263c5ba6c4feabfc49fe771f2f98a79d2f7628b8762723b"
+    },
+    {
+      "name": "innosetup-6.6.0.exe",
+      "url": "https://github.com/jrsoftware/issrc/releases/download/is-6_6_0/innosetup-6.6.0.exe",
+      "digest": "sha256:fa39687070ba17cf1c6a179f8671af73375254b63e97948e6b9532fc46302cec"
+    }
+  ],
+  "unsupportedUserSample": {
+    "name": "Ant.Download.Manager.Pro.v2.16.7.RePack.by.xetrin.exe",
+    "bytes": 99724306,
+    "sha256": "ccfa1851400f8ecefb151cbeb1281c8ddc92ad11cdfea10b11f229972ab1d98b",
+    "dataVersion": "Inno Setup Setup Data (6.0.0) (u)",
+    "locationRecords": 913,
+    "recordsWithLegacyEncryptedBit": 905,
+    "exitCode": 50,
+    "status": "unsupported",
+    "installerExecuted": false,
+    "diagnosis": "Nonstandard header: SlicesPerDisk is 256 under the official layout; legacy encryption marker set in 905 of 913 location records. No password supplied."
+  },
+  "artifacts": [
+    {
+      "architecture": "x64",
+      "path": "out/dist/win-x64-release/Extract.exe",
+      "bytes": 869888,
+      "sha256": "64437e69115a0e5e783c8fcb42857b8a90134106c40506cf9d5fb2384adac4e3",
+      "staticCrtAndSystemImportsChecked": true
+    },
+    {
+      "architecture": "x86",
+      "path": "out/dist/win-x86-release/Extract.exe",
+      "bytes": 766976,
+      "sha256": "73ed82601cd9826f57de404708abd25721e2e413bed8696c9753d92cc7839719",
+      "staticCrtAndSystemImportsChecked": true
+    }
+  ]
+}

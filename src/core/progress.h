@@ -19,6 +19,9 @@ struct Snapshot {
     Phase phase = Phase::analyzing;
     std::uint64_t completed = 0;
     std::optional<std::uint64_t> total;
+    struct Counter { std::uint64_t completed; std::optional<std::uint64_t> total; };
+    // 同一包的本层文件写入累计量；嵌套校验不替换进度条的计量基准。
+    std::optional<Counter> extraction;
 };
 class Observer {
 public:

@@ -50,6 +50,10 @@ def main():
     assert len({e['done'] for e in extracting if 0 < e['done'] < len(content)}) > 5, 'No progress within a large file'
     assert max(e['done'] for e in extracting) == len(content), 'Reports/cache counted as extracted data'
     assert any(e['phase'] == 3 and 0 < e['done'] < len(content) for e in events), 'No hash progress'
+    displayed = [e for e in events if e['extractionDone'] is not None]
+    assert all(e['extractionTotal'] == len(content) for e in displayed)
+    assert [e['extractionDone'] for e in displayed] == sorted(e['extractionDone'] for e in displayed), 'Per-file hash reset the file progress bar'
+    assert any(e['phase'] == 3 and e['extractionDone'] == len(content) and 0 < e['done'] < len(content) for e in displayed)
     actual = next(output.rglob('中文 & 文件.bin')).read_bytes()
     assert hashlib.sha256(actual).digest() == hashlib.sha256(content).digest()
 
@@ -64,6 +68,8 @@ def main():
     for name, expected in [('nested.cab', len(inner) + 5), ('inner.zip', len(content))]:
         assert all(e['total'] == expected for e in packages[name]), 'Nested totals mixed'
         assert max(e['done'] for e in packages[name]) == expected
+        counters = [e for e in events if Path(e['package']).name == name and e['extractionDone'] is not None]
+        assert all(e['extractionTotal'] == expected for e in counters), 'Nested display counter inherited outer bytes'
     assert len(list(output.rglob('_extract-report.json'))) == 2
 
     output, events = run('observer-failure.zip', payload, throwing=True)

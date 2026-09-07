@@ -2,7 +2,7 @@
 
 日期：2026-09-05。版本：0.2.0。此阶段在现有 MSI 能力上增加 Inno 内嵌静态文件提取；NSIS / Electron 为下一格式阶段。
 
-本文件保留 0.2.0 的范围、验证与产物摘要。0.2.1 新增 `6.1.0 (u)` / loader v1，见 [Textify 兼容修复](08-textify-compatibility.md)；0.3.1 新增 `6.5.0` 与内嵌安装包自动展开，当前结果见 [嵌套提取](10-nested-extraction.md)。
+本文件保留 0.2.0 的范围、验证与产物摘要。当前支持版本见 [Inno 兼容性](20-inno-compatibility.md)。0.2.1 新增 `6.1.0 (u)` / loader v1，见 [Textify 兼容修复](08-textify-compatibility.md)；0.3.1 新增 `6.5.0` 与内嵌安装包自动展开，见 [嵌套提取](10-nested-extraction.md)。
 
 ## 已实现范围
 

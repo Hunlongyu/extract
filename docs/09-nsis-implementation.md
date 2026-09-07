@@ -2,6 +2,10 @@
 
 本文件记录 0.3.1 阶段。0.4.0 的自定义品牌文本、目录控制流与 ZIP/7z 载荷支持见 [常见封装验收](11-common-wrappers.md)。
 
+后续的双架构目录归组修复见[NSIS 架构分支目录](19-nsis-architecture-layouts.md)。
+
+后续的 ANSI 字符串支持及 QQ 音乐样本验证见 [ANSI 兼容性](21-nsis-ansi-compatibility.md)。
+
 日期：2026-09-05。版本：0.3.1。已交付 NSIS 包内静态文件提取、已识别内嵌安装包的自动展开及 XnView 两层内容验证。Electron 最终应用载荷尚未验收。
 
 ## 1. 已实现范围

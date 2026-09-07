@@ -1,0 +1,70 @@
+{
+  "scope": "Local completion notification cleanup",
+  "nativeNotifications": [
+    {
+      "mode": "failure",
+      "exitCode": 50,
+      "actionLabel": "查看结果",
+      "actionUsesJobProtocol": true,
+      "progressTitle": null,
+      "progressStatus": null,
+      "finalXml": "<toast activationType=\"protocol\" launch=\"hunlongyu-extract://job/00C2593F-9718-444E-ACA5-9EC7F58D119E\"><visual><binding template=\"ToastGeneric\"><text>失败 · progress-5f35ab815d2b4884bf3c82f8d2c1dc9b.zip</text><text>原因：当前支持 MSI、CAB、WiX Burn、NSIS Unicode、受支持版本的 Inno Setup、ZIP/7z 及其 SFX。</text></binding></visual><actions><action content=\"查看结果\" activationType=\"protocol\" arguments=\"hunlongyu-extract://job/00C2593F-9718-444E-ACA5-9EC7F58D119E\"/></actions><audio silent=\"true\"/></toast>",
+      "resultModes": [
+        "standalone"
+      ]
+    },
+    {
+      "mode": "normal",
+      "exitCode": 0,
+      "actionLabel": "打开文件夹",
+      "actionUsesJobProtocol": true,
+      "progressTitle": null,
+      "progressStatus": "",
+      "finalXml": "<toast activationType=\"protocol\" launch=\"hunlongyu-extract://job/4D7E4003-440B-4AE6-9ACB-67D349A0D83C\"><visual><binding template=\"ToastGeneric\"><text>已完成 · progress-76f5e66ad4a042bd8fbddf2e8eaf260d.zip</text><text>输出：E:\\Hunlongyu\\extract\\out\\notification-ui\\normal\\76f5e66ad4a042bd8fbddf2e8eaf260d\\progress-76f5e66ad4a042bd8fbddf2e8eaf260d_extracted</text><progress value=\"1\" valueStringOverride=\"100%\" status=\"\"/></binding></visual><actions><action content=\"打开文件夹\" activationType=\"protocol\" arguments=\"hunlongyu-extract://job/4D7E4003-440B-4AE6-9ACB-67D349A0D83C\"/></actions><audio silent=\"true\"/></toast>",
+      "resultModes": [
+        "updated-existing"
+      ]
+    },
+    {
+      "mode": "partial",
+      "exitCode": 299,
+      "actionLabel": "查看结果",
+      "actionUsesJobProtocol": true,
+      "progressTitle": null,
+      "progressStatus": null,
+      "finalXml": "<toast activationType=\"protocol\" launch=\"hunlongyu-extract://job/435AF1F7-015F-481B-9432-41AD6E6BE1E7\"><visual><binding template=\"ToastGeneric\"><text>批量处理存在未完成项</text><text>完成 1 个，部分完成 0 个，失败 1 个。\r\nprogress-599a2745128845f891c09d8d6017ea0a.zip、second.zip。</text></binding></visual><actions><action content=\"查看结果\" activationType=\"protocol\" arguments=\"hunlongyu-extract://job/435AF1F7-015F-481B-9432-41AD6E6BE1E7\"/></actions><audio silent=\"true\"/></toast>",
+      "resultModes": [
+        "standalone"
+      ]
+    },
+    {
+      "mode": "short",
+      "exitCode": 0,
+      "actionLabel": "打开文件夹",
+      "actionUsesJobProtocol": true,
+      "progressTitle": null,
+      "progressStatus": "",
+      "finalXml": "<toast activationType=\"protocol\" launch=\"hunlongyu-extract://job/664EF303-3ADE-4172-8FF3-04697C7BA914\"><visual><binding template=\"ToastGeneric\"><text>已完成 · progress-5565a3c22b5446508995787865b83498.zip</text><text>输出：E:\\Hunlongyu\\extract\\out\\notification-ui\\short\\5565a3c22b5446508995787865b83498\\progress-5565a3c22b5446508995787865b83498_extracted</text><progress value=\"1\" valueStringOverride=\"100%\" status=\"\"/></binding></visual><actions><action content=\"打开文件夹\" activationType=\"protocol\" arguments=\"hunlongyu-extract://job/664EF303-3ADE-4172-8FF3-04697C7BA914\"/></actions><audio silent=\"true\"/></toast>",
+      "resultModes": [
+        "standalone"
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "architecture": "x64",
+      "path": "out\\dist\\win-x64-release\\Extract.exe",
+      "bytes": 879104,
+      "sha256": "65384e13ecc66a3cbb9b66e580d47b1945982f0ef4a688e0cf508ed3b0a00d84",
+      "staticCrtAndSystemImportsChecked": true
+    },
+    {
+      "architecture": "x86",
+      "path": "out\\dist\\win-x86-release\\Extract.exe",
+      "bytes": 778240,
+      "sha256": "5d380adb58b693b0f219a8c221f1c7ef5ab7e496a209518b621259fa97428f91",
+      "staticCrtAndSystemImportsChecked": true
+    }
+  ],
+  "visualScreenshotVerified": false
+}

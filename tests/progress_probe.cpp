@@ -24,7 +24,9 @@ struct Trace : progress::Observer {
         const auto text = L"{\"phase\":" + std::to_wstring(static_cast<int>(value.phase))
             + L",\"package\":" + json_string(value.package.view()) + L",\"item\":" + json_string(value.item.view())
             + L",\"done\":" + std::to_wstring(value.completed) + L",\"total\":"
-            + (value.total ? std::to_wstring(*value.total) : L"null") + L"}";
+            + (value.total ? std::to_wstring(*value.total) : L"null")
+            + L",\"extractionDone\":" + (value.extraction ? std::to_wstring(value.extraction->completed) : L"null")
+            + L",\"extractionTotal\":" + (value.extraction && value.extraction->total ? std::to_wstring(*value.extraction->total) : L"null") + L"}";
         std::printf("%s\n", platform::utf8(text).c_str());
     }
 };
@@ -45,6 +47,12 @@ void self_test() {
         progress::advance(150);
         require(capture.last.completed == 150 && capture.last.total == 200 && capture.last.package.view() == L"parent.zip",
                 Status::internal_error, L"子阶段计数或包名错误。");
+        require(capture.last.extraction && capture.last.extraction->completed == 30 && capture.last.extraction->total == 100,
+                Status::internal_error, L"单文件校验替换了本层提取进度。");
+        {
+            progress::Scope nested(progress::Phase::analyzing, {}, {}, L"inner.zip");
+            require(!capture.last.extraction, Status::internal_error, L"新包继承了外层提取进度。");
+        }
     }
     require(capture.last.completed == 30 && capture.last.total == 100 && capture.last.item.view() == L"a.bin",
             Status::internal_error, L"子阶段污染了提取计数。");

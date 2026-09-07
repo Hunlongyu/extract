@@ -1,0 +1,163 @@
+{
+  "scope": "Local unreleased progress presentation fix",
+  "realPackage": {
+    "sample": "QQMusic_22.10.0.0_mefcl_Setup.exe",
+    "progressEvents": 13570,
+    "aggregateEvents": 7891,
+    "monotonicFileBytes": true,
+    "fileBytes": 220640492,
+    "files": 268,
+    "hashesMatchPriorExtraction": true,
+    "separateSolidPreparation": true
+  },
+  "ctest": {
+    "x64": [
+      "path_policy",
+      "progress_integration",
+      "inno_integration"
+    ],
+    "x86": [
+      "path_policy",
+      "progress_integration",
+      "inno_integration"
+    ]
+  },
+  "nativeNotifications": [
+    {
+      "mode": "failure",
+      "exitCode": 50,
+      "snapshotCount": 12,
+      "liveFractions": [],
+      "finalXml": [
+        "<toast activationType=\"protocol\" launch=\"hunlongyu-extract://job/15880310-DAA8-41A5-B7DC-8FB0770C2C32\"><visual><binding template=\"ToastGeneric\"><text>Extract：失败 · progress-52d73991d0534fde8e211e52af301619.zip</text><text>原因：当前支持 MSI、CAB、WiX Burn、NSIS Unicode、受支持版本的 Inno Setup、ZIP/7z 及其 SFX。\r\n点击查看任务记录。</text></binding></visual><audio silent=\"true\"/></toast>"
+      ],
+      "resultModes": [
+        "standalone"
+      ]
+    },
+    {
+      "mode": "normal",
+      "exitCode": 0,
+      "snapshotCount": 52,
+      "liveFractions": [
+        0.441162,
+        0.441162,
+        0.441162,
+        0.441162,
+        0.441162,
+        0.441162,
+        0.441162,
+        0.441162,
+        0.441162,
+        0.441162,
+        0.441162,
+        0.441162,
+        0.441162,
+        0.441162,
+        0.441162,
+        0.441162,
+        0.441162,
+        0.441162,
+        0.441162,
+        0.441162,
+        0.441162,
+        0.441162,
+        0.441162,
+        0.441162,
+        0.441162,
+        0.441162,
+        0.441162,
+        0.441162,
+        0.441162,
+        0.441162,
+        0.441162,
+        0.441162,
+        0.441162,
+        0.441162,
+        0.441162,
+        0.441162,
+        0.441162,
+        0.441162
+      ],
+      "finalXml": [
+        "<toast activationType=\"protocol\" launch=\"hunlongyu-extract://job/F3789D72-E41A-47FC-86B6-8D66407E9AF8\"><visual><binding template=\"ToastGeneric\"><text>Extract：已完成 · progress-9e20906c8c2548c09f0c842ab5bcc9cf.zip</text><text>输出：E:\\Hunlongyu\\extract\\out\\progress-fix\\native-normal\\9e20906c8c2548c09f0c842ab5bcc9cf\\progress-9e20906c8c2548c09f0c842ab5bcc9cf_extracted\r\n点击打开文件夹。</text><progress title=\"解包已完成\" value=\"1\" valueStringOverride=\"100%\" status=\"文件与内层检查均已完成\"/></binding></visual><audio silent=\"true\"/></toast>"
+      ],
+      "resultModes": [
+        "updated-existing"
+      ]
+    },
+    {
+      "mode": "partial",
+      "exitCode": 299,
+      "snapshotCount": 1,
+      "liveFractions": [],
+      "finalXml": [
+        "<toast activationType=\"protocol\" launch=\"hunlongyu-extract://job/FD9EF392-475B-4E75-81B0-187A3E3814F3\"><visual><binding template=\"ToastGeneric\"><text>Extract：批量处理存在未完成项</text><text>完成 1 个，部分完成 0 个，失败 1 个。\r\nprogress-fdd317a36c264ee89badbbb5b4f79161.zip、second.zip。点击查看各包结果。</text></binding></visual><audio silent=\"true\"/></toast>"
+      ],
+      "resultModes": [
+        "standalone"
+      ]
+    },
+    {
+      "mode": "short",
+      "exitCode": 0,
+      "snapshotCount": 0,
+      "liveFractions": [],
+      "finalXml": [
+        "<toast activationType=\"protocol\" launch=\"hunlongyu-extract://job/382E102C-F633-43A7-906D-A919CBE2E390\"><visual><binding template=\"ToastGeneric\"><text>Extract：已完成 · progress-f1e62df7ce8f4ad182e94c90815bc4a7.zip</text><text>输出：E:\\Hunlongyu\\extract\\out\\progress-fix\\native-short\\f1e62df7ce8f4ad182e94c90815bc4a7\\progress-f1e62df7ce8f4ad182e94c90815bc4a7_extracted\r\n点击打开文件夹。</text><progress title=\"解包已完成\" value=\"1\" valueStringOverride=\"100%\" status=\"文件与内层检查均已完成\"/></binding></visual><audio silent=\"true\"/></toast>"
+      ],
+      "resultModes": [
+        "standalone"
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "architecture": "x64",
+      "path": "out\\dist\\win-x64-release\\Extract.exe",
+      "bytes": 878080,
+      "sha256": "8e4b88a29f2c6046dc67087052860ef2f02993720a76eaa60731d757c6121567",
+      "staticCrtAndSystemImportsChecked": true
+    },
+    {
+      "architecture": "x86",
+      "path": "out\\dist\\win-x86-release\\Extract.exe",
+      "bytes": 776192,
+      "sha256": "8aa1a9988b03f83f865690e2dbb1c6d431e4850657683cdbc37dcd19ec48b19c",
+      "staticCrtAndSystemImportsChecked": true
+    }
+  ],
+  "nsisRegression": {
+    "version": "v3.11",
+    "matrixPackages": 6,
+    "invalidCases": 30,
+    "mutationCases": 24,
+    "mutationResults": [
+      13,
+      13,
+      13,
+      13,
+      13,
+      13,
+      13,
+      13,
+      13,
+      13,
+      13,
+      13,
+      13,
+      13,
+      13,
+      13,
+      13,
+      0,
+      0,
+      13,
+      13,
+      13,
+      13,
+      13
+    ],
+    "extractInvocations": 121
+  }
+}

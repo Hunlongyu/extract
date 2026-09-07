@@ -9,8 +9,8 @@
 #include <set>
 #include <deque>
 
-// 自行实现的磁盘解析器。布局依据 NSIS v312 的 fileform.h、fileform.cpp、
-// fileform.c、exec.c、util.c；这里只读文件指令，不运行 NSIS 字节码。
+// 自行实现的磁盘解析器。布局依据 NSIS v312 / v251 的 fileform.h、fileform.cpp、
+// fileform.c、exec.c、util.c；ANSI 转义另核对 build.cpp，不运行 NSIS 字节码。
 namespace extract::formats {
 namespace {
 using codecs::Compression;
@@ -68,14 +68,14 @@ class SolidData {
 public:
     SolidData(Compression method, io::Bytes input) : file_(L"nsis-cache") {
         log::Scope step(L"nsis.decode_solid_cache");
-        progress::Scope stage(progress::Phase::decoding, input.size(), L"压缩数据读取量");
+        progress::Scope stage(progress::Phase::decoding, input.size(), L"正在展开固实压缩缓存，按压缩数据读取量");
         codecs::Stream stream(method, input);
         std::uint64_t consumed = 0;
         std::array<std::byte, 65536> buffer{};
         for (;;) {
             const auto size = stream.read(buffer);
             const auto used = stream.consumed();
-            if (!size) break;
+            if (!size) { progress::advance(used - consumed); break; }
             file_.append(std::span(buffer).first(size));
             progress::advance(used - consumed); consumed = used;
         }
@@ -121,9 +121,12 @@ struct NsisPackage::Impl {
     std::array<Block, 8> blocks{};
     std::vector<Instruction> instructions;
     std::wstring strings;
+    bool ansi = false;
+    unsigned ansi_codepage = 0;
     std::vector<std::vector<std::int32_t>> languages;
     std::map<std::uint64_t, Payload> payloads;
     std::vector<std::uint64_t> file_offsets;
+    std::vector<std::vector<std::size_t>> file_instructions;
     bool solid = false;
     std::optional<Compression> method;
     mutable std::size_t string_budget = 64 * 1024 * 1024;
@@ -209,6 +212,7 @@ struct NsisPackage::Impl {
             catalog.total_size += payload.size;
         }
         require(!catalog.files.empty(), Status::unsupported, L"NSIS 包没有可提取的内嵌文件指令。");
+        group_architecture_branches();
         plan_paths(catalog);
         catalog.notes.push_back(L"静态提取所有 File 指令；不执行条件、安装操作或插件，不生成卸载器或脚本写入的文件。");
         catalog.notes.push_back(L"files 记录本层文件；提取时会继续展开已识别的内嵌安装包，结果记录在 nestedPackages。--list 只列本层。");
@@ -222,28 +226,49 @@ struct NsisPackage::Impl {
         require(blocks[0].offset == root_size && blocks[1].offset >= blocks[0].offset &&
             blocks[2].offset >= blocks[1].offset && blocks[3].offset >= blocks[2].offset &&
             blocks[4].offset > blocks[3].offset && blocks[5].offset >= blocks[4].offset && blocks[5].offset <= header.size(),
-            Status::unsupported, L"NSIS 块布局不属于受支持的 Unicode 3.x 格式。");
+            Status::unsupported, L"NSIS 块布局不属于受支持的格式。");
         require(blocks[2].count > 0 && blocks[2].count <= instruction_limit,
             Status::limit_exceeded, L"NSIS 指令或区段数量超出上限。");
         require(blocks[3].offset - blocks[2].offset == static_cast<std::uint64_t>(blocks[2].count) * 28,
             Status::corrupt, L"NSIS 指令表长度不一致。");
         if (blocks[1].count) {
             const auto section_size = (blocks[2].offset - blocks[1].offset) / blocks[1].count;
-            require((section_size == 2072 || section_size == 16408) &&
+            ansi = section_size == 1048 || section_size == 8216;
+            require((ansi || section_size == 2072 || section_size == 16408) &&
                 section_size * blocks[1].count == blocks[2].offset - blocks[1].offset,
-                Status::unsupported, L"当前仅支持 NSIS Unicode 1024/8192 字符构建。");
+                Status::unsupported, L"NSIS 区段布局不属于受支持的 1024/8192 字符构建。");
         }
         const auto string_bytes = io::slice(header, blocks[3].offset, blocks[4].offset - blocks[3].offset);
-        require(string_bytes.size() % 2 == 0 && string_bytes.size() >= 2, Status::corrupt, L"NSIS 字符串表长度无效。");
+        require((ansi || string_bytes.size() % 2 == 0) && string_bytes.size() >= 2, Status::corrupt, L"NSIS 字符串表长度无效。");
         io::Reader text_reader(string_bytes);
-        while (text_reader.remaining()) strings += static_cast<wchar_t>(text_reader.u16());
+        while (text_reader.remaining()) strings += static_cast<wchar_t>(ansi ? text_reader.u8() : text_reader.u16());
         require(strings.front() == 0 && strings.back() == 0, Status::corrupt, L"NSIS 字符串表未终止。");
-        const std::wstring marker = L"Nullsoft Install System v3.";
+        if (ansi) {
+            // 2.x 的 FC/FD/FE/FF 转义与 3.x ANSI 的 01/02/03/04 不同。
+            // 先验证整个旧式字符串编码；不将未验证的 ANSI 变体套用此布局。
+            bool encoded = false;
+            for (std::size_t i = 0; i < strings.size(); ++i) {
+                const auto c = strings[i];
+                // 原始许可证字符串可含 02 + RTF，不能把任意低控制字节当成 3.x。
+                const bool modern_reference = (c == 1 || c == 3) && i + 2 < strings.size()
+                    && (strings[i + 1] & 128) && (strings[i + 2] & 128);
+                require(!modern_reference, Status::unsupported, L"当前仅支持 NSIS 2.x ANSI 字符串编码。");
+                if (c < 252) continue;
+                require(++i < strings.size() && strings[i] != 0, Status::corrupt, L"NSIS ANSI 转义截断。");
+                if (c == 252) continue;
+                encoded = true;
+                const auto low = strings[i];
+                require(++i < strings.size() && strings[i] != 0, Status::corrupt, L"NSIS ANSI 编码参数截断。");
+                require(c == 254 || ((low & 128) && (strings[i] & 128)), Status::corrupt, L"NSIS ANSI 编码参数无效。");
+            }
+            require(encoded, Status::unsupported, L"无法确认 NSIS ANSI 字符串编码。");
+        }
+        const std::wstring marker = ansi ? L"Nullsoft Install System v2." : L"Nullsoft Install System v3.";
         const auto version = strings.find(marker);
         if (version == strings.npos) {
             // BrandingText 可合法替换默认版本文本；结构校验不能依赖 UI 品牌字符串。
-            catalog.format_version = L"3.x Unicode (custom branding)";
-            catalog.notes.push_back(L"默认 NSIS 版本文字已被替换；按 Unicode 块/指令布局识别，不猜测编译器补丁版本。");
+            catalog.format_version = ansi ? L"2.x ANSI (compatible layout)" : L"3.x Unicode (custom branding)";
+            catalog.notes.push_back(L"默认 NSIS 版本文字已被替换；按块、指令和字符串布局识别，不猜测编译器补丁版本。");
         } else {
             const auto version_start = version + marker.size() - 2;
             const auto version_end = strings.find(L'\0', version_start);
@@ -254,17 +279,31 @@ struct NsisPackage::Impl {
         require(blocks[4].count > 0 && blocks[4].count <= 256 && language_size >= 10 && (language_size - 10) % 4 == 0 &&
             static_cast<std::uint64_t>(language_size) * blocks[4].count == blocks[5].offset - blocks[4].offset,
             Status::corrupt, L"NSIS 语言表长度不一致。");
+        std::set<unsigned> codepages;
         for (std::uint32_t n = 0; n < blocks[4].count; ++n) {
             io::Reader language(io::slice(header, blocks[4].offset + static_cast<std::uint64_t>(n) * language_size, language_size));
-            language.skip(10); std::vector<std::int32_t> values;
+            const auto language_id = language.u16();
+            if (ansi) {
+                DWORD codepage = 0;
+                const auto locale = MAKELCID(language_id, SORT_DEFAULT);
+                if (!GetLocaleInfoW(locale, LOCALE_IDEFAULTANSICODEPAGE | LOCALE_RETURN_NUMBER,
+                    reinterpret_cast<LPWSTR>(&codepage), sizeof(codepage) / sizeof(wchar_t)) || !IsValidCodePage(codepage)) codepage = 0;
+                codepages.insert(codepage);
+            }
+            language.skip(8); std::vector<std::int32_t> values;
             while (language.remaining()) values.push_back(static_cast<std::int32_t>(language.u32()));
             languages.push_back(std::move(values));
+        }
+        if (ansi) {
+            if (codepages.size() == 1) ansi_codepage = *codepages.begin();
+            catalog.notes.push_back(L"ANSI 文本按安装包语言表推定代码页：" + std::to_wstring(ansi_codepage)
+                + L"；代码页不确定时只接受 ASCII 路径，不使用当前系统代码页猜测。");
         }
         io::Reader code(io::slice(header, blocks[2].offset, static_cast<std::uint64_t>(blocks[2].count) * 28));
         for (std::uint32_t n = 0; n < blocks[2].count; ++n) {
             Instruction instruction{}; instruction.op = code.u32();
             for (auto& p : instruction.p) p = static_cast<std::int32_t>(code.u32());
-            require(instruction.op > 0 && instruction.op <= 73, Status::unsupported, L"NSIS 包包含未知指令编号。");
+            require(instruction.op > 0 && instruction.op <= (ansi ? 68U : 73U), Status::unsupported, L"NSIS 包包含未知指令编号。");
             instructions.push_back(instruction);
         }
     }
@@ -287,15 +326,46 @@ struct NsisPackage::Impl {
         }
         require(static_cast<std::size_t>(index) < strings.size(), Status::corrupt, L"NSIS 字符串索引越界。");
         Value result;
+        std::string literal;
+        const auto literal_byte = [&](wchar_t c) {
+            require(literal.size() < 32000, Status::limit_exceeded, L"NSIS ANSI 字符串展开过长。");
+            literal += static_cast<char>(c);
+        };
+        const auto flush_literal = [&] {
+            if (literal.empty()) return;
+            const bool ascii = std::all_of(literal.begin(), literal.end(), [](unsigned char c) { return c < 128; });
+            require(ascii || ansi_codepage != 0, Status::unsupported, L"NSIS ANSI 路径的代码页不明确。");
+            const auto page = ascii ? 1252U : ansi_codepage;
+            const auto count = MultiByteToWideChar(page, MB_ERR_INVALID_CHARS, literal.data(), static_cast<int>(literal.size()), nullptr, 0);
+            require(count > 0, Status::corrupt, L"NSIS ANSI 路径包含无效编码。");
+            require(static_cast<std::size_t>(count) <= 16000 - result.text.size(), Status::limit_exceeded, L"NSIS 字符串展开过长。");
+            std::wstring text(static_cast<std::size_t>(count), 0);
+            require(MultiByteToWideChar(page, MB_ERR_INVALID_CHARS, literal.data(), static_cast<int>(literal.size()), text.data(), count) == count,
+                Status::corrupt, L"NSIS ANSI 路径解码失败。");
+            append(result, Value{std::move(text)}); literal.clear();
+        };
         for (std::size_t i = static_cast<std::size_t>(index);; ++i) {
             require(string_budget > 0, Status::limit_exceeded, L"NSIS 字符串解析工作量超过上限。");
             --string_budget;
             require(i < strings.size(), Status::corrupt, L"NSIS 字符串未终止。");
-            const auto c = strings[i];
+            auto c = strings[i];
             if (!c) break;
+            if (ansi) {
+                if (c < 252) { literal_byte(c); continue; }
+                if (c == 252) {
+                    require(++i < strings.size() && strings[i] != 0, Status::corrupt, L"NSIS ANSI 字符转义无效。");
+                    literal_byte(strings[i]); continue;
+                }
+                flush_literal();
+                c = static_cast<wchar_t>(256 - c); // FF lang / FE shell / FD var
+            }
             if (c > 4) { append(result, Value{std::wstring(1, c)}); continue; }
             require(++i < strings.size(), Status::corrupt, L"NSIS 编码字符串截断。");
-            const auto value = static_cast<unsigned>(strings[i]);
+            auto value = static_cast<unsigned>(strings[i]);
+            if (ansi) {
+                require(value != 0 && ++i < strings.size() && strings[i] != 0, Status::corrupt, L"NSIS ANSI 编码字符串截断。");
+                value |= static_cast<unsigned>(strings[i]) << 8;
+            }
             if (c == 4) { require(value != 0, Status::corrupt, L"NSIS 字符转义无效。"); append(result, Value{std::wstring(1, static_cast<wchar_t>(value))}); continue; }
             const auto decoded = ((value >> 8) & 0x7f) * 128 + (value & 0x7f);
             if (c == 1) append(result, string(-static_cast<std::int32_t>(decoded) - 1, state, depth + 1));
@@ -309,6 +379,7 @@ struct NsisPackage::Impl {
             else if (const auto it = state.variables.find(decoded); it != state.variables.end()) append(result, it->second);
             else append(result, unknown(L"$VAR" + std::to_wstring(decoded)));
         }
+        flush_literal();
         (void)platform::utf8(result.text);
         return result;
     }
@@ -365,6 +436,7 @@ struct NsisPackage::Impl {
                 const auto offset = static_cast<std::uint64_t>(p[2]);
                 if (const auto duplicate = duplicates.find({value.text, offset}); duplicate != duplicates.end()) {
                     catalog.files[duplicate->second].conditions += L", " + std::to_wstring(i);
+                    file_instructions[duplicate->second].push_back(i);
                     continue;
                 }
                 Entry file; file.id = L"nsis-" + std::to_wstring(i);
@@ -392,6 +464,7 @@ struct NsisPackage::Impl {
                 file.original_path = file.path = destination;
                 duplicates.emplace(std::make_pair(value.text, offset), catalog.files.size());
                 catalog.files.push_back(std::move(file)); file_offsets.push_back(offset);
+                file_instructions.push_back({i});
                 continue;
             }
             // 保守的基本块分析：跨调用/返回不猜路径，外部函数和插件可修改变量。
@@ -409,6 +482,153 @@ struct NsisPackage::Impl {
             }
         }
         if (!catalog.paths_resolved) catalog.notes.push_back(L"无法静态确定原始目录的文件保留至 _unresolved；已识别卸载器的路径问题不影响应用载荷完成状态。");
+    }
+
+    void group_architecture_branches() {
+        // 只归组可证明的两个直线互斥分支。PE Machine 仅用于命名，非 PE 文件
+        // 和共用的异构辅助程序仍按 File 指令所属分支保留，不按扩展名猜归属。
+        struct NameLess {
+            bool operator()(const std::wstring& a, const std::wstring& b) const {
+                return CompareStringOrdinal(a.data(), static_cast<int>(a.size()), b.data(), static_cast<int>(b.size()), TRUE) == CSTR_LESS_THAN;
+            }
+        };
+        using Paths = std::map<std::wstring, std::size_t, NameLess>;
+        const auto is_app = [](const Entry& file) {
+            return file.path_resolved && !file.path.empty() && platform::equal_name(file.path.begin()->wstring(), L"app");
+        };
+        std::map<std::uint64_t, std::wstring> architectures;
+        const auto architecture = [&](std::size_t index) -> std::wstring {
+            const auto offset = file_offsets[index];
+            if (const auto found = architectures.find(offset); found != architectures.end()) return found->second;
+            const auto& payload = payloads.at(offset);
+            std::array<std::byte, 4096> buffer{};
+            auto bytes = std::span(buffer).first(static_cast<std::size_t>((std::min)(payload.size, static_cast<std::uint64_t>(buffer.size()))));
+            codecs::Stream stream(payload.method, payload.bytes);
+            stream.read_exact(bytes);
+            std::wstring name;
+            if (bytes.size() >= 64 && bytes[0] == std::byte{'M'} && bytes[1] == std::byte{'Z'}) {
+                const auto pe = u32(bytes, 60);
+                if (pe >= 64 && pe <= bytes.size() - 26 && u32(bytes, pe) == 0x4550) {
+                    const auto machine = io::Reader(io::slice(bytes, pe + 4, 2)).u16();
+                    const auto magic = io::Reader(io::slice(bytes, pe + 24, 2)).u16();
+                    if (machine == 0x14c && magic == 0x10b) name = L"x86";
+                    if (machine == 0x8664 && magic == 0x20b) name = L"x64";
+                    if (machine == 0xaa64 && magic == 0x20b) name = L"arm64";
+                }
+            }
+            architectures.emplace(offset, name); return name;
+        };
+        const auto n = instructions.size();
+        std::size_t work = 0;
+        for (std::size_t branch = 0; branch < n; ++branch) {
+            const auto& condition = instructions[branch];
+            std::int32_t a = 0, b = 0;
+            if (condition.op == 26) { a = condition.p[2]; b = condition.p[3]; }
+            else if (condition.op == 12 || condition.op == 34) { a = condition.p[1]; b = condition.p[2]; }
+            else if (condition.op == 14) { a = condition.p[0]; b = condition.p[1]; }
+            else continue;
+            if (a < 0 || b < 0) continue;
+            auto first = a ? static_cast<std::size_t>(a - 1) : branch + 1;
+            auto second = b ? static_cast<std::size_t>(b - 1) : branch + 1;
+            if (first > second) std::swap(first, second);
+            if (first != branch + 1 || second <= first + 1 || second >= n) continue;
+            const auto& jump = instructions[second - 1];
+            if (jump.op != 2 || jump.p[0] <= 0) continue;
+            const auto join = static_cast<std::size_t>(jump.p[0] - 1);
+            if (join <= second || join >= n) continue;
+            // 可选布局优化达到分析预算就保持原有无覆盖提取，不拒绝安装包。
+            if (work + n + catalog.files.size() > 2000000) return;
+            work += n + catalog.files.size();
+            bool safe = true;
+            for (auto i = first; i < join; ++i) {
+                if (i == second - 1) continue;
+                const auto op = instructions[i].op;
+                if (op != 6 && op != 10 && op != 11 && op != 13 && op != 20 && op != 25) { safe = false; break; }
+            }
+            if (!safe) continue;
+            // 其它分支、函数调用或区段不能从外部进入候选分支内部。
+            const auto entry = [&](std::int32_t target) {
+                if (target < 0) { safe = false; return; }
+                if (target > 0 && static_cast<std::size_t>(target - 1) >= first && static_cast<std::size_t>(target - 1) < join) safe = false;
+            };
+            for (std::size_t i = 0; i < n && safe; ++i) {
+                if (i >= branch && i < join) continue;
+                const auto& e = instructions[i]; const auto& p = e.p;
+                switch (e.op) {
+                case 2: case 5: entry(p[0]); break;
+                case 12: case 34: entry(p[1]); entry(p[2]); break;
+                case 14: entry(p[0]); entry(p[1]); break;
+                case 22: entry(p[3]); entry(p[5]); break;
+                case 26: entry(p[2]); entry(p[3]); break;
+                case 28: entry(p[2]); entry(p[3]); entry(p[4]); break;
+                default: break;
+                }
+            }
+            const auto stride = blocks[1].count ? (blocks[2].offset - blocks[1].offset) / blocks[1].count : 0;
+            for (std::uint32_t i = 0; i < blocks[1].count && safe; ++i) {
+                const auto code = u32(header, blocks[1].offset + i * stride + 12);
+                if (code >= first && code < join) safe = false;
+            }
+            if (!safe) continue;
+            std::vector<unsigned> masks(catalog.files.size());
+            std::array<Paths, 2> paths;
+            for (std::size_t i = 0; i < catalog.files.size() && safe; ++i) {
+                if (!is_app(catalog.files[i])) continue;
+                for (const auto instruction : file_instructions[i]) {
+                    masks[i] |= instruction >= first && instruction < second ? 1U : instruction >= second && instruction < join ? 2U : 4U;
+                }
+                for (unsigned arm = 0; arm < 2; ++arm) {
+                    if (!(masks[i] & (1U << arm))) continue;
+                    const auto [it, fresh] = paths[arm].emplace(catalog.files[i].path.wstring(), i);
+                    if (!fresh && file_offsets[it->second] != file_offsets[i]) safe = false;
+                }
+            }
+            if (!safe) continue;
+            std::array<std::wstring, 2> names;
+            bool distinct = false;
+            for (const auto& [path, left] : paths[0]) {
+                const auto right = paths[1].find(path);
+                if (right == paths[1].end() || file_offsets[left] == file_offsets[right->second]) continue;
+                const auto x = architecture(left), y = architecture(right->second);
+                // 两个分支也可能各自带有同架构的不同资源 DLL；它们不能用作架构证据。
+                if (x == y) continue;
+                if (x.empty() || y.empty() || (!names[0].empty() && names[0] != x) || (!names[1].empty() && names[1] != y)) { safe = false; break; }
+                names = {x, y}; distinct = true;
+            }
+            if (!safe || !distinct) continue;
+            std::vector<Entry> files;
+            std::vector<std::uint64_t> offsets;
+            Paths emitted;
+            const auto emit = [&](Entry file, std::uint64_t offset) {
+                const auto [it, fresh] = emitted.emplace(file.path.wstring(), files.size());
+                if (!fresh) { if (offsets[it->second] != offset) safe = false; return; }
+                platform::validate_relative(file.path);
+                files.push_back(std::move(file)); offsets.push_back(offset);
+            };
+            for (std::size_t i = 0; i < catalog.files.size(); ++i) {
+                if (!is_app(catalog.files[i])) { emit(catalog.files[i], file_offsets[i]); continue; }
+                const auto mask = masks[i] & 4 ? 3U : masks[i];
+                for (unsigned arm = 0; arm < 2; ++arm) if (mask & (1U << arm)) {
+                    auto file = catalog.files[i];
+                    fs::path path(L"app-" + names[arm]);
+                    for (auto part = std::next(file.path.begin()); part != file.path.end(); ++part) path /= *part;
+                    file.path = std::move(path); file.id += L"-" + names[arm];
+                    file.conditions += L"; static branch layout " + names[arm] + L" (runtime condition not evaluated)";
+                    emit(std::move(file), file_offsets[i]);
+                }
+            }
+            for (const auto& file : files) {
+                for (auto parent = file.path.parent_path(); !parent.empty(); parent = parent.parent_path())
+                    if (emitted.contains(parent.wstring())) safe = false;
+            }
+            if (!safe) continue;
+            std::uint64_t total = 0;
+            for (const auto& file : files) total = checked_size_sum(total, file.size);
+            catalog.files = std::move(files); file_offsets = std::move(offsets); catalog.total_size = total;
+            catalog.notes.push_back(L"已将可静态证明的双分支架构布局分别保存至 app-" + names[0] + L" 和 app-" + names[1]
+                + L"；各分支的普通资源与共用文件一并保留，不执行架构判断或安装脚本。");
+            return;
+        }
     }
 
     std::vector<std::optional<Value>> directory_flow() {

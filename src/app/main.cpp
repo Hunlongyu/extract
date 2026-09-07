@@ -161,20 +161,20 @@ int run() {
         if (!quiet) {
             std::wstring title, body;
             if (inputs.size() == 1) {
-                title = std::wstring(L"Extract：") + (succeeded == 1 ? L"已完成 · " : partial == 1 ? L"部分完成 · " : L"失败 · ")
+                title = std::wstring(succeeded == 1 ? L"已完成 · " : partial == 1 ? L"部分完成 · " : L"失败 · ")
                     + inputs.front().filename().wstring();
-                if (succeeded == 1) body = L"输出：" + single_output.wstring() + L"\n点击打开文件夹。";
-                else if (partial == 1) body = L"已保留部分文件。输出：" + single_output.wstring() + L"\n点击查看未完成原因。";
-                else body = L"原因：" + failure_reason + L"\n点击查看任务记录。";
+                if (succeeded == 1) body = L"输出：" + single_output.wstring();
+                else if (partial == 1) body = L"已保留部分文件。输出：" + single_output.wstring();
+                else body = L"原因：" + failure_reason;
             } else {
-                title = first_error == ERROR_SUCCESS ? L"Extract：批量处理已完成" : L"Extract：批量处理存在未完成项";
+                title = first_error == ERROR_SUCCESS ? L"批量处理已完成" : L"批量处理存在未完成项";
                 body = L"完成 " + std::to_wstring(succeeded) + L" 个，部分完成 " + std::to_wstring(partial)
                     + L" 个，失败 " + std::to_wstring(inputs.size() - succeeded - partial) + L" 个。\n"
                     + inputs[0].filename().wstring() + L"、" + inputs[1].filename().wstring()
-                    + (inputs.size() > 2 ? L" 等 " + std::to_wstring(inputs.size()) + L" 个安装包。" : L"。")
-                    + L"点击查看各包结果。";
+                    + (inputs.size() > 2 ? L" 等 " + std::to_wstring(inputs.size()) + L" 个安装包。" : L"。");
             }
-            const HRESULT notified = progress_notification.complete(title, body, record->id());
+            const auto action_label = inputs.size() == 1 && succeeded == 1 ? L"打开文件夹" : L"查看结果";
+            const HRESULT notified = progress_notification.complete(title, body, record->id(), succeeded == inputs.size(), action_label);
             const auto notification_status = notified == S_OK ? L"通知已提交；显示取决于系统设置。" :
                 (notified == S_FALSE ? L"系统通知已禁用。" : L"系统通知提交失败。");
             extract::log::detail(notified == S_OK ? extract::log::Level::info : extract::log::Level::warning, L"notification.result", [&] {

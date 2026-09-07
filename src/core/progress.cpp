@@ -29,7 +29,17 @@ void pulse() noexcept {
     if (!current || !observer || reporting) return;
     const auto error = GetLastError();
     reporting = true;
-    try { observer->update(current->value_); }
+    try {
+        auto snapshot = current->value_;
+        for (auto* scope = current; scope; scope = scope->previous_) {
+            if (scope->value_.package.view() != snapshot.package.view()) break;
+            if (scope->value_.phase == Phase::extracting) {
+                snapshot.extraction = Snapshot::Counter{scope->value_.completed, scope->value_.total};
+                break;
+            }
+        }
+        observer->update(snapshot);
+    }
     catch (...) { /* 通知不可用或观察器失败，不改变解包结果。 */ }
     reporting = false;
     SetLastError(error);

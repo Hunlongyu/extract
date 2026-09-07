@@ -1,0 +1,121 @@
+{
+  "scope": "Local unreleased ANSI NSIS compatibility fix",
+  "realSample": {
+    "input": "QQMusic_22.10.0.0_mefcl_Setup.exe",
+    "inputSha256": "29d0dcc50680c16e04cc555d8873e49db1c0b945958c7651fb5295123d3e306d",
+    "inputBytes": 74514819,
+    "result": "complete",
+    "files": 268,
+    "totalBytes": 220640492,
+    "independentPayloadComparison": true,
+    "packageCrcVerified": true,
+    "codepage": 936,
+    "outputDirectory": "C:\\Users\\hunlo\\Downloads\\QQMusic_22.10.0.0_mefcl_Setup_extracted",
+    "installerOrPayloadExecuted": false
+  },
+  "artifacts": [
+    {
+      "architecture": "x64",
+      "realPackageExitCode": 0,
+      "filesCompared": 268,
+      "artifactPath": "E:\\Hunlongyu\\extract\\out\\dist\\win-x64-release\\Extract.exe",
+      "artifactBytes": 875008,
+      "artifactSha256": "b96dc56c37a2811e85abc01f65ca007bde279efee6d9402ea48758932f365ceb",
+      "staticCrtAndSystemImportsChecked": true
+    },
+    {
+      "architecture": "x86",
+      "realPackageExitCode": 0,
+      "filesCompared": 268,
+      "artifactPath": "E:\\Hunlongyu\\extract\\out\\dist\\win-x86-release\\Extract.exe",
+      "artifactBytes": 772096,
+      "artifactSha256": "0b6bc8948ec1423c20d378f5c22ae8386f7b8eff44be8b6680e9fbf2cb17d183",
+      "staticCrtAndSystemImportsChecked": true
+    }
+  ],
+  "nsisRegression": [
+    {
+      "version": "v3.11",
+      "matrixPackages": 6,
+      "invalidCases": 30,
+      "mutationCases": 24,
+      "mutationResults": [
+        13,
+        13,
+        13,
+        13,
+        13,
+        13,
+        13,
+        13,
+        13,
+        13,
+        13,
+        13,
+        13,
+        13,
+        13,
+        13,
+        13,
+        0,
+        0,
+        13,
+        13,
+        13,
+        13,
+        13
+      ],
+      "extractInvocations": 121,
+      "architecture": "x64"
+    },
+    {
+      "version": "v3.11",
+      "matrixPackages": 6,
+      "invalidCases": 30,
+      "mutationCases": 24,
+      "mutationResults": [
+        13,
+        13,
+        13,
+        13,
+        13,
+        13,
+        13,
+        13,
+        13,
+        13,
+        13,
+        13,
+        13,
+        13,
+        13,
+        13,
+        13,
+        0,
+        0,
+        13,
+        13,
+        13,
+        13,
+        13
+      ],
+      "extractInvocations": 121,
+      "architecture": "x86"
+    }
+  ],
+  "nestedRegression": {
+    "architecture": "x64",
+    "passedScenarios": 20
+  },
+  "otherTests": {
+    "x64": [
+      "path_policy",
+      "progress_integration"
+    ],
+    "x86": [
+      "path_policy",
+      "progress_integration"
+    ]
+  },
+  "ansiFixtureOrigin": "Derived from official NSIS 3.11 ANSI stored fixtures using documented v251 string encoding; not official 2.51 compiler output"
+}

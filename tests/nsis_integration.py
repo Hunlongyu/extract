@@ -156,6 +156,81 @@ File "other.dat"
     report, files = extract(variants, None)
     check(len(files) == 4 and all(p.startswith('_variants/') for p in files), 'conflict preservation / exact duplicate coalescing')
     check(sorted(files.values()) == sorted([sources['hello.txt']] * 2 + [sources['other.dat']] * 2), 'variant content')
+    # Inert PE headers label architectures; none of these payloads are executed.
+    def pe_payload(machine, marker):
+        data = bytearray(1024)
+        data[:2] = b'MZ'
+        struct.pack_into('<I', data, 60, 128)
+        data[128:132] = b'PE\0\0'
+        struct.pack_into('<H', data, 132, machine)
+        struct.pack_into('<H', data, 148, 224 if machine == 0x14c else 240)
+        struct.pack_into('<H', data, 152, 0x10b if machine == 0x14c else 0x20b)
+        data[512:512 + len(marker)] = marker
+        return bytes(data)
+
+    native = {'x64.bin': pe_payload(0x8664, b'x64 program'),
+              'x86.bin': pe_payload(0x14c, b'x86 program'),
+              'arm64.bin': pe_payload(0xaa64, b'arm64 program'),
+              'resource-a.bin': pe_payload(0x14c, b'resource for first branch'),
+              'resource-b.bin': pe_payload(0x14c, b'resource for second branch')}
+    for name, data in native.items():
+        (root / name).write_bytes(data)
+    architecture_body = '''SetOutPath "$INSTDIR"
+File /oname=before.txt "hello.txt"
+File /oname=helper.exe "x86.bin"
+StrCmp $0 "64" native_a native_b
+native_a:
+SetOutPath "$INSTDIR"
+File /oname=Main.exe "x64.bin"
+File /oname=Main.tr "resource-a.bin"
+File /oname=shared.txt "hello.txt"
+File /oname=only64.txt "other.dat"
+SetOutPath "$INSTDIR\\lib"
+File /oname=engine.dll "x64.bin"
+Goto joined
+native_b:
+SetOutPath "$INSTDIR"
+File /oname=Main.exe "x86.bin"
+File /oname=Main.tr "resource-b.bin"
+File /oname=shared.txt "hello.txt"
+SetOutPath "$INSTDIR\\lib"
+File /oname=engine.dll "x86.bin"
+joined:
+SetOutPath "$INSTDIR"
+File /oname=after.txt "other.dat"
+SetOutPath "$TEMP"
+File /oname=outside.txt "hello.txt"
+'''
+    layouts = {'temp/outside.txt': sources['hello.txt']}
+    for arch in ('x64', 'x86'):
+        prefix = 'app-' + arch + '/'
+        layouts.update({prefix + 'before.txt': sources['hello.txt'], prefix + 'after.txt': sources['other.dat'],
+                        prefix + 'helper.exe': native['x86.bin'], prefix + 'shared.txt': sources['hello.txt'],
+                        prefix + 'Main.exe': native[arch + '.bin'], prefix + 'lib/engine.dll': native[arch + '.bin'],
+                        prefix + 'Main.tr': native['resource-a.bin' if arch == 'x64' else 'resource-b.bin']})
+    layouts['app-x64/only64.txt'] = sources['other.dat']
+    for solid in (False, True):
+        path = build('architectures-' + str(solid), method='lzma', solid=solid, body=architecture_body)
+        report, _ = extract(path, layouts)
+        check(len({f['id'] for f in report['files']}) == len(report['files']), 'layout IDs must remain unique')
+        check(any('app-x64' in note and 'app-x86' in note for note in report['notes']), 'layout evidence missing')
+        check(all(f['originalPath'].startswith('app/') for f in report['files'] if f['path'].startswith('app-')), 'original destinations lost')
+    arm_layouts = {p.replace('app-x64/', 'app-arm64/'): (native['arm64.bin'] if p.startswith('app-x64/') and p.endswith(('Main.exe', 'engine.dll')) else data)
+                   for p, data in layouts.items()}
+    extract(build('architectures-arm64', body=architecture_body.replace('"x64.bin"', '"arm64.bin"')), arm_layouts)
+    # Same-architecture alternatives, nested control flow, external entry, and conflicting
+    # common files must retain the conservative per-file conflict layout.
+    fallback_bodies = {
+        'same-architecture': architecture_body.replace('"x64.bin"', '"x86.bin"'),
+        'nested-control': architecture_body.replace('File /oname=only64.txt', 'IfFileExists "$TEMP\\flag" +2 0\nFile /oname=only64.txt'),
+        'external-entry': 'Goto inside_a\n' + architecture_body.replace('File /oname=only64.txt', 'inside_a:\nFile /oname=only64.txt'),
+        'common-conflict': architecture_body.replace('File /oname=before.txt "hello.txt"', 'File /oname=Main.tr "noise.bin"'),
+        'mixed-machine': architecture_body.replace('File /oname=engine.dll "x64.bin"', 'File /oname=engine.dll "arm64.bin"'),
+    }
+    for name, body in fallback_bodies.items():
+        _, files = extract(build(name, body=body), None, 299 if name == 'external-entry' else 0)
+        check(not any(p.startswith(('app-x64/', 'app-x86/', 'app-arm64/')) for p in files), 'ambiguous layout was guessed: ' + name)
+        check(any(p.startswith('_variants/') for p in files), 'conflicting alternatives lost: ' + name)
     # Straight-line full StrCpy is propagated; unknown branch-dependent paths stay partial.
     copied = build('copied', body='''StrCpy $0 "$INSTDIR\\copied"
 SetOutPath "$0"
@@ -261,6 +336,70 @@ File "hello.txt"
         reject(target)
     ansi = build('ansi', unicode=False, body='SetOutPath "$INSTDIR"\nFile "hello.txt"')
     reject(ansi, 50)
+    # Independently translate a stored official 3.x ANSI fixture to the documented
+    # 2.x FC/FD/FE/FF encoding. This is a derived fixture, not a 2.x compiler claim.
+    ansi_stored = build('ansi-stored', unicode=False, stored=True,
+        body='SetOutPath "$(FixtureDir)"\nFile /oname=abc.dat "hello.txt"',
+        extra='LoadLanguageFile "${NSISDIR}\\Contrib\\Language files\\English.nlf"\n'
+              'LangString FixtureDir ${LANG_ENGLISH} "$INSTDIR\\sub"')
+    def legacy_ansi():
+        p = Package(ansi_stored)
+        end = struct.unpack_from('<I', p.header, 36)[0]
+        i = p.strings
+        while i < end:
+            code = p.header[i]
+            if 1 <= code <= 4:
+                p.header[i] = 256 - code
+                i += 2 if code == 4 else 3
+            else:
+                check(code < 252, 'fixture requires ANSI byte escaping')
+                i += 1
+        return p
+    def ansi_case(name, change, expected_files=None, error=None):
+        p = legacy_ansi()
+        change(p)
+        target = root / ('ansi2-' + name + '.exe')
+        target.write_bytes(p.rebuild())
+        if error is not None:
+            reject(target, error)
+        else:
+            report, _ = extract(target, expected_files)
+            check('2.' in report['formatVersion'], 'ANSI legacy layout report')
+    def ansi_name(p, value, language=2052):
+        check(len(value) == 7, 'ANSI replacement width')
+        at = p.header.index(b'abc.dat', p.strings)
+        p.header[at:at + 7] = value
+        lang = struct.unpack_from('<I', p.header, 36)[0]
+        struct.pack_into('<H', p.header, lang, language)
+    ansi_case('ascii', lambda p: None, {'app/sub/abc.dat': sources['hello.txt']})
+    # CP936 character whose second byte is FD: unescape before multibyte decoding.
+    chinese_name = b'\x81\xfd'.decode('cp936') + '.dat'
+    ansi_case('chinese-escaped', lambda p: ansi_name(p, b'\x81\xfc\xfd.dat'),
+              {'app/sub/' + chinese_name: sources['hello.txt']})
+    ansi_case('western', lambda p: ansi_name(p, b'\xe9bc.dat', 1033),
+              {'app/sub/ébc.dat': sources['hello.txt']})
+    ansi_case('unknown-page-ascii', lambda p: ansi_name(p, b'abc.dat', 65535),
+              {'app/sub/abc.dat': sources['hello.txt']})
+    ansi_case('unknown-page-text', lambda p: ansi_name(p, b'\x81\xfc\xfd.dat', 65535), error=50)
+    ansi_case('invalid-multibyte', lambda p: ansi_name(p, b'\x81\x30\x81.dat'), error=13)
+    ansi_case('traversal', lambda p: ansi_name(p, b'../.dat'), error=5)
+    def truncated_ansi(p):
+        end = struct.unpack_from('<I', p.header, 36)[0]
+        p.header[end - 2] = 255
+    ansi_case('truncated-code', truncated_ansi, error=13)
+    def long_ansi(p):
+        end = struct.unpack_from('<I', p.header, 36)[0]
+        text = b'a' * 32001 + b'\0'
+        p.header[end:end] = text
+        for block in range(4, 8):
+            at = 4 + block * 8
+            offset = struct.unpack_from('<I', p.header, at)[0]
+            if offset >= end:
+                struct.pack_into('<I', p.header, at, offset + len(text))
+        struct.pack_into('<I', p.header, p.file_entries[0] + 8, end - p.strings)
+        struct.pack_into('<I', p.raw, p.start + 20, len(p.header))
+        struct.pack_into('<I', p.raw, p.header_start - 4, len(p.header))
+    ansi_case('literal-budget', long_ansi, error=223)
     # Malformed control flow must be rejected before payload creation.
     branch_package = Package(base)
     struct.pack_into('<7i', branch_package.header, branch_package.entries, 2, branch_package.count + 100, 0, 0, 0, 0, 0)

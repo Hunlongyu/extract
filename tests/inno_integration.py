@@ -39,18 +39,22 @@ class Package:
         self.loader_crc = self.table + (40 if self.legacy else 60)
         self.metadata, self.payload = struct.unpack_from('<II' if self.legacy else '<QQ', self.raw, self.table + (32 if self.legacy else 40))
         self.prefix = self.raw[:self.metadata + (64 if self.legacy else 117)]
+        self.data_id = self.raw[self.metadata:self.metadata + 64].rstrip(b'\0').decode('ascii')
+        self.sha1 = any(f'({v})' in self.data_id for v in ('6.0.0', '6.1.0', '6.3.0'))
+        self.old_flags = self.sha1 or any(f'({v})' in self.data_id for v in ('6.4.0.1', '6.4.2'))
+        self.sign_byte = self.old_flags and '(6.0.0)' not in self.data_id and '(6.1.0)' not in self.data_id
         self.version7 = b'(7.' in self.raw[self.metadata:self.metadata + 64]
         self.version650 = b'(6.5.0)' in self.raw[self.metadata:self.metadata + 64]
         self.short_offset = self.legacy or self.version650
         self.wide_size = self.version7 or b'(6.7.' in self.raw[self.metadata:self.metadata + 64]
         self.block_start = len(self.prefix)
-        self.location_size = 74 if self.legacy else (85 if self.version650 else 89)
+        self.location_size = (74 if self.sha1 else 86) + int(self.sign_byte) if self.old_flags else (85 if self.short_offset else 89)
         self.size_offset = 20 if self.short_offset else 24
         self.packed_offset = 28 if self.short_offset else 32
         self.hash_offset = 36 if self.short_offset else 40
-        self.flag_offset = 72 if self.legacy else (84 if self.version650 else 88)
-        self.compressed_flag = 128 if self.legacy else 16
-        self.encrypted_flag = 64 if self.legacy else 8
+        self.flag_offset = self.hash_offset + (20 if self.sha1 else 32) + 16
+        self.compressed_flag = 128 if self.old_flags else 16
+        self.encrypted_flag = 64 if self.old_flags else 8
         position = self.block_start
         self.blocks = []
         for _ in range(2):
@@ -109,7 +113,7 @@ def main():
     match = re.search(r'Compiler engine version: Inno Setup (\d+)\.(\d+)\.(\d+)', banner)
     check(match is not None, 'ISCC version missing')
     version = tuple(map(int, match.groups()))
-    check(version == (6, 2, 2) or version >= (6, 5, 0), f'unsupported fixture compiler {version}')
+    check(version >= (6, 0, 5), f'unsupported fixture compiler {version}')
     version7 = version[0] == 7
     print(f'Official compiler: {compiler} ({".".join(match.groups())})', flush=True)
     raw = bytearray(random.Random(321).randbytes(150_007))
@@ -214,7 +218,7 @@ Test=Known custom message
             data = (output / entry['path']).read_bytes()
             check(data == expected[key], f'wrong bytes {entry}')
             check(entry['sourceHashVerified'] and entry['sha256'] == sha(data), f'hash not verified {entry}')
-            check(entry['sourceHashAlgorithm'] == ('SHA-1' if version == (6, 2, 2) else 'SHA-256'), 'wrong source hash algorithm')
+            check(entry['sourceHashAlgorithm'] == ('SHA-1' if version < (6, 4, 0) else 'SHA-256'), 'wrong source hash algorithm')
             if entry['sourceExpression'] == '{app}\\bin\\payload.dat':
                 check(entry['path'] == 'app/bin/payload.dat', 'logical app path')
             if 'choice.txt' in key or key in ('{app}\\prefix', '{app}\\prefix\\child.txt'):
@@ -243,15 +247,15 @@ Test=Known custom message
     embedded_only = build('dontcopy', files='Source: "payload.dat"; Flags: dontcopy')
     verify(embedded_only, {'{tmp}\\payload.dat': original['payload.dat']})
     external = build('external', files='Source: "C:\\missing\\external.dat"; DestDir: "{app}"; ExternalSize: 1; Flags: external skipifsourcedoesntexist')
-    if version == (6, 2, 2):
+    if version < (6, 4, 0):
         # 旧官方编译器的可选 ISCrypt.dll 不随测试工具分发。直接验证密码 UI 与加密标志的区别。
         password_only = build('password-only', setup='Password=fixture-secret\nEncryption=no')
         verify(password_only)
         modified = Package(password_only)
         cursor = 0
-        for _ in range(34):
+        for _ in range(34 if version < (6, 3, 0) else 36):
             cursor += 4 + struct.unpack_from('<I', modified.blocks[0], cursor)[0]
-        modified.blocks[0][cursor + 161 + 4] |= 0x10
+        modified.blocks[0][cursor + (161 if version < (6, 3, 0) else 159) + 4] |= 0x10
         encrypted = root / 'encrypted-marker.exe'
         encrypted.write_bytes(modified.rebuild())
     else:
@@ -284,7 +288,7 @@ Test=Known custom message
     mutate('loader-crc', lambda d, p: d.__setitem__(p.loader_crc, d[p.loader_crc] ^ 1), raw=True)
     mutate('metadata-header-crc', lambda d, p: d.__setitem__(p.block_start, d[p.block_start] ^ 1), raw=True)
     mutate('metadata-content-crc', lambda d, p: d.__setitem__(p.block_start + 13, d[p.block_start + 13] ^ 1), raw=True)
-    if version != (6, 2, 2):
+    if version >= (6, 5, 0):
         mutate('encryption-crc', lambda d, p: d.__setitem__(p.metadata + 64, d[p.metadata + 64] ^ 1), raw=True)
     mutate('unknown-version', lambda d, p: d.__setitem__(slice(p.metadata, p.metadata + 64), b'Inno Setup Setup Data (99.0)'.ljust(64, b'\0')), 50, True)
     mutate('truncated', lambda d, p: d.__delitem__(slice(-200, None)), raw=True)
@@ -296,6 +300,16 @@ Test=Known custom message
     mutate('chunk-offset', lambda p: struct.pack_into('<I' if p.short_offset else '<Q', p.blocks[1], 8, 2**32 - 1 if p.short_offset else 2**64 - 1))
     mutate('external-volume', lambda p: struct.pack_into('<I', p.blocks[1], 0, 1), 50)
     mutate('encrypted-location', lambda p: p.blocks[1].__setitem__(p.flag_offset, p.blocks[1][p.flag_offset] | p.encrypted_flag), 50)
+    if version < (6, 4, 0):
+        def unsupported_header(p):
+            cursor = 0
+            for _ in range(34 if version < (6, 3, 0) else 36):
+                cursor += 4 + struct.unpack_from('<I', p.blocks[0], cursor)[0]
+            # 修改版可能沿用标准版本标识；不得将不匹配的头部当成正常数据。
+            struct.pack_into('<I', p.blocks[0], cursor + 64 + 74, 256)
+        mutate('unsupported-header-layout', unsupported_header, 50)
+    if Package(base).sign_byte:
+        mutate('unknown-sign-mode', lambda p: p.blocks[1].__setitem__(p.flag_offset + 2, 255))
 
     def replace_path(sample, before, after):
         old = before.encode('utf-16le')
@@ -321,7 +335,7 @@ Test=Known custom message
     mutate('pe-offset', lambda d, p: struct.pack_into('<I', d, 60, 0xfffffff0), raw=True)
     mutate('pe-section-count', lambda d, p: struct.pack_into('<H', d, struct.unpack_from('<I', d, 60)[0] + 6, 65535), raw=True)
     def unknown_flags(p):
-        offset = p.flag_offset + (1 if p.legacy else 0)
+        offset = p.flag_offset + (1 if p.old_flags else 0)
         p.blocks[1][offset] |= 128
     mutate('unknown-location-flags', unknown_flags)
     for name, package in built.items():

@@ -8,8 +8,8 @@
 #include <map>
 #include <numeric>
 
-// 磁盘布局依据：jrsoftware/issrc is-6_2_2、is-6_5_4、is-6_6_1、is-6_7_3、is-7_1_0 的 Struct / Shared.Struct、
-// Shared.SetupEntFunc、Compression.Base 和 Setup.FileExtractor。
+// 磁盘布局依据：jrsoftware/issrc 的 Struct / Shared.Struct、Shared.SetupEntFunc、
+// Compression.Base 和 Setup.FileExtractor；固定版本与验证矩阵见 docs/20-inno-compatibility.md。
 // 此处按字节读取磁盘记录，不映射 Delphi 内存结构，也不执行安装脚本。
 namespace extract::formats {
 namespace {
@@ -122,7 +122,7 @@ void undo_call_filter(std::span<std::byte> data, std::uint32_t file_offset) {
 struct InnoPackage::Impl {
     io::Input input;
     Catalog catalog;
-    enum class Schema { v610u, v650, v652, v661, v670, v7003 } schema = Schema::v670;
+    enum class Schema { v600u, v610u, v630, v6401, v642, v643, v650, v652, v660, v661, v670, v7003 } schema = Schema::v670;
     bool version7 = false;
     std::uint64_t payload_offset = 0, metadata_offset = 0;
     codecs::Compression method = codecs::Compression::stored;
@@ -171,16 +171,22 @@ struct InnoPackage::Impl {
                 version += c;
             }
         }
-        if (version == L"Inno Setup Setup Data (6.1.0) (u)") { schema = Schema::v610u; catalog.format_version = L"6.1.0 (u)"; }
+        if (version == L"Inno Setup Setup Data (6.0.0) (u)") { schema = Schema::v600u; catalog.format_version = L"6.0.0 (u)"; }
+        else if (version == L"Inno Setup Setup Data (6.1.0) (u)") { schema = Schema::v610u; catalog.format_version = L"6.1.0 (u)"; }
+        else if (version == L"Inno Setup Setup Data (6.3.0)") { schema = Schema::v630; catalog.format_version = L"6.3.0"; }
+        else if (version == L"Inno Setup Setup Data (6.4.0.1)") { schema = Schema::v6401; catalog.format_version = L"6.4.0.1"; }
+        else if (version == L"Inno Setup Setup Data (6.4.2)") { schema = Schema::v642; catalog.format_version = L"6.4.2"; }
+        else if (version == L"Inno Setup Setup Data (6.4.3)") { schema = Schema::v643; catalog.format_version = L"6.4.3"; }
         else if (version == L"Inno Setup Setup Data (6.5.0)") { schema = Schema::v650; catalog.format_version = L"6.5.0"; }
         else if (version == L"Inno Setup Setup Data (6.5.2)") { schema = Schema::v652; catalog.format_version = L"6.5.2"; }
+        else if (version == L"Inno Setup Setup Data (6.6.0)") { schema = Schema::v660; catalog.format_version = L"6.6.0"; }
         else if (version == L"Inno Setup Setup Data (6.6.1)") { schema = Schema::v661; catalog.format_version = L"6.6.1"; }
         else if (version == L"Inno Setup Setup Data (6.7.0)") { schema = Schema::v670; catalog.format_version = L"6.7.0"; }
         else if (version == L"Inno Setup Setup Data (7.0.0.3)") { schema = Schema::v7003; catalog.format_version = L"7.0.0.3"; }
         else throw Failure(Status::unsupported, L"尚未支持此 Inno 数据版本：" + version);
-        require(loader64 == (schema != Schema::v610u), Status::unsupported, L"Inno loader 与数据版本的组合尚未支持：" + version);
+        require(loader64 == (schema >= Schema::v650), Status::unsupported, L"Inno loader 与数据版本的组合尚未支持：" + version);
         version7 = schema == Schema::v7003;
-        if (schema != Schema::v610u) {
+        if (schema >= Schema::v650) {
             const auto encryption_crc = source.u32();
             const auto encryption = source.take(49);
             require(codecs::crc32(encryption) == encryption_crc, Status::corrupt, L"Inno 加密描述 CRC 不匹配。");
@@ -194,25 +200,34 @@ struct InnoPackage::Impl {
     void read_catalog(io::Bytes metadata, io::Bytes location_data) {
         io::Reader reader(metadata);
         const bool modern = schema >= Schema::v670;
-        const bool legacy = schema == Schema::v610u;
-        (void)strings(reader, legacy ? 30 : (modern ? 39 : 34), 4);
+        const bool old_tables = schema < Schema::v650;
+        const bool sha1 = schema <= Schema::v630;
+        const bool old_flags = schema <= Schema::v642;
+        const unsigned header_strings = schema <= Schema::v610u ? 30 : schema <= Schema::v6401 ? 32 : schema <= Schema::v643 ? 33 : modern ? 39 : 34;
+        (void)strings(reader, header_strings, 4);
         std::array<std::uint32_t, 17> counts{};
         for (std::size_t i = 0; i < counts.size(); ++i) {
-            if (legacy && i == 7) continue; // 此布局没有 ISSigKey 表
+            if (old_tables && i == 7) continue; // 6.5 以前没有 ISSigKey 表
             counts[i] = reader.u32();
             require(counts[i] <= (i == 9 ? location_data.size() : metadata.size()), Status::corrupt, L"Inno 表条目数超过实际元数据范围。");
         }
         if (version7) reader.skip(4); // CompiledCodeVersion
-        reader.skip(legacy ? 74 : (modern ? 65 : (schema == Schema::v661 ? 55 : (schema == Schema::v650 ? 38 : 46))));
-        require(reader.u32() == 1, Status::unsupported, L"当前不支持 Inno 多分卷媒体布局。");
+        const unsigned header_tail = schema <= Schema::v630 ? 74 : old_tables ? 86 : modern ? 65 :
+            schema == Schema::v661 ? 55 : schema == Schema::v660 ? 54 : schema == Schema::v650 ? 38 : 46;
+        reader.skip(header_tail);
+        const auto slices_per_disk = reader.u32();
+        require(slices_per_disk == 1, Status::unsupported,
+            L"Inno 分卷参数或修改版头部布局不受支持（预期 1，读取到 " + std::to_wstring(slices_per_disk) + L"）。");
         reader.skip(6);
         const auto compression = reader.u8();
         require(compression <= 4, Status::unsupported, L"Inno 使用了未知压缩方法。");
         method = static_cast<codecs::Compression>(compression);
-        if (legacy) {
-            reader.skip(12); // 架构、目录页设置和显示大小
-            const auto options = reader.take(6);
-            require((std::to_integer<unsigned>(options[4]) & 0x10) == 0, Status::unsupported, L"当前不支持加密的 Inno 安装包。");
+        if (old_tables) {
+            reader.skip(schema <= Schema::v610u ? 12 : 10); // 6.3 起架构改为头部字符串
+            const auto options = reader.take(schema == Schema::v630 ? 7 : 6);
+            const auto index = schema <= Schema::v630 ? 4 : 3;
+            const auto mask = schema <= Schema::v630 ? 0x10 : 0x80;
+            require((std::to_integer<unsigned>(options[index]) & mask) == 0, Status::unsupported, L"当前不支持加密的 Inno 安装包。");
         } else reader.skip(modern ? 18 : 16);
         struct Layout { unsigned strings, ansi, tail; };
         std::array<Layout, 8> prefix{{{4,4,19}, {2,0,4}, {0,1,0}, {4,0,30},
@@ -228,12 +243,12 @@ struct InnoPackage::Impl {
         std::vector<std::uint32_t> location_indices;
         unsigned generated = 0;
         for (std::uint32_t i = 0; i < counts[8]; ++i) {
-            auto text = strings(reader, legacy ? 10 : 15, legacy ? 0 : 1);
-            reader.skip(legacy ? 20 : 33 + 20); // 外部验证描述、版本约束
+            auto text = strings(reader, old_tables ? 10 : 15, old_tables ? 0 : 1);
+            reader.skip(old_tables ? 20 : 33 + 20); // 外部验证描述、版本约束
             const auto location = reader.u32();
             reader.skip(4 + 8 + 2);
             if (version7) reader.skip(1);
-            reader.skip(legacy ? 4 : (modern ? 8 : 5));
+            reader.skip(old_tables ? 4 : (modern ? 8 : 5));
             const auto type = reader.u8();
             require(type <= 1, Status::corrupt, L"Inno 文件类型无效。");
             if (type == 1) {
@@ -258,7 +273,9 @@ struct InnoPackage::Impl {
         require(!catalog.files.empty(), Status::unsupported, L"此 Inno 安装包没有内嵌静态文件。");
         if (generated) catalog.notes.push_back(L"安装时生成的卸载程序记录未作为内嵌文件提取：" + std::to_wstring(generated));
         if (!catalog.paths_resolved) catalog.notes.push_back(L"存在动态目录表达式，文件保存在 _unresolved，原表达式记录在 sourceExpression。");
-        require(location_data.size() == static_cast<std::uint64_t>(counts[9]) * (legacy ? 74 : (schema == Schema::v650 ? 85 : 89)), Status::corrupt, L"Inno 文件位置表长度错误。");
+        const unsigned location_size = schema <= Schema::v610u ? 74 : schema == Schema::v630 ? 75 :
+            schema <= Schema::v642 ? 87 : schema <= Schema::v650 ? 85 : 89;
+        require(location_data.size() == static_cast<std::uint64_t>(counts[9]) * location_size, Status::corrupt, L"Inno 文件位置表长度错误。");
         io::Reader records(location_data);
         for (std::uint32_t i = 0; i < counts[9]; ++i) {
             const auto first = records.u32(), last = records.u32();
@@ -266,11 +283,13 @@ struct InnoPackage::Impl {
             Location location{};
             location.start = schema <= Schema::v650 ? records.u32() : records.u64(); location.suboffset = records.u64();
             location.size = records.u64(); location.packed = records.u64();
-            location.hash = hex_string(records.take(legacy ? 20 : 32));
+            location.hash = hex_string(records.take(sha1 ? 20 : 32));
             records.skip(16);
-            if (legacy) {
+            if (old_flags) {
                 const auto flags = records.u16();
-                require((flags & ~0x7ffu) == 0, Status::corrupt, L"Inno 文件位置标志无效。");
+                const auto allowed = schema <= Schema::v610u ? 0x7ffu : 0x1ffu;
+                require((flags & ~allowed) == 0, Status::corrupt, L"Inno 文件位置标志无效。");
+                if (schema >= Schema::v630) require(records.u8() <= 3, Status::corrupt, L"Inno 文件签名选项无效。");
                 // 旧版 16 位 flags 的 CALL、加密、压缩位分别为 4、6、7。
                 location.flags = static_cast<std::uint8_t>(((flags & 0x10) >> 2) | ((flags & 0xc0) >> 3));
             } else location.flags = records.u8();
@@ -285,7 +304,7 @@ struct InnoPackage::Impl {
             location.files.push_back(i);
             auto& file = catalog.files[i];
             file.size = location.size;
-            if (legacy) file.expected_sha1 = location.hash;
+            if (sha1) file.expected_sha1 = location.hash;
             else file.expected_sha256 = location.hash;
             require(file.size <= max_file_bytes - catalog.total_size, Status::limit_exceeded, L"Inno 总输出超出 64 位文件范围。");
             catalog.total_size += file.size;

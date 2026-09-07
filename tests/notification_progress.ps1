@@ -3,7 +3,7 @@
 param(
     [Parameter(Mandatory)][string]$Executable,
     [Parameter(Mandatory)][string]$WorkRoot,
-    [ValidateSet('normal','dismiss','quiet','short','failure','batch')][string]$Mode = 'normal'
+    [ValidateSet('normal','dismiss','quiet','short','failure','batch','partial')][string]$Mode = 'normal'
 )
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.IO.Compression
@@ -24,9 +24,10 @@ finally { $entry.Dispose(); $archive.Dispose(); $stream.Dispose() }
 if ($Mode -eq 'failure') { [IO.File]::WriteAllText($zip, 'not an archive') }
 $arguments = '"' + $zip + '"'
 if ($Mode -eq 'quiet') { $arguments = '--quiet ' + $arguments }
-if ($Mode -eq 'batch') {
+if ($Mode -in @('batch','partial')) {
     $second = Join-Path $root 'second.zip'
     Copy-Item -LiteralPath $zip -Destination $second
+    if ($Mode -eq 'partial') { [IO.File]::WriteAllText($second, 'not an archive') }
     $arguments += ' "' + $second + '"'
 }
 $before = @($history.GetHistory('Hunlongyu.Extract') | ForEach-Object { $_.Group })
@@ -72,15 +73,31 @@ $group = $Matches[1]
 $final = @($history.GetHistory('Hunlongyu.Extract') | Where-Object { $_.Tag -eq 'progress' -and $_.Group -eq $group })
 $updates = @($logs | Where-Object event -eq 'notification.progress_update')
 $resultMode = @($logs | Where-Object event -eq 'notification.result_mode')
-$expectedExit = if ($Mode -eq 'failure') { 50 } else { 0 }
+$expectedExit = if ($Mode -eq 'failure') { 50 } elseif ($Mode -eq 'partial') { 299 } else { 0 }
 if ($process.ExitCode -ne $expectedExit) { throw "Unexpected exit code: $($process.ExitCode)" }
 if ($Mode -eq 'quiet') {
     if ($final.Count -or $updates.Count -or $resultMode.Count) { throw 'Quiet mode sent notifications' }
 } else {
     if ($final.Count -ne 1) { throw 'Expected exactly one final notification' }
     $finalXml = $final[0].Content.GetXml()
-    if ($finalXml.Contains('<progress') -or -not $finalXml.Contains($name)) { throw 'Final result lacks package name or still has a progress bar' }
-    if ($Mode -eq 'batch' -and -not $finalXml.Contains('second.zip')) { throw 'Batch result lacks filenames' }
+    [xml]$document = $finalXml
+    $action = $document.SelectSingleNode('/toast/actions/action')
+    $openFolder = '"\u6253\u5f00\u6587\u4ef6\u5939"' | ConvertFrom-Json
+    $viewResult = '"\u67e5\u770b\u7ed3\u679c"' | ConvertFrom-Json
+    $expectedAction = if ($Mode -in @('failure','partial','batch')) { $viewResult } else { $openFolder }
+    if (-not $action -or $action.GetAttribute('content') -ne $expectedAction -or
+        $action.GetAttribute('activationType') -ne 'protocol' -or
+        $action.GetAttribute('arguments') -ne $document.DocumentElement.GetAttribute('launch')) {
+        throw 'Result action is missing or does not open the existing job target'
+    }
+    $bar = $document.SelectSingleNode('/toast/visual/binding/progress')
+    if ($bar -and ($bar.HasAttribute('title') -or $bar.GetAttribute('status'))) { throw 'Completed progress repeats status text' }
+    if ($document.SelectSingleNode('/toast/visual/binding/text').InnerText.StartsWith('Extract')) { throw 'Result repeats app identity' }
+    if (-not $finalXml.Contains($name)) { throw 'Final result lacks package name' }
+    if ($Mode -in @('failure','partial')) {
+        if ($finalXml.Contains('<progress')) { throw 'Failure shows a completed progress bar' }
+    } elseif (-not $finalXml.Contains('value="1"') -or -not $finalXml.Contains('100%')) { throw 'Success did not retain a full progress bar' }
+    if ($Mode -in @('batch','partial') -and -not $finalXml.Contains('second.zip')) { throw 'Batch result lacks filenames' }
     if ($Mode -in @('normal','dismiss')) {
         if ($resultMode[-1].message -ne 'updated-existing') { throw 'Final result would produce another popup' }
         if (-not @($snapshots | Where-Object { $_.Xml.Contains('<progress') }).Count) { throw 'No live progress observed' }
@@ -88,6 +105,16 @@ if ($Mode -eq 'quiet') {
     if ($Mode -eq 'normal') {
         $accepted = @($updates | Where-Object { $_.message -match 'result=0;' })
         if ($accepted.Count -lt 2 -or $accepted.Count -ne $updates.Count) { throw 'Progress updates were not accepted' }
+        $previousFraction = 0.0
+        $fileUpdates = 0
+        foreach ($snapshot in $snapshots) {
+            if (-not $snapshot.Fields.ContainsKey('fraction') -or $snapshot.Fields['fraction'] -eq 'indeterminate') { continue }
+            $fraction = [double]::Parse($snapshot.Fields['fraction'], [Globalization.CultureInfo]::InvariantCulture)
+            if ($fraction -lt $previousFraction -or $fraction -ge 1.0) { throw 'Live file progress regressed or claimed final completion' }
+            $previousFraction = $fraction
+            ++$fileUpdates
+        }
+        if (-not $fileUpdates) { throw 'No cumulative file progress observed' }
     }
     if ($Mode -eq 'dismiss') {
         if (-not $removed -or -not @($logs | Where-Object event -eq 'notification.progress_stopped').Count) { throw 'Dismissal did not stop updates' }

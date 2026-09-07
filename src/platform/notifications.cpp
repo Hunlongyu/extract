@@ -186,7 +186,8 @@ void unregister_notifications() {
     delete_tree(std::wstring(L"Software\\Classes\\AppUserModelId\\") + app_id);
 }
 
-HRESULT show_notification(std::wstring_view title, std::wstring_view body, std::wstring_view job_id, bool suppress_popup) noexcept {
+HRESULT show_notification(std::wstring_view title, std::wstring_view body, std::wstring_view job_id, bool suppress_popup, bool complete_bar,
+                          std::wstring_view action_label) noexcept {
     try {
         require(job_id.empty() || valid_job_id(job_id), Status::internal_error, L"通知任务标识无效。");
         register_notifications();
@@ -200,7 +201,11 @@ HRESULT show_notification(std::wstring_view title, std::wstring_view body, std::
         const auto uri = job_id.empty() ? std::wstring(L"hunlongyu-extract://help/") : L"hunlongyu-extract://job/" + std::wstring(job_id);
         const auto xml = L"<toast activationType=\"protocol\" launch=\"" + xml_escape(uri) + L"\"><visual><binding template=\"ToastGeneric\"><text>"
             + xml_escape(title) + L"</text><text>" + xml_escape(body.substr(0, 500))
-            + L"</text></binding></visual><audio silent=\"true\"/></toast>";
+            + L"</text>" + (complete_bar ? L"<progress value=\"1\" valueStringOverride=\"100%\" status=\"\"/>" : L"")
+            + L"</binding></visual>"
+            + (action_label.empty() ? L"" : L"<actions><action content=\"" + xml_escape(action_label)
+                + L"\" activationType=\"protocol\" arguments=\"" + xml_escape(uri) + L"\"/></actions>")
+            + L"<audio silent=\"true\"/></toast>";
         const auto notification = make_notification(xml, job_id);
         if (suppress_popup) {
             ComPtr<IToastNotification2> options;
@@ -223,6 +228,8 @@ struct ProgressNotification::Impl {
     std::size_t index = 1, count = 1;
     UINT32 sequence = 0;
     bool shown = false, disabled = false;
+    progress::Text last_package;
+    bool last_extracting = false, last_full = false;
 
     explicit Impl(std::wstring_view id) : job(id) {
         require(valid_job_id(id), Status::internal_error, L"进度通知任务标识无效。");
@@ -230,10 +237,14 @@ struct ProgressNotification::Impl {
     void send(const progress::Snapshot& value) {
         if (disabled) return;
         const auto now = GetTickCount64();
+        const bool extracting = value.extraction.has_value();
+        const bool full = extracting && value.extraction->total && value.extraction->completed == *value.extraction->total;
+        const bool boundary = value.package.view() != last_package.view() || extracting != last_extracting || (full && !last_full);
         // 短任务只显示一次包含包名的结果，避免先弹进度再立即消失。
         if (!shown && now - started < 500) return;
-        if (shown && now - last_update < 250) return;
+        if (shown && !boundary && now - last_update < 250) return;
         last_update = now;
+        last_package = value.package; last_extracting = extracting; last_full = full;
         if (!notifier) {
             register_notifications();
             ComPtr<IToastNotificationManagerStatics> manager;
@@ -247,17 +258,23 @@ struct ProgressNotification::Impl {
             check(notifier.As(&updater), L"系统不支持通知进度更新");
         }
         const auto package = fs::path(value.package.view()).filename().wstring();
-        const auto heading = L"Extract：" + std::wstring(progress::phase_name(value.phase));
+        const auto heading = L"Extract：" + (extracting ? std::wstring(L"正在提取并校验文件") : std::wstring(progress::phase_name(value.phase)));
         const auto context = (count > 1 ? L"输入 " + std::to_wstring(index) + L" / " + std::to_wstring(count) + L" · " : L"") + package;
         std::wstring fraction = L"indeterminate", amount = L"处理中";
-        if (value.total && *value.total) {
-            const auto ratio = static_cast<double>(value.completed) / static_cast<double>(*value.total);
-            fraction = std::to_wstring(value.completed < *value.total ? (std::min)(0.999999, ratio) : 1.0);
-            const auto percent = value.completed < *value.total ? (std::min)(99U, static_cast<unsigned>(ratio * 100)) : 100U;
-            amount = std::to_wstring(percent) + L"% · " + size_text(value.completed) + L" / " + size_text(*value.total);
-        } else if (value.completed) amount = L"已处理 " + size_text(value.completed);
+        if (extracting && value.extraction->total && *value.extraction->total) {
+            const auto& bytes = *value.extraction;
+            const auto ratio = static_cast<double>(bytes.completed) / static_cast<double>(*bytes.total);
+            fraction = std::to_wstring((std::min)(0.999999, ratio));
+            const auto percent = (std::min)(99U, static_cast<unsigned>(ratio * 100));
+            amount = std::to_wstring(percent) + L"% · " + size_text(bytes.completed) + L" / " + size_text(*bytes.total);
+            if (full) amount = L"本层文件已写入 · 正在校验或整理";
+        } else if (value.total || value.completed) {
+            amount = L"已处理 " + size_text(value.completed);
+            if (value.total && *value.total) amount += L" / " + size_text(*value.total);
+        }
+        amount += L" · 已用 " + std::to_wstring((now - started) / 1000) + L" 秒";
         const std::wstring item(value.item.view());
-        const auto status = item.empty() ? std::wstring(progress::phase_name(value.phase)) : item;
+        const auto status = std::wstring(progress::phase_name(value.phase)) + (item.empty() ? L"" : L" · " + item);
 
         ComPtr<IInspectable> inspectable;
         check(RoActivateInstance(HStringReference(RuntimeClass_Windows_UI_Notifications_NotificationData).Get(), &inspectable), L"创建通知进度数据失败");
@@ -271,11 +288,12 @@ struct ProgressNotification::Impl {
         };
         insert(L"heading", heading); insert(L"context", context); insert(L"fraction", fraction);
         insert(L"amount", amount); insert(L"status", status);
+        insert(L"progressTitle", extracting ? L"本层文件写入" : L"当前阶段（非任务百分比）");
         check(data->put_SequenceNumber(++sequence), L"设置通知更新序号失败");
         if (!shown) {
             const auto xml = L"<toast activationType=\"protocol\" launch=\"hunlongyu-extract://job/" + xml_escape(job)
                 + L"\"><visual><binding template=\"ToastGeneric\"><text>{heading}</text><text>{context}</text>"
-                  L"<progress title=\"当前阶段\" value=\"{fraction}\" valueStringOverride=\"{amount}\" status=\"{status}\"/>"
+                  L"<progress title=\"{progressTitle}\" value=\"{fraction}\" valueStringOverride=\"{amount}\" status=\"{status}\"/>"
                   L"</binding></visual><audio silent=\"true\"/></toast>";
             const auto notification = make_notification(xml, job);
             ComPtr<IToastNotification4> binding;
@@ -290,7 +308,8 @@ struct ProgressNotification::Impl {
             log::detail(log::Level::info, L"notification.progress_update", [&] {
                 return L"job=" + job + L"; sequence=" + std::to_wstring(sequence) + L"; result=" + std::to_wstring(result)
                     + L"; phase=" + std::wstring(progress::phase_name(value.phase)) + L"; bytes=" + std::to_wstring(value.completed)
-                    + L"; total=" + (value.total ? std::to_wstring(*value.total) : L"unknown");
+                    + L"; total=" + (value.total ? std::to_wstring(*value.total) : L"unknown")
+                    + L"; fraction=" + fraction + L"; amount=" + amount;
             });
             if (result != NotificationUpdateResult_Succeeded) {
                 disabled = true;
@@ -325,9 +344,9 @@ void ProgressNotification::update(const progress::Snapshot& value) noexcept {
     catch (...) { impl_->disabled = true; }
 }
 void ProgressNotification::close() noexcept { if (impl_) impl_->close(); }
-HRESULT ProgressNotification::complete(std::wstring_view title, std::wstring_view body, std::wstring_view job_id) noexcept {
+HRESULT ProgressNotification::complete(std::wstring_view title, std::wstring_view body, std::wstring_view job_id, bool all_succeeded, std::wstring_view action_label) noexcept {
     const bool existing = impl_ && impl_->shown;
-    const auto result = show_notification(title, body, job_id, existing);
+    const auto result = show_notification(title, body, job_id, existing, all_succeeded, action_label);
     log::write(log::Level::info, L"notification.result_mode", existing ? L"updated-existing" : L"standalone");
     if (result == S_OK) {
         if (impl_) { impl_->disabled = true; impl_->shown = false; }
