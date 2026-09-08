@@ -9,7 +9,7 @@
   <img src="https://img.shields.io/badge/Windows-10%20%2F%2011-0078D4?style=flat-square" alt="Windows 10 / 11">
   <img src="https://img.shields.io/badge/Arch-x86%20%7C%20x64%20%7C%20ARM64-64748B?style=flat-square" alt="Architectures: x86, x64, ARM64">
   <img src="https://img.shields.io/badge/Portable-Single%20EXE-16A34A?style=flat-square" alt="Portable: single EXE">
-  <img src="https://img.shields.io/badge/Version-v0.8.0-7C3AED?style=flat-square" alt="Version v0.8.0">
+  <img src="https://img.shields.io/badge/Version-v0.8.1-7C3AED?style=flat-square" alt="Version v0.8.1">
 </p>
 <p align="center"><strong>English</strong> | <a href="README.zh-CN.md">简体中文</a></p>
 
@@ -84,7 +84,7 @@ Use `--quiet` to suppress notifications or `--list <package>` to output a JSON f
 
 Built with **C++20 / C17, CMake, and Win32**, with project-owned package parsers and statically linked compression libraries. Detailed developer documents are currently in Chinese.
 
-Version 0.8.0 adds Velopack / Squirrel, MSIX / APPX, Inno / CAB split packages, and task cancellation. See the [release notes](docs/releases/v0.8.0.md).
+Version 0.8.1 adds Velopack / Squirrel, MSIX / APPX, Inno / CAB split packages, and task cancellation. See the [release notes](docs/releases/v0.8.1.md).
 
 - [Build and development](docs/05-build-and-development.md)
 - [Release workflow](docs/16-release.md) — version tags trigger builds; ordinary pushes do not publish. ARM64 runtime testing is pending.

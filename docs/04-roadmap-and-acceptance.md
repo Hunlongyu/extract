@@ -4,13 +4,13 @@
 
 ## 当前状态（优先于下文历史阶段记录）
 
-v0.8.0 发布范围见 [双语版本说明](releases/v0.8.0.md)；正式发布状态以 GitHub Releases 为准。
+v0.8.1 发布范围见 [双语版本说明](releases/v0.8.1.md)；正式发布状态以 GitHub Releases 为准。
 
 - v0.7.0 基础功能：核心静态解包、MSI/CAB/Burn、ZIP/7z/SFX、选定 Inno 6.0–6.7/7.1、NSIS Unicode 3.x 与部分 ANSI 2.x、内层展开、多架构目录、日志、进度通知和三架构单 EXE 标签发布。
-- v0.8.0 增加：独立工作进程、批次取消、可选单包超时、异常退出后继续批次、登记临时文件的身份校验清理，以及历史任务中断标记。设计和验证边界见 [工作进程与取消](22-worker-cancellation.md)。纳入 v0.8.0。
-- v0.8.0 新增 [Velopack/Squirrel 完整离线包](24-update-packages.md)：分别解析固定标记与 DATA/131 资源，整理应用目录；差分、缺载荷和损坏包明确报错。纳入 v0.8.0。
-- v0.8.0 新增 [MSIX/APPX/Bundle](25-msix-appx.md)：清单与块哈希校验，保留 VFS，多架构/资源包分开提取，缺少外置成员明确标为部分完成。纳入 v0.8.0。
-- v0.8.0 新增 [Inno 外置分卷与 CAB 跨卷续接](26-split-volumes.md)，包含 MSI 内嵌、外置及混合 CAB 卷链。纳入 v0.8.0。
+- v0.8.1 增加：独立工作进程、批次取消、可选单包超时、异常退出后继续批次、登记临时文件的身份校验清理，以及历史任务中断标记。设计和验证边界见 [工作进程与取消](22-worker-cancellation.md)。纳入 v0.8.1。
+- v0.8.1 新增 [Velopack/Squirrel 完整离线包](24-update-packages.md)：分别解析固定标记与 DATA/131 资源，整理应用目录；差分、缺载荷和损坏包明确报错。纳入 v0.8.1。
+- v0.8.1 新增 [MSIX/APPX/Bundle](25-msix-appx.md)：清单与块哈希校验，保留 VFS，多架构/资源包分开提取，缺少外置成员明确标为部分完成。纳入 v0.8.1。
+- v0.8.1 新增 [Inno 外置分卷与 CAB 跨卷续接](26-split-volumes.md)，包含 MSI 内嵌、外置及混合 CAB 卷链。纳入 v0.8.1。
 - 下一阶段：继续维护 [失败与回归样本清单](23-compatibility-backlog.md)，补已有格式的真实兼容缺口；InstallShield/Advanced Installer 私有封装需近期样本调查，Burn 内部 CAB 跨卷仍待实现。
 - 验证缺口：ARM64 实机运行、Windows 10/11 干净桌面矩阵，以及持续模糊测试。未逐项复核的历史验收框保留未勾选，不代表相应代码全部缺失。
 

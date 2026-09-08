@@ -9,7 +9,7 @@
   <img src="https://img.shields.io/badge/Windows-10%20%2F%2011-0078D4?style=flat-square" alt="Windows 10 / 11">
   <img src="https://img.shields.io/badge/Arch-x86%20%7C%20x64%20%7C%20ARM64-64748B?style=flat-square" alt="架构：x86、x64、ARM64">
   <img src="https://img.shields.io/badge/Portable-Single%20EXE-16A34A?style=flat-square" alt="便携运行：单个 EXE">
-  <img src="https://img.shields.io/badge/Version-v0.8.0-7C3AED?style=flat-square" alt="版本 v0.8.0">
+  <img src="https://img.shields.io/badge/Version-v0.8.1-7C3AED?style=flat-square" alt="版本 v0.8.1">
 </p>
 <p align="center"><a href="README.md">English</a> | <strong>简体中文</strong></p>
 
@@ -84,7 +84,7 @@ Start-Process .\Extract.exe -ArgumentList '--output "D:\Unpacked" "D:\Downloads\
 
 使用 **C++20 / C17、CMake 和 Win32** 开发，安装包解析由本项目实现，底层压缩库静态链接。
 
-v0.8.0 新增 Velopack / Squirrel、MSIX / APPX、Inno / CAB 分卷支持和任务取消，详见[版本说明](docs/releases/v0.8.0.md)。
+v0.8.1 新增 Velopack / Squirrel、MSIX / APPX、Inno / CAB 分卷支持和任务取消，详见[版本说明](docs/releases/v0.8.1.md)。
 
 - [构建与开发](docs/05-build-and-development.md)
 - [发布流程](docs/16-release.md)：仅版本标签触发构建，普通 push 不发布；ARM64 运行验证待完成。

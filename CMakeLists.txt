@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.25)
 
-project(Extract VERSION 0.8.0 LANGUAGES C CXX)
+project(Extract VERSION 0.8.1 LANGUAGES C CXX)
 
 # 部分 Windows CMake 将 MSVC 的 UTF-8 中文 /showIncludes 前缀按 GBK
 # 再编码，Ninja 因而漏记头文件依赖。仅修正已观察到的错误前缀；

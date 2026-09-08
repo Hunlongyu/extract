@@ -66,7 +66,7 @@ python tests/inno_integration.py --executable out/build/win-x64-release/bin/Extr
 
 ## 使用与退出码
 
-v0.8.0 增加 [工作进程、取消和超时](22-worker-cancellation.md)、[Velopack/Squirrel 完整包](24-update-packages.md)和 [MSIX/APPX/Bundle](25-msix-appx.md)，工具齐备时 CTest 共 14 项。`update_package_integration` 使用 Python 生成无入口点的惰性 PE/ZIP，不联网、不执行样本；官方固定摘要样本另做可选本地验证。
+v0.8.1 增加 [工作进程、取消和超时](22-worker-cancellation.md)、[Velopack/Squirrel 完整包](24-update-packages.md)和 [MSIX/APPX/Bundle](25-msix-appx.md)，工具齐备时 CTest 共 14 项。`update_package_integration` 使用 Python 生成无入口点的惰性 PE/ZIP，不联网、不执行样本；官方固定摘要样本另做可选本地验证。
 
 `msix_integration` 查找 Windows SDK 最新版本目录中的 `x64/MakeAppx.exe`，生成已知内容的单包、资源包和 Bundle；用 Python 独立 ZIP 读取及打包前内容核对提取结果，并运行损坏、缺失、路径与哈希反例。缺少 SDK 打包器返回 77，发布工作流要求 14 项均通过且无跳过。MakeAppx 仅为测试工具，不链接或附带到产品，不运行包内程序。
 
