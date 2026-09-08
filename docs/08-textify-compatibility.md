@@ -2,6 +2,8 @@
 
 日期：2026-09-05。版本：0.2.1。
 
+下文为该版本历史记录；后续本地开发已接入标准 Inno 外置分卷，范围与验证见 [分卷说明](26-split-volumes.md)。加密和下载条目仍不支持。
+
 用户拖入 Textify 后，任务 `C01757D7-7060-4AA6-AC27-B786EAF20ECE` 报告“当前不支持此 Inno loader 布局”。原因是 0.2.0 只实现了 loader v2，样本实际使用 loader v1 与 `Inno Setup Setup Data (6.1.0) (u)`。
 
 原始偏移表 CRC 正确。这是兼容分支缺失，不是依据已发现的数据损坏作出的拒绝。`6.1.0 (u)` 是数据标识，不能据此断定安装包的编译器产品版本；生产方 6.2.2（2023-02-15）仍使用这套结构，处于项目的近期样本窗口。[官方结构定义](https://github.com/jrsoftware/issrc/blob/is-6_2_2/Projects/Struct.pas)、[官方版本记录](https://jrsoftware.org/files/is6.2-whatsnew.htm)

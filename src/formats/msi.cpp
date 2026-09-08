@@ -294,35 +294,66 @@ MsiPackage::~MsiPackage() = default;
 const Catalog& MsiPackage::catalog() const { return impl_->catalog; }
 fs::path MsiPackage::extract(const fs::path& parent) {
     io::Output output(parent.empty() ? impl_->catalog.input.parent_path() : parent, impl_->catalog.input.stem().wstring());
-    for (const auto& media : impl_->media) {
+    std::set<std::size_t> processed_media;
+    for (std::size_t media_index = 0; media_index < impl_->media.size(); ++media_index) {
+        const auto& media = impl_->media[media_index];
+        if (processed_media.contains(media_index)) continue;
         if (media.cabinet.empty()) continue;
         log::Scope media_step(L"msi.cabinet");
         log::write(log::Level::info, L"msi.media", media.cabinet);
-        std::unique_ptr<io::TemporaryFile> embedded;
-        std::unique_ptr<io::Input> external;
-        io::Bytes bytes;
-        if (media.cabinet[0] == L'#') {
-            progress::Scope stage(progress::Phase::preparing, {}, media.cabinet);
-            embedded = impl_->cabinet_bytes(media.cabinet.substr(1)); bytes = embedded->bytes();
+        struct Source { std::unique_ptr<io::TemporaryFile> embedded; std::unique_ptr<io::Input> external; io::Bytes bytes; };
+        std::map<std::size_t, Source> sources;
+        const auto load = [&](std::size_t i) -> io::Bytes {
+            if (const auto found = sources.find(i); found != sources.end()) return found->second.bytes;
+            require(!processed_media.contains(i), Status::corrupt, L"MSI 不同卷链重复引用同一媒体。");
+            const auto& cabinet = impl_->media[i].cabinet;
+            require(!cabinet.empty(), Status::corrupt, L"MSI CAB 卷链引用了松散文件媒体。");
+            Source source;
+            if (cabinet[0] == L'#') {
+                progress::Scope stage(progress::Phase::preparing, {}, cabinet);
+                source.embedded = impl_->cabinet_bytes(cabinet.substr(1)); source.bytes = source.embedded->bytes();
+            }
+            else {
+                try { source.external = std::make_unique<io::Input>(impl_->catalog.input.parent_path() / cabinet); }
+                catch (const Failure& e) { throw Failure(e.status, L"读取 MSI 外置 CAB 失败：" + cabinet + L"；" + e.message, e.native_code); }
+                source.bytes = source.external->bytes();
+            }
+            auto bytes = source.bytes; sources.emplace(i, std::move(source)); return bytes;
+        };
+        const auto bytes = load(media_index);
+        io::Reader header(bytes); header.skip(30); const bool spanning = (header.u16() & 3) != 0;
+        const auto first_name = media.cabinet[0] == L'#' ? media.cabinet.substr(1) : media.cabinet;
+        codecs::CabinetSet cabinets(bytes, spanning ? codecs::cabinet_name(first_name) : "payload.cab", [&](const std::string& raw) {
+            const auto name = codecs::cabinet_path(raw);
+            std::optional<std::size_t> found;
+            for (std::size_t i = 0; i < impl_->media.size(); ++i) {
+                const auto& value = impl_->media[i].cabinet; if (value.empty()) continue;
+                const auto physical = value[0] == L'#' ? value.substr(1) : value;
+                if (platform::equal_name(physical, name)) {
+                    require(!found, Status::corrupt, L"MSI CAB 分卷名称在内嵌/外置媒体间存在歧义。"); found = i;
+                }
+            }
+            require(found.has_value(), Status::corrupt, L"MSI Media 未声明 CAB 分卷：" + name); return load(*found);
+        });
+        const auto& members = cabinets.members();
+        std::vector<std::size_t> group_files;
+        for (const auto& [i, unused] : sources) {
+            (void)unused; processed_media.insert(i);
+            group_files.insert(group_files.end(), impl_->media[i].files.begin(), impl_->media[i].files.end());
         }
-        else {
-            try { external = std::make_unique<io::Input>(impl_->catalog.input.parent_path() / media.cabinet); }
-            catch (const Failure& e) { throw Failure(e.status, L"读取 MSI 外置 CAB 失败：" + media.cabinet + L"；" + e.message, e.native_code); }
-            bytes = external->bytes();
-        }
-        const auto members = codecs::cab_members(bytes);
-        require(members.size() == media.files.size(), Status::corrupt, L"CAB 文件数与对应 MSI 媒体不符。");
+        require(members.size() == group_files.size(), Status::corrupt, L"CAB 文件数与对应 MSI 媒体不符。");
         std::vector<Entry*> targets;
         std::set<std::size_t> seen;
         for (const auto& member : members) {
             identifier(member.decoded_name);
-            const auto found = std::find_if(media.files.begin(), media.files.end(), [&](std::size_t i) {
+            const auto found = std::find_if(group_files.begin(), group_files.end(), [&](std::size_t i) {
                 return platform::equal_name(impl_->catalog.files[i].id, member.decoded_name);
             });
-            require(found != media.files.end() && seen.insert(*found).second, Status::corrupt, L"CAB 成员不属于此媒体或重复。");
+            require(found != group_files.end() && seen.insert(*found).second, Status::corrupt, L"CAB 成员不属于此媒体或重复。");
             targets.push_back(&impl_->catalog.files[*found]);
         }
-        codecs::extract_cab(bytes, targets, output);
+        if (cabinets.volume_count() > 1) impl_->catalog.notes.push_back(L"MSI CAB 卷链已校验并续接：" + first_name + L"，共 " + std::to_wstring(cabinets.volume_count()) + L" 卷。");
+        cabinets.extract(targets, output);
     }
     for (std::size_t i = 0; i < impl_->sources.size(); ++i) {
         const auto& source = impl_->sources[i]; if (source.compressed) continue;

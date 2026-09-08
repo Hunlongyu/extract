@@ -1,5 +1,6 @@
 #include "io/input.h"
 #include "platform/log.h"
+#include "core/control.h"
 #include <algorithm>
 
 namespace extract::io {
@@ -21,6 +22,7 @@ Input::Input(const fs::path& path) : path_(platform::absolute_path(path)),
     log::detail(log::Level::info, L"input.size", [&] { return L"bytes=" + std::to_wstring(size_); });
 }
 void Input::read(std::uint64_t offset, std::span<std::byte> destination) const {
+    control::checkpoint();
     require(offset <= size_ && destination.size() <= size_ - offset, Status::corrupt, L"文件读取范围越界。");
     LARGE_INTEGER position{}; position.QuadPart = static_cast<LONGLONG>(offset);
     if (!SetFilePointerEx(file_.get(), position, nullptr, FILE_BEGIN)) platform::io_failure(L"无法定位输入文件");

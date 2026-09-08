@@ -44,7 +44,7 @@ PeLayout pe_layout(io::Bytes input) {
     return result;
 }
 
-io::Bytes pe_rcdata(io::Bytes input, std::uint32_t id) {
+static io::Bytes resource(io::Bytes input, std::uint32_t id, std::wstring_view type) {
     io::Reader dos(io::slice(input, 0, 64));
     require(dos.u16() == 0x5a4d, Status::unsupported, L"输入不是受支持的 PE 安装包。");
     dos.skip(58);
@@ -91,18 +91,30 @@ io::Bytes pe_rcdata(io::Bytes input, std::uint32_t id) {
         return result;
     };
     const auto resources = resolve(resource_rva, resource_size);
-    const auto child = [&](std::uint32_t offset, std::optional<std::uint32_t> name, bool directory) {
+    const auto child = [&](std::uint32_t offset, std::optional<std::uint32_t> name, bool directory, std::wstring_view named = {}) {
         io::Reader node(io::slice(resources, offset, 16));
         node.skip(12);
-        const auto named = node.u16(), numeric = node.u16();
-        const auto count = static_cast<std::uint32_t>(named) + numeric;
+        const auto named_count = node.u16(), numeric = node.u16();
+        const auto count = static_cast<std::uint32_t>(named_count) + numeric;
         require(count <= 4096, Status::limit_exceeded, L"PE 资源条目过多。");
         io::Reader entries(io::slice(resources, static_cast<std::uint64_t>(offset) + 16, static_cast<std::uint64_t>(count) * 8));
         std::optional<std::uint32_t> selected;
         for (std::uint32_t i = 0; i < count; ++i) {
             const auto key = entries.u32(), value = entries.u32();
+            if (!named.empty()) {
+                if (!(key & 0x80000000U)) continue;
+                const auto name_offset = key & 0x7fffffffU;
+                require(name_offset <= resources.size(), Status::corrupt, L"PE 资源名称偏移越界。");
+                io::Reader text(resources.subspan(name_offset));
+                const auto length = text.u16();
+                const auto encoded = text.take(static_cast<std::size_t>(length) * 2);
+                if (length != named.size()) continue;
+                io::Reader decoded(encoded); bool matches = true;
+                for (auto c : named) if (decoded.u16() != c) matches = false;
+                if (!matches) continue;
+            }
             if (name && key != *name) continue;
-            if (!name && selected) continue;
+            if (!name && named.empty() && selected) continue;
             require(!selected, Status::corrupt, L"PE 资源 ID 重复。");
             require(((value & 0x80000000u) != 0) == directory, Status::corrupt, L"PE 资源层级无效。");
             selected = value & 0x7fffffffu;
@@ -110,11 +122,13 @@ io::Bytes pe_rcdata(io::Bytes input, std::uint32_t id) {
         require(selected.has_value(), Status::unsupported, L"未发现受支持的安装器资源。");
         return *selected;
     };
-    const auto type_node = child(0, 10, true);
+    const auto type_node = type.empty() ? child(0, 10, true) : child(0, {}, true, type);
     const auto id_node = child(type_node, id, true);
     const auto leaf = child(id_node, {}, false);
     io::Reader data(io::slice(resources, leaf, 16));
     const auto rva = data.u32(), size = data.u32();
     return resolve(rva, size);
 }
+io::Bytes pe_rcdata(io::Bytes input, std::uint32_t id) { return resource(input, id, {}); }
+io::Bytes pe_named_resource(io::Bytes input, std::wstring_view type, std::uint32_t id) { return resource(input, id, type); }
 } // namespace extract::formats

@@ -30,7 +30,7 @@ x86 的可用地址空间较小，大型 7z 固实块可能无法映射；优先
 
 1. 使用固定提交 SHA 的官方 checkout / artifact Actions。
 2. 在 `windows-2025` 的 MSVC 环境分别构建 x86、x64、ARM64；通过 `vswhere` 发现工具链。
-3. x86 / x64 运行全部 10 个现有 CTest，要求无失败、无跳过，包含实际字节进度与嵌套阶段隔离测试。NSIS 3.11 测试编译器下载后验证固定 SHA-256，Inno 编译器和 7-Zip 使用 runner 镜像预装工具，均只生成惰性测试数据。
+3. x86 / x64 运行全部 14 个现有 CTest，要求无失败、无跳过，包含实际字节进度、工作进程、更新包、MSIX、分卷及嵌套阶段隔离测试。NSIS 3.11 测试编译器下载后验证固定 SHA-256，Inno 编译器和 7-Zip 使用 runner 镜像预装工具，均只生成惰性测试数据。
 4. ARM64 在 x64 runner 上交叉编译，关闭测试目标；目前未设置 ARM64 实机运行测试。这不等于已验证 ARM64 上的提取和通知行为。
 5. `package-release.ps1` 检查全部 C/C++ 编译命令使用 `/MT`、EXE 机器类型、GUI 子系统、内置版本及普通/延迟导入的系统 DLL 白名单，再复制单文件产物并计算摘要。
 6. 所有架构成功后，发布 job 才获得 `contents: write` 权限。下载并验证三个构建产物、合并许可和摘要；读取 `docs/releases/vX.Y.Z.md` 的双语发布说明，使用 `gh release create --verify-tag --draft --notes-file` 上传。缺少发布说明时拒绝创建 Release。

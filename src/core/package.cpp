@@ -5,6 +5,8 @@
 #include "formats/archive.h"
 #include "formats/cab.h"
 #include "formats/burn.h"
+#include "formats/update_package.h"
+#include "formats/msix.h"
 #include "io/input.h"
 #include "platform/log.h"
 #include "core/progress.h"
@@ -32,10 +34,19 @@ std::unique_ptr<Package> parse(const io::Input& input, std::wstring_view format)
     } catch (const Failure& failure) { log::failure(L"parse.failed", failure); throw; }
 }
 }
+static std::unique_ptr<Package> parse_archive(const io::Input& input) {
+    auto package = parse<formats::ArchivePackage>(input, L"ZIP/7z");
+    if (formats::msix_catalog(package->catalog())) {
+        package.reset();
+        return parse<formats::MsixPackage>(input, L"MSIX/APPX");
+    }
+    return package;
+}
 std::unique_ptr<Package> open_package(const fs::path& path) {
     progress::Scope progress(progress::Phase::analyzing, {}, {}, path.native());
     log::Scope step(L"package.detect", &path);
     io::Input input(path);
+    if (formats::msix_extension(path)) return parse<formats::MsixPackage>(input, L"MSIX/APPX");
     std::array<std::byte, 8> header{};
     const auto header_size = static_cast<std::size_t>((std::min)(input.size(), std::uint64_t{8}));
     input.read(0, std::span(header).first(header_size));
@@ -44,16 +55,17 @@ std::unique_ptr<Package> open_package(const fs::path& path) {
     for (std::size_t i = 0; msi && i < compound.size(); ++i) msi = std::to_integer<unsigned char>(header[i]) == compound[i];
     if (msi) return parse<formats::MsiPackage>(input, L"MSI");
     const auto bytes = input.bytes();
+    if (formats::update_package_probe(path, bytes)) return parse<formats::UpdatePackage>(input, L"Velopack/Squirrel");
     if (bytes.size() >= 2 && bytes[0] == std::byte{'M'} && bytes[1] == std::byte{'Z'}) {
         if (formats::burn_probe(bytes)) return parse<formats::BurnPackage>(input, L"WiX Burn");
         if (formats::nsis_probe(bytes)) return parse<formats::NsisPackage>(input, L"NSIS");
-        if (formats::archive_probe(bytes)) return parse<formats::ArchivePackage>(input, L"ZIP/7z");
+        if (formats::archive_probe(bytes)) return parse_archive(input);
         if (formats::cab_probe(bytes)) return parse<formats::CabPackage>(input, L"CAB");
         return parse<formats::InnoPackage>(input, L"Inno Setup (PE fallback probe)");
     }
     if (formats::cab_probe(bytes)) return parse<formats::CabPackage>(input, L"CAB");
-    if (formats::archive_probe(bytes)) return parse<formats::ArchivePackage>(input, L"ZIP/7z");
-    throw Failure(Status::unsupported, L"当前支持 MSI、CAB、WiX Burn、NSIS Unicode、受支持版本的 Inno Setup、ZIP/7z 及其 SFX。");
+    if (formats::archive_probe(bytes)) return parse_archive(input);
+    throw Failure(Status::unsupported, L"当前支持 MSI、CAB、WiX Burn、NSIS、受支持版本的 Inno Setup、Velopack/Squirrel 完整包、MSIX/APPX/Bundle、ZIP/7z 及其 SFX。");
 }
 
 void plan_paths(Catalog& catalog) {

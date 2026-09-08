@@ -7,6 +7,7 @@ param(
     [switch]$WithoutTests,
     [switch]$Install,
     [switch]$Test,
+    [switch]$CleanFirst,
     [string]$NsisCompiler,
     [string]$SevenZipTestTool,
     [switch]$Fresh
@@ -77,7 +78,9 @@ try {
     & $cmakePath @configureArguments
     if ($LASTEXITCODE -ne 0) { throw 'CMake 配置失败。' }
 
-    & $cmakePath --build --preset $preset --parallel
+    $buildArguments = @('--build', '--preset', $preset, '--parallel')
+    if ($CleanFirst) { $buildArguments += '--clean-first' }
+    & $cmakePath @buildArguments
     if ($LASTEXITCODE -ne 0) { throw '编译失败。' }
 
     if ($Test) {

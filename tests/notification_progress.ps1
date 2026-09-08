@@ -3,7 +3,7 @@
 param(
     [Parameter(Mandatory)][string]$Executable,
     [Parameter(Mandatory)][string]$WorkRoot,
-    [ValidateSet('normal','dismiss','quiet','short','failure','batch','partial')][string]$Mode = 'normal'
+    [ValidateSet('normal','dismiss','quiet','short','failure','batch','partial','cancel')][string]$Mode = 'normal'
 )
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.IO.Compression
@@ -18,7 +18,7 @@ $stream = [IO.File]::Create($zip)
 $archive = [IO.Compression.ZipArchive]::new($stream, [IO.Compression.ZipArchiveMode]::Create)
 $entry = $archive.CreateEntry('payload.bin', [IO.Compression.CompressionLevel]::Optimal).Open()
 $chunk = New-Object byte[] (1024 * 1024)
-$blocks = if ($Mode -in @('normal','dismiss')) { 1024 } else { 1 }
+$blocks = if ($Mode -in @('normal','dismiss','cancel')) { 1024 } else { 1 }
 try { for ($i=0; $i -lt $blocks; ++$i) { $entry.Write($chunk, 0, $chunk.Length) } }
 finally { $entry.Dispose(); $archive.Dispose(); $stream.Dispose() }
 if ($Mode -eq 'failure') { [IO.File]::WriteAllText($zip, 'not an archive') }
@@ -35,6 +35,7 @@ $process = Start-Process -FilePath $exe -ArgumentList $arguments -WindowStyle Hi
 $snapshots = @()
 $group = $null
 $removed = $false
+$cancelRequested = $false
 $watch = [Diagnostics.Stopwatch]::StartNew()
 while (-not $process.HasExited -and $watch.Elapsed.TotalSeconds -lt 120) {
     foreach ($toast in @($history.GetHistory('Hunlongyu.Extract'))) {
@@ -46,6 +47,17 @@ while (-not $process.HasExited -and $watch.Elapsed.TotalSeconds -lt 120) {
         if (-not $group -and ($xml.Contains($name) -or ([string]$fields['context']).Contains($name))) { $group = $toast.Group }
         if (-not $group -or $toast.Group -ne $group) { continue }
         $snapshots += [pscustomobject]@{ Group=$group; Xml=$xml; Fields=$fields; Milliseconds=$watch.ElapsedMilliseconds }
+        if ($Mode -eq 'cancel' -and -not $cancelRequested -and $xml.Contains('{fraction}')) {
+            [xml]$live = $xml
+            $cancelAction = $live.SelectSingleNode('/toast/actions/action')
+            $cancelLabel = '"\u53d6\u6d88\u4efb\u52a1"' | ConvertFrom-Json
+            if (-not $cancelAction -or $cancelAction.GetAttribute('content') -ne $cancelLabel -or
+                $cancelAction.GetAttribute('activationType') -ne 'protocol' -or
+                $cancelAction.GetAttribute('arguments') -ne "hunlongyu-extract://cancel/$group") { throw 'Missing cancel action' }
+            $cancelProcess = Start-Process -FilePath $exe -ArgumentList "--open-notification hunlongyu-extract://cancel/$group" -WindowStyle Hidden -PassThru -Wait
+            if ($cancelProcess.ExitCode -ne 0) { throw 'Cancel protocol activation failed' }
+            $cancelRequested = $true
+        }
         if ($Mode -eq 'dismiss' -and -not $removed -and $xml.Contains('<progress')) {
             $history.Remove('progress', $group, 'Hunlongyu.Extract')
             $removed = $true
@@ -61,7 +73,7 @@ $logs = @()
 foreach ($directory in @((Join-Path (Split-Path $exe) 'log'), (Join-Path $env:LOCALAPPDATA 'Extract/log'))) {
     if (-not (Test-Path -LiteralPath $directory)) { continue }
     foreach ($file in Get-ChildItem -LiteralPath $directory -Filter '*.log' -File) {
-        foreach ($line in Get-Content -LiteralPath $file.FullName -Encoding UTF8) {
+        foreach ($line in Get-Content -LiteralPath $file.FullName -Encoding UTF8 -ErrorAction SilentlyContinue) {
             try { $record = $line | ConvertFrom-Json } catch { continue }
             if ($record.pid -eq $process.Id) { $logs += $record }
         }
@@ -73,7 +85,7 @@ $group = $Matches[1]
 $final = @($history.GetHistory('Hunlongyu.Extract') | Where-Object { $_.Tag -eq 'progress' -and $_.Group -eq $group })
 $updates = @($logs | Where-Object event -eq 'notification.progress_update')
 $resultMode = @($logs | Where-Object event -eq 'notification.result_mode')
-$expectedExit = if ($Mode -eq 'failure') { 50 } elseif ($Mode -eq 'partial') { 299 } else { 0 }
+$expectedExit = if ($Mode -eq 'failure') { 50 } elseif ($Mode -eq 'partial') { 299 } elseif ($Mode -eq 'cancel') { 1223 } else { 0 }
 if ($process.ExitCode -ne $expectedExit) { throw "Unexpected exit code: $($process.ExitCode)" }
 if ($Mode -eq 'quiet') {
     if ($final.Count -or $updates.Count -or $resultMode.Count) { throw 'Quiet mode sent notifications' }
@@ -84,7 +96,7 @@ if ($Mode -eq 'quiet') {
     $action = $document.SelectSingleNode('/toast/actions/action')
     $openFolder = '"\u6253\u5f00\u6587\u4ef6\u5939"' | ConvertFrom-Json
     $viewResult = '"\u67e5\u770b\u7ed3\u679c"' | ConvertFrom-Json
-    $expectedAction = if ($Mode -in @('failure','partial','batch')) { $viewResult } else { $openFolder }
+    $expectedAction = if ($Mode -in @('failure','partial','batch','cancel')) { $viewResult } else { $openFolder }
     if (-not $action -or $action.GetAttribute('content') -ne $expectedAction -or
         $action.GetAttribute('activationType') -ne 'protocol' -or
         $action.GetAttribute('arguments') -ne $document.DocumentElement.GetAttribute('launch')) {
@@ -94,11 +106,12 @@ if ($Mode -eq 'quiet') {
     if ($bar -and ($bar.HasAttribute('title') -or $bar.GetAttribute('status'))) { throw 'Completed progress repeats status text' }
     if ($document.SelectSingleNode('/toast/visual/binding/text').InnerText.StartsWith('Extract')) { throw 'Result repeats app identity' }
     if (-not $finalXml.Contains($name)) { throw 'Final result lacks package name' }
-    if ($Mode -in @('failure','partial')) {
+    if ($Mode -in @('failure','partial','cancel')) {
         if ($finalXml.Contains('<progress')) { throw 'Failure shows a completed progress bar' }
     } elseif (-not $finalXml.Contains('value="1"') -or -not $finalXml.Contains('100%')) { throw 'Success did not retain a full progress bar' }
     if ($Mode -in @('batch','partial') -and -not $finalXml.Contains('second.zip')) { throw 'Batch result lacks filenames' }
-    if ($Mode -in @('normal','dismiss')) {
+    if ($Mode -eq 'cancel' -and -not $cancelRequested) { throw 'No cancel activation tested' }
+    if ($Mode -in @('normal','dismiss','cancel')) {
         if ($resultMode[-1].message -ne 'updated-existing') { throw 'Final result would produce another popup' }
         if (-not @($snapshots | Where-Object { $_.Xml.Contains('<progress') }).Count) { throw 'No live progress observed' }
     }

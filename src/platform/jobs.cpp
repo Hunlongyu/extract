@@ -50,11 +50,27 @@ std::wstring read_text(const fs::path& path) {
         io_failure(L"任务记录解码失败");
     return text;
 }
+std::wstring event_name(std::wstring_view id) { return L"Local\\Hunlongyu.Extract.Cancel." + std::wstring(id); }
+void recover(const fs::path& directory, std::wstring_view id) {
+    if (read_text(directory / L"state.txt") != L"running") return;
+    Handle active(OpenEventW(SYNCHRONIZE, FALSE, event_name(id).c_str()));
+    if (active || GetLastError() != ERROR_FILE_NOT_FOUND) return;
+    // 父进程已结束：不重跑安装包，也不从可修改的磁盘记录推导删除权限。
+    const auto note = L"上次任务被中断，不能视为解包完成。已提交的文件保留；残留临时目录请结合日志检查。\r\n";
+    replace_text(directory, L"interrupted.txt", note);
+    replace_text(directory, L"state.txt", L"interrupted");
+    try { replace_text(directory, L"summary.txt", note + read_text(directory / L"summary.txt")); } catch (...) {}
+    replace_text(directory, L"open-target.txt", directory.wstring());
+    log::write(log::Level::warning, L"job.recovered", id);
+}
 }
 
 fs::path jobs_directory() { return local_data() / L"Extract" / L"jobs"; }
 
 JobRecord::JobRecord() : id_(unique_id()) {
+    cancel_ = Handle(CreateEventW(nullptr, TRUE, FALSE, event_name(id_).c_str()));
+    if (!cancel_) io_failure(L"无法创建任务取消事件");
+    require(GetLastError() != ERROR_ALREADY_EXISTS, Status::internal_error, L"任务标识冲突。");
     auto path = local_data();
     locks_ = lock_ancestors(path);
     for (const auto& component : {std::wstring(L"Extract"), std::wstring(L"jobs"), id_}) {
@@ -65,13 +81,19 @@ JobRecord::JobRecord() : id_(unique_id()) {
     }
     directory_ = path;
     log::detail(log::Level::info, L"job.created", [&] { return L"job=" + id_ + L"; directory=" + directory_.wstring(); });
-    finish(L"任务正在执行。\r\n");
+    update(L"任务正在执行。\r\n");
+    replace_text(directory_, L"open-target.txt", directory_.wstring());
+    replace_text(directory_, L"state.txt", L"running");
     replace_text(directory_.parent_path(), L"latest.txt", id_);
 }
 
 void JobRecord::finish(const std::wstring& summary, const fs::path& open_target) {
-    replace_text(directory_, L"summary.txt", summary + L"\r\n详细日志：" + log::location() + L"\r\n");
+    update(summary);
     replace_text(directory_, L"open-target.txt", (open_target.empty() ? directory_ : open_target).wstring());
+    replace_text(directory_, L"state.txt", L"finished");
+}
+void JobRecord::update(const std::wstring& summary) {
+    replace_text(directory_, L"summary.txt", summary + L"\r\n详细日志：" + log::location() + L"\r\n");
 }
 
 bool valid_job_id(std::wstring_view id) noexcept {
@@ -88,6 +110,7 @@ void open_job(std::wstring_view id) {
     require(valid_job_id(id), Status::unsafe_path, L"通知任务标识无效。");
     const auto directory = jobs_directory() / id;
     auto guards = lock_ancestors(directory);
+    if (GetFileAttributesW(extended_path(directory / L"state.txt").c_str()) != INVALID_FILE_ATTRIBUTES) recover(directory, id);
     const auto target = absolute_path(read_text(directory / L"open-target.txt"));
     auto target_guards = lock_ancestors(target);
     const auto result = reinterpret_cast<INT_PTR>(ShellExecuteW(nullptr, L"open", target.c_str(), nullptr, nullptr, SW_SHOWNORMAL));
@@ -98,5 +121,26 @@ void open_last_job() {
     const auto directory = jobs_directory();
     auto guards = lock_ancestors(directory);
     open_job(read_text(directory / L"latest.txt"));
+}
+
+void cancel_job(std::wstring_view id) {
+    require(valid_job_id(id), Status::unsafe_path, L"取消任务标识无效。");
+    Handle event(OpenEventW(EVENT_MODIFY_STATE, FALSE, event_name(id).c_str()));
+    if (!event) io_failure(L"任务已结束或不存在");
+    if (!SetEvent(event.get())) io_failure(L"无法请求取消任务");
+    log::write(log::Level::info, L"job.cancel_requested", id);
+}
+void cancel_last_job() {
+    const auto directory = jobs_directory(); const auto guards = lock_ancestors(directory);
+    cancel_job(read_text(directory / L"latest.txt"));
+}
+void recover_last_job() noexcept {
+    try {
+        const auto root = jobs_directory(); const auto guards = lock_ancestors(root);
+        const auto id = read_text(root / L"latest.txt");
+        require(valid_job_id(id), Status::unsafe_path, L"任务记录标识无效。");
+        const auto directory = root / id; const auto locks = lock_ancestors(directory);
+        if (GetFileAttributesW(extended_path(directory / L"state.txt").c_str()) != INVALID_FILE_ATTRIBUTES) recover(directory, id);
+    } catch (...) { /* 无旧任务、旧版记录或记录不可读，不影响新任务。 */ }
 }
 } // namespace extract::platform

@@ -7,4 +7,5 @@ struct PeLayout { std::vector<PeSection> sections; std::uint64_t overlay = 0; st
 PeLayout pe_layout(io::Bytes input);
 // 只解析 PE 数据，不将输入作为模块加载；返回指定数值 ID 的 RCDATA 内容。
 io::Bytes pe_rcdata(io::Bytes input, std::uint32_t id);
+io::Bytes pe_named_resource(io::Bytes input, std::wstring_view type, std::uint32_t id);
 } // namespace extract::formats

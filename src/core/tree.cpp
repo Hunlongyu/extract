@@ -4,16 +4,19 @@
 #include "formats/archive.h"
 #include "formats/cab.h"
 #include "formats/burn.h"
+#include "formats/update_package.h"
+#include "formats/msix.h"
 #include "io/input.h"
 #include "platform/log.h"
 #include "core/progress.h"
+#include "core/control.h"
 #include <algorithm>
 #include <map>
 #include <set>
 
 namespace extract {
 namespace {
-enum class Kind { none, msi, inno, nsis, zip, seven_zip, cab, burn, uninstaller };
+enum class Kind { none, msi, inno, nsis, zip, seven_zip, cab, burn, update, msix, uninstaller };
 
 template<std::size_t N>
 bool starts(io::Bytes bytes, const std::array<unsigned char, N>& signature) {
@@ -29,6 +32,7 @@ Kind probe(io::Bytes bytes, bool archives) {
         starts(bytes, std::array<unsigned char, 4>{'P','K',5,6}))) return Kind::zip;
     if (!starts(bytes, std::array<unsigned char, 2>{'M','Z'})) return Kind::none;
     try {
+        if (formats::update_package_probe({}, bytes)) return Kind::update;
         if (formats::burn_probe(bytes)) return Kind::burn;
         if (formats::nsis_probe(bytes)) return formats::nsis_uninstaller(bytes) ? Kind::uninstaller : Kind::nsis;
         if (const auto archive = formats::archive_probe(bytes))
@@ -48,6 +52,8 @@ std::wstring name(Kind kind) {
     case Kind::msi: return L"MSI";
     case Kind::cab: return L"CAB";
     case Kind::burn: return L"WiX Burn";
+    case Kind::update: return L"Velopack/Squirrel";
+    case Kind::msix: return L"MSIX/APPX";
     case Kind::inno: return L"Inno Setup";
     case Kind::nsis: return L"NSIS";
     case Kind::zip: return L"ZIP";
@@ -65,6 +71,7 @@ void save_report(const fs::path& directory, const Catalog& catalog) {
         FILE_SHARE_READ, nullptr, CREATE_NEW, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OPEN_REPARSE_POINT, nullptr));
     if (!file) platform::io_failure(L"无法创建递归解包报告");
     try {
+        control::created(temporary, file.get());
         const auto bytes = platform::utf8(catalog_json(catalog, true));
         platform::write_all(file.get(), std::as_bytes(std::span(bytes)));
         if (!FlushFileBuffers(file.get())) platform::io_failure(L"无法保存递归解包报告");
@@ -130,15 +137,17 @@ struct Context {
         std::vector<fs::path> inner_primary;
         std::set<fs::path> archive_primary;
         for (auto& entry : catalog.files) {
+            control::checkpoint();
             if (!entry.path_resolved) log::detail(entry.is_uninstaller ? log::Level::info : log::Level::warning, L"path.unresolved", [&] {
                 return entry.path.wstring() + L"; source=" + entry.source_expression + L"; auxiliary=" + (entry.is_uninstaller ? L"true" : L"false");
             });
             const auto extension = entry.path.extension().wstring();
+            const bool msix = formats::msix_extension(entry.path);
             const bool executable = platform::equal_name(extension, L".exe") || platform::equal_name(extension, L".msi");
             const auto root = entry.path.begin()->wstring();
             const bool archive = ((catalog.format == L"NSIS" && !platform::equal_name(root, L"app")) || catalog.format == L"CAB") &&
                 (platform::equal_name(extension, L".zip") || platform::equal_name(extension, L".7z") || platform::equal_name(extension, L".cab"));
-            if (!executable && !archive) continue;
+            if (!executable && !archive && !msix) continue;
             const auto path = result.output / entry.path;
             progress::file(entry.path.native());
             log::Scope child_step(L"nested.inspect", &path);
@@ -150,7 +159,7 @@ struct Context {
                     std::array<std::byte, 8> header{};
                     input.read(0, std::span(header).first(static_cast<std::size_t>((std::min)(input.size(), std::uint64_t{8}))));
                     kind = starts(std::span<const std::byte>(header), std::array<unsigned char, 8>{0xd0,0xcf,0x11,0xe0,0xa1,0xb1,0x1a,0xe1})
-                        ? Kind::msi : probe(input.bytes(), archive);
+                        ? Kind::msi : (msix ? Kind::msix : probe(input.bytes(), archive));
                     if (kind == Kind::uninstaller)
                         require(platform::sha256(path) == entry.sha256, Status::corrupt, L"卸载辅助文件在提取后被修改。");
                 }
@@ -180,7 +189,8 @@ struct Context {
                     nested.message = L"相同内容已展开，复用已有结果。";
                     log::detail(log::Level::info, L"nested.reused", [&] { return child_result.output.wstring(); });
                 } else {
-                    child_result = process(std::move(child), result.output, depth + 1, entry.sha256);
+                    const auto child_parent = catalog.format == L"MSIX/APPX Bundle" ? result.output / entry.path.parent_path() : result.output;
+                    child_result = process(std::move(child), child_parent, depth + 1, entry.sha256);
                     result.total_bytes += child_result.total_bytes; result.file_count += child_result.file_count;
                 }
                 nested.output = child_result.output.lexically_relative(result.output);
@@ -193,6 +203,7 @@ struct Context {
                 if (child_result.complete && (kind == Kind::zip || kind == Kind::seven_zip))
                     archive_primary.insert(child_result.primary_output);
             } catch (const Failure& failure) {
+                if (failure.status == Status::cancelled) throw;
                 log::failure(L"nested.failed", failure);
                 nested_ok = false;
                 nested.status = failure.status == Status::unsupported ? L"unsupported" :
@@ -211,7 +222,7 @@ struct Context {
         const bool app_executable = std::any_of(catalog.files.begin(), catalog.files.end(), [&](const Entry& entry) {
             return !entry.is_uninstaller && rooted_at_app(entry) && platform::equal_name(entry.path.extension().wstring(), L".exe");
         });
-        if (app_files) result.primary_output /= L"app";
+        if (app_files && catalog.format != L"MSIX/APPX") result.primary_output /= L"app";
         if ((catalog.format == L"NSIS" || catalog.format == L"WiX Burn" || catalog.format == L"CAB") && inner_primary.size() == 1 && result.complete) {
             // NSIS 外层可能只把卸载图标等资源放入 app，真正的应用在内嵌归档中。
             if (!app_files || (catalog.format == L"NSIS" && !app_executable && archive_primary.contains(inner_primary.front())))

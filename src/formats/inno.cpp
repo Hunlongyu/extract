@@ -4,6 +4,7 @@
 #include "formats/pe.h"
 #include "codecs/stream.h"
 #include "io/output.h"
+#include "io/temporary.h"
 #include <algorithm>
 #include <map>
 #include <numeric>
@@ -125,9 +126,13 @@ struct InnoPackage::Impl {
     enum class Schema { v600u, v610u, v630, v6401, v642, v643, v650, v652, v660, v661, v670, v7003 } schema = Schema::v670;
     bool version7 = false;
     std::uint64_t payload_offset = 0, metadata_offset = 0;
+    std::uint32_t slices_per_disk = 1;
+    struct Volume { std::unique_ptr<io::Input> input; std::uint64_t base, header; };
+    std::vector<Volume> volumes;
     codecs::Compression method = codecs::Compression::stored;
     struct Location {
         std::uint64_t start, suboffset, size, packed;
+        std::uint32_t first = 0, last = 0;
         std::wstring hash;
         std::uint8_t flags;
         std::vector<std::size_t> files;
@@ -157,7 +162,6 @@ struct InnoPackage::Impl {
         require(table.u32() == codecs::crc32(table_bytes.first(loader64 ? 60 : 40)), Status::corrupt, L"Inno loader 偏移表 CRC 不匹配。");
         require(declared_size <= input.bytes().size() && metadata_offset < declared_size,
                 Status::corrupt, L"Inno 声明长度或元数据偏移越界。");
-        require(payload_offset != 0, Status::unsupported, L"当前不支持 Inno 外置分卷。");
         require(payload_offset <= metadata_offset, Status::corrupt, L"Inno 载荷范围无效。");
         io::Reader source(io::slice(input.bytes(), metadata_offset, declared_size - metadata_offset));
         const auto id_bytes = source.take(64);
@@ -215,9 +219,9 @@ struct InnoPackage::Impl {
         const unsigned header_tail = schema <= Schema::v630 ? 74 : old_tables ? 86 : modern ? 65 :
             schema == Schema::v661 ? 55 : schema == Schema::v660 ? 54 : schema == Schema::v650 ? 38 : 46;
         reader.skip(header_tail);
-        const auto slices_per_disk = reader.u32();
-        require(slices_per_disk == 1, Status::unsupported,
-            L"Inno 分卷参数或修改版头部布局不受支持（预期 1，读取到 " + std::to_wstring(slices_per_disk) + L"）。");
+        slices_per_disk = reader.u32();
+        require(slices_per_disk >= 1 && slices_per_disk <= 26 && (!payload_offset || slices_per_disk == 1), Status::unsupported,
+            L"Inno 分卷参数或修改版头部布局不受支持（读取到 " + std::to_wstring(slices_per_disk) + L"）。");
         reader.skip(6);
         const auto compression = reader.u8();
         require(compression <= 4, Status::unsupported, L"Inno 使用了未知压缩方法。");
@@ -279,8 +283,9 @@ struct InnoPackage::Impl {
         io::Reader records(location_data);
         for (std::uint32_t i = 0; i < counts[9]; ++i) {
             const auto first = records.u32(), last = records.u32();
-            require(first == 0 && last == 0, Status::unsupported, L"当前不支持 Inno 跨卷文件。");
+            require(first <= last && last <= INT_MAX && (!payload_offset || (first == 0 && last == 0)), Status::corrupt, L"Inno 文件分卷范围无效。");
             Location location{};
+            location.first = first; location.last = last;
             location.start = schema <= Schema::v650 ? records.u32() : records.u64(); location.suboffset = records.u64();
             location.size = records.u64(); location.packed = records.u64();
             location.hash = hex_string(records.take(sha1 ? 20 : 32));
@@ -309,14 +314,54 @@ struct InnoPackage::Impl {
             require(file.size <= max_file_bytes - catalog.total_size, Status::limit_exceeded, L"Inno 总输出超出 64 位文件范围。");
             catalog.total_size += file.size;
         }
-        const auto payload = io::slice(input.bytes(), payload_offset, metadata_offset - payload_offset);
+        if (!payload_offset) {
+            const auto last = std::max_element(locations.begin(), locations.end(), [](const auto& a, const auto& b) { return a.last < b.last; })->last;
+            std::uint64_t base = 0, names = 0;
+            for (std::uint32_t i = 0; i <= last; ++i) {
+                control::checkpoint();
+                auto name = input.path().stem().wstring() + L"-" + std::to_wstring(i / slices_per_disk + 1);
+                if (slices_per_disk != 1) name += static_cast<wchar_t>(L'a' + i % slices_per_disk);
+                name += L".bin"; platform::validate_component(name);
+                names = checked_size_sum(names, name.size() * sizeof(wchar_t) + sizeof(Volume));
+                require(names <= metadata_limit, Status::limit_exceeded, L"Inno 分卷描述超过元数据预算。");
+                const auto path = input.path().parent_path() / name;
+                log::Scope step(L"inno.open_volume", &path);
+                std::unique_ptr<io::Input> file;
+                try { file = std::make_unique<io::Input>(path); }
+                catch (const Failure& e) { throw Failure(e.status, L"读取 Inno 分卷失败：" + name + L"；" + e.message, e.native_code); }
+                const std::uint64_t header = schema > Schema::v650 ? 16 : 12;
+                require(file->size() >= header, Status::corrupt, L"Inno 分卷头被截断：" + name);
+                std::array<std::byte, 16> data{}; file->read(0, std::span(data).first(static_cast<std::size_t>(header)));
+                io::Reader fields(std::span<const std::byte>(data).first(static_cast<std::size_t>(header)));
+                require(fields.u64() == (header == 16 ? 0x1a3233626b736469ULL : 0x1a3233616b736469ULL), Status::corrupt, L"Inno 分卷标识错误：" + name);
+                const auto size = header == 16 ? fields.u64() : fields.u32();
+                require(size == file->size(), Status::corrupt, L"Inno 分卷长度不符：" + name);
+                volumes.push_back({std::move(file), base, header});
+                base = checked_size_sum(base, size - header);
+            }
+            catalog.notes.push_back(L"静态读取同目录 Inno 外置分卷，共 " + std::to_wstring(volumes.size()) + L" 卷；SlicesPerDisk=" + std::to_wstring(slices_per_disk));
+            for (auto& location : locations) {
+                const auto& first = volumes[location.first]; const auto& last_volume = volumes[location.last];
+                require(location.start >= first.header && location.start <= first.input->size() && first.input->size() - location.start >= 4,
+                        Status::corrupt, L"Inno 分卷数据块起点无效。");
+                std::array<std::byte, 4> signature{}; first.input->read(location.start, signature);
+                require(io::Reader(signature).u32() == 0x1a626c7a, Status::corrupt, L"Inno 分卷数据块标识损坏。");
+                location.start = checked_size_sum(first.base, location.start - first.header);
+                const auto end = checked_size_sum(checked_size_sum(location.start, 4), location.packed);
+                const auto volume_end = checked_size_sum(last_volume.base, last_volume.input->size() - last_volume.header);
+                require(end <= volume_end && (location.first == location.last || end > last_volume.base), Status::corrupt, L"Inno 数据块长度与结束分卷不符。");
+            }
+        }
+        const auto payload = payload_offset ? io::slice(input.bytes(), payload_offset, metadata_offset - payload_offset) : io::Bytes{};
         for (std::size_t i = 0; i < locations.size(); ++i) {
             const auto& location = locations[i];
             require(!location.files.empty(), Status::corrupt, L"Inno 位置表含未被文件清单引用的载荷。");
-            require(location.start <= payload.size() && payload.size() - location.start >= 4
-                    && location.packed <= payload.size() - location.start - 4, Status::corrupt, L"Inno 文件数据块越界。");
-            io::Reader signature(io::slice(payload, location.start, 4));
-            require(signature.u32() == 0x1a626c7a, Status::corrupt, L"Inno 文件数据块标识损坏。");
+            if (payload_offset) {
+                require(location.start <= payload.size() && payload.size() - location.start >= 4
+                        && location.packed <= payload.size() - location.start - 4, Status::corrupt, L"Inno 文件数据块越界。");
+                io::Reader signature(io::slice(payload, location.start, 4));
+                require(signature.u32() == 0x1a626c7a, Status::corrupt, L"Inno 文件数据块标识损坏。");
+            }
             auto [it, inserted] = chunks.try_emplace(location.start);
             auto& chunk = it->second;
             const bool compressed = (location.flags & 16) != 0;
@@ -351,7 +396,27 @@ struct InnoPackage::Impl {
         for (const auto& [start, chunk] : chunks) {
             log::Scope chunk_step(L"inno.decode_chunk");
             log::detail(log::Level::info, L"inno.chunk", [&] { return L"offset=" + std::to_wstring(start) + L"; packedBytes=" + std::to_wstring(chunk.packed); });
-            const auto data = io::slice(input.bytes(), payload_offset + start + 4, chunk.packed);
+            std::unique_ptr<io::TemporaryFile> joined;
+            io::Bytes data;
+            if (payload_offset) data = io::slice(input.bytes(), payload_offset + start + 4, chunk.packed);
+            else {
+                progress::Scope stage(progress::Phase::preparing, chunk.packed, L"读取 Inno 外置分卷");
+                joined = std::make_unique<io::TemporaryFile>(L"inno-volume-cache");
+                auto position = checked_size_sum(start, 4), remaining = chunk.packed;
+                for (const auto& volume : volumes) {
+                    const auto end = volume.base + volume.input->size() - volume.header;
+                    if (position >= end || !remaining) continue;
+                    require(position >= volume.base, Status::corrupt, L"Inno 分卷流范围无效。");
+                    auto offset = position - volume.base + volume.header;
+                    auto count = (std::min)(remaining, end - position);
+                    while (count) {
+                        const auto n = static_cast<std::size_t>((std::min)(count, static_cast<std::uint64_t>(buffer.size())));
+                        auto part = std::span(buffer).first(n); volume.input->read(offset, part); joined->append(part);
+                        count -= n; remaining -= n; position += n; offset += n; progress::advance(n);
+                    }
+                }
+                require(!remaining, Status::corrupt, L"Inno 外置分卷数据不足。"); data = joined->bytes();
+            }
             codecs::Stream stream(chunk.compressed ? method : codecs::Compression::stored, data);
             std::uint64_t position = 0;
             for (const auto index : chunk.locations) {

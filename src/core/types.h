@@ -15,7 +15,7 @@
 namespace extract {
 namespace fs = std::filesystem;
 
-enum class Status { unsupported, corrupt, io_error, unsafe_path, limit_exceeded, internal_error };
+enum class Status { unsupported, corrupt, io_error, unsafe_path, limit_exceeded, internal_error, cancelled, timeout, worker_crashed };
 
 struct Failure final : std::exception {
     Status status;
@@ -44,6 +44,8 @@ struct Entry {
     std::wstring expected_sha512;
     std::optional<std::uint32_t> expected_crc32;
     bool source_hash_verified = false;
+    std::wstring block_hash_algorithm;
+    bool block_hash_verified = false;
     bool path_resolved = true;
     bool is_uninstaller = false;
 };

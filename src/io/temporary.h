@@ -1,6 +1,7 @@
 #pragma once
 #include "io/input.h"
 #include "io/output.h"
+#include "core/control.h"
 
 namespace extract::io {
 inline fs::path temporary_directory() {
@@ -19,6 +20,7 @@ public:
     TemporaryFile(const TemporaryFile&) = delete;
     TemporaryFile& operator=(const TemporaryFile&) = delete;
     void append(Bytes bytes) {
+        control::checkpoint();
         require(!mapping_, Status::internal_error, L"不能修改已映射的缓存。");
         const auto next = checked_size_sum(size_, bytes.size());
         if (size_ >= checked_until_) {

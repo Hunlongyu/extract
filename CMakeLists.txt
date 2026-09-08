@@ -1,6 +1,15 @@
 cmake_minimum_required(VERSION 3.25)
 
-project(Extract VERSION 0.7.0 LANGUAGES C CXX)
+project(Extract VERSION 0.8.0 LANGUAGES C CXX)
+
+# 部分 Windows CMake 将 MSVC 的 UTF-8 中文 /showIncludes 前缀按 GBK
+# 再编码，Ninja 因而漏记头文件依赖。仅修正已观察到的错误前缀；
+# 英文或其它正常探测结果保持不变。
+if(CMAKE_CL_SHOWINCLUDES_PREFIX MATCHES "^娉ㄦ剰:")
+    set(CMAKE_CL_SHOWINCLUDES_PREFIX "注意: 包含文件: ")
+    set(CMAKE_C_CL_SHOWINCLUDES_PREFIX "${CMAKE_CL_SHOWINCLUDES_PREFIX}")
+    set(CMAKE_CXX_CL_SHOWINCLUDES_PREFIX "${CMAKE_CL_SHOWINCLUDES_PREFIX}")
+endif()
 
 if(NOT WIN32)
     message(FATAL_ERROR "Extract currently targets Windows only.")
@@ -80,6 +89,7 @@ endforeach()
 add_library(extract_core STATIC
     src/core/types.cpp
     src/core/progress.cpp
+    src/core/control.cpp
     src/core/package.cpp
     src/core/tree.cpp
     src/platform/files.cpp
@@ -95,6 +105,8 @@ add_library(extract_core STATIC
     src/formats/inno.cpp
     src/formats/nsis.cpp
     src/formats/archive.cpp
+    src/formats/update_package.cpp
+    src/formats/msix.cpp
 )
 target_include_directories(extract_core PUBLIC src)
 target_link_libraries(extract_core PUBLIC extract_project_options msi cabinet bcrypt ole32 ntdll xmllite shlwapi shell32)
@@ -105,6 +117,7 @@ add_executable(Extract WIN32
     src/platform/console.cpp
     src/platform/console.h
     src/platform/jobs.cpp
+    src/platform/worker.cpp
     src/platform/notifications.cpp
     "${CMAKE_CURRENT_BINARY_DIR}/generated/version.rc"
     resources/app.manifest
@@ -140,6 +153,21 @@ if(BUILD_TESTING)
     set(EXTRACT_NSIS_COMPILER "" CACHE FILEPATH "Official makensis.exe used only to generate test fixtures")
     set(EXTRACT_7Z_TEST_TOOL "" CACHE FILEPATH "Official 7zr.exe used only to generate archive test fixtures")
     if(Python3_Interpreter_FOUND)
+        add_test(NAME msix_integration COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/msix_integration.py"
+            --executable "$<TARGET_FILE:Extract>"
+            --work-root "${CMAKE_CURRENT_BINARY_DIR}/msix-fixtures")
+        set_tests_properties(msix_integration PROPERTIES TIMEOUT 600 SKIP_RETURN_CODE 77)
+        add_test(NAME update_package_integration COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/update_package_integration.py"
+            --executable "$<TARGET_FILE:Extract>"
+            --work-root "${CMAKE_CURRENT_BINARY_DIR}/update-package-fixtures")
+        set_tests_properties(update_package_integration PROPERTIES TIMEOUT 240)
+        add_test(NAME worker_integration COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/worker_integration.py"
+            --executable "$<TARGET_FILE:Extract>"
+            --work-root "${CMAKE_CURRENT_BINARY_DIR}/worker-fixtures")
+        set_tests_properties(worker_integration PROPERTIES TIMEOUT 240)
         add_test(NAME progress_integration COMMAND "${Python3_EXECUTABLE}"
             "${CMAKE_CURRENT_SOURCE_DIR}/tests/progress_integration.py"
             --probe "$<TARGET_FILE:extract_progress_probe>"
@@ -165,6 +193,11 @@ if(BUILD_TESTING)
         if(EXTRACT_INNO_COMPILER)
             list(APPEND inno_compiler_args --compiler "${EXTRACT_INNO_COMPILER}")
         endif()
+        add_test(NAME volume_integration COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/volume_integration.py"
+            --executable "$<TARGET_FILE:Extract>"
+            --work-root "${CMAKE_CURRENT_BINARY_DIR}/volume-fixtures" ${inno_compiler_args})
+        set_tests_properties(volume_integration PROPERTIES TIMEOUT 600 SKIP_RETURN_CODE 77)
         add_test(NAME inno_integration COMMAND "${Python3_EXECUTABLE}"
             "${CMAKE_CURRENT_SOURCE_DIR}/tests/inno_integration.py"
             --executable "$<TARGET_FILE:Extract>"

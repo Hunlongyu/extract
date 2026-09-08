@@ -6,6 +6,8 @@
 
 优先完善现有 MSI/NSIS，再新增标准 CAB 和 WiX Burn；随后做 MSIX/APPX、Squirrel/Velopack 离线包，以及有近期样本的 InstallShield 封装。无需把整个 UniExtract 工具箱重写一遍。
 
+以上为调查时的顺序。当前 MSI/CAB/Burn 已实现，Velopack/Squirrel、MSIX/APPX/Bundle 首批离线布局及 Inno 外置卷、独立/MSI CAB 跨卷续接也已在本地实现；最新范围见 [更新包实现](24-update-packages.md)、[MSIX/APPX 实现](25-msix-appx.md)与 [分卷实现](26-split-volumes.md)。
+
 “近期”按本项目既定的 2021–2026 年样本范围；下文优先级依据现有代码缺口、格式组合价值和实现范围判断，**不是安装器市场占有率统计**。
 
 安装包解析、目录规划、嵌套提取由我们实现；压缩/通用归档基础库、Windows CAB API 可以继续使用。参考工具仅用于理解结构和建立测试对照，不作为发布程序的外部依赖。
@@ -251,7 +253,7 @@ A 的 `observer.ini` 引用了不存在的 `vp.so`、`relic.so`、`x23cat.so`；
 
 两者是不同封装实现，不能只按 Electron 应用名称选择解析器。分别核查 EXE 内嵌载荷位置、完整更新包的归档结构和应用目录映射；按实际结构复用 ZIP 层，必要时先补 PE 资源内载荷定位。
 
-首批仅支持可自足的完整离线载荷。纯在线启动器、只有 delta 的更新包和缺少基础版本的情况给出具体状态，不伪装成空包成功；不执行更新器和安装钩子。项目范围参考 [Velopack 官方仓库](https://github.com/velopack/velopack)。具体二进制布局仍待专项源码调查和样本验收。
+首批完整离线载荷现已在本地实现：Velopack 固定标记和 Squirrel.Windows DATA/131 分别解析。无完整载荷、只有 delta 或缺少基础版本时给出具体原因，不执行更新器和安装钩子。具体固定源码、测试证据与仍未覆盖的情况见 [专项实现记录](24-update-packages.md)。
 
 ### 5. InstallShield 与 Advanced Installer：拆成不同任务
 
@@ -288,7 +290,7 @@ Advanced Installer 官方提供 `/extract`，但本次检查的 UniExtract2 `TYP
 
 每个模块至少覆盖：多个近期生成样本、中文/空格路径、嵌套应用包、缺失外置载荷、损坏数据、冲突文件名、路径越界和累计解压预算。真实样本从第一版开始保留，测试记录精确结构版本和最终文件哈希。
 
-2026-09-07 已取消 512 MiB 输入及共享 8 GiB/10,000 文件预算，改为实际磁盘空间和整数范围检查。worker/硬超时仍未完成，现有连续映射及解码器约束仍影响大包覆盖；详见 [资源处理](17-large-packages.md)。
+2026-09-07 已取消 512 MiB 输入及共享 8 GiB/10,000 文件预算，改为实际磁盘空间和整数范围检查。v0.7.0 发布后本地增加 [worker/可选超时](22-worker-cancellation.md)；现有连续映射及解码器约束仍影响大包覆盖，详见 [资源处理](17-large-packages.md)。
 
 ## 核查依据
 

@@ -1,6 +1,7 @@
 #include "codecs/stream.h"
 #include "platform/log.h"
 #include "core/progress.h"
+#include "core/control.h"
 #include "codecs/nsis_bzip.h"
 #include <LzmaDec.h>
 #include <Lzma2Dec.h>
@@ -196,7 +197,7 @@ Stream::~Stream() = default;
 void Stream::read_exact(std::span<std::byte> output) {
     require(impl_->read(output) == output.size(), Status::corrupt, L"压缩流未提供声明的文件内容。");
 }
-std::size_t Stream::read(std::span<std::byte> output) { return impl_->read(output); }
+std::size_t Stream::read(std::span<std::byte> output) { control::checkpoint(); return impl_->read(output); }
 std::uint64_t Stream::consumed() const noexcept { return impl_->position; }
 void Stream::finish() {
     std::array<std::byte, 1> extra{};

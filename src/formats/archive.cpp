@@ -14,6 +14,10 @@
 namespace extract::formats {
 namespace {
 constexpr std::size_t metadata_limit = 64 * 1024 * 1024;
+void initialize_crc() {
+    static std::once_flag initialized;
+    std::call_once(initialized, [] { CrcGenerateTable(); });
+}
 std::uint32_t u32(io::Bytes b, std::uint64_t p) { return io::Reader(io::slice(b, p, 4)).u32(); }
 bool signature(io::Bytes b, std::size_t p, std::string_view value) {
     return p <= b.size() && value.size() <= b.size() - p && std::memcmp(b.data() + p, value.data(), value.size()) == 0;
@@ -139,7 +143,7 @@ struct Seven {
     }
     ~Seven() { SzArEx_Free(&database, &main.api); }
 };
-struct ZipFile { std::uint64_t data, packed; codecs::Compression method; };
+struct ZipFile { std::uint64_t data, packed; codecs::Compression method; std::uint64_t local_header_size; };
 }
 
 std::optional<ArchiveLocation> archive_probe(io::Bytes bytes) {
@@ -165,22 +169,30 @@ std::optional<ArchiveLocation> archive_probe(io::Bytes bytes) {
 }
 
 struct ArchivePackage::Impl {
-    io::Input input;
+    std::unique_ptr<io::Input> input;
+    io::Bytes bytes;
     Catalog catalog;
     std::unique_ptr<Seven> seven;
     std::vector<std::uint32_t> indices;
     std::vector<ZipFile> zip;
-    explicit Impl(const fs::path& path) : input(path) {
-        static std::once_flag initialized;
-        std::call_once(initialized, [] { CrcGenerateTable(); });
-        const auto location = archive_probe(input.bytes());
+    std::function<void(std::size_t, std::uint64_t, io::Bytes)> verifier;
+    explicit Impl(const fs::path& path) : input(std::make_unique<io::Input>(path)), bytes(input->bytes()) {
+        initialize_crc();
+        const auto location = archive_probe(bytes);
         require(location.has_value(), Status::unsupported, L"未识别为 ZIP/7z 或受支持的 SFX。");
-        catalog.input = input.path();
+        catalog.input = input->path();
         if (location->kind == ArchiveKind::seven_zip) read_seven(location->offset);
         else read_zip(location->offset);
         plan_paths(catalog);
         catalog.notes.push_back(L"静态归档提取；不执行 SFX 配置、脚本、链接或输出文件。空目录不单独恢复。");
         if (location->offset) catalog.notes.push_back(L"PE 自解压外壳附加区偏移：" + std::to_wstring(location->offset));
+    }
+    Impl(const fs::path& path, io::Bytes zip_bytes) : bytes(zip_bytes) {
+        initialize_crc();
+        require(kind_at(bytes, 0) == ArchiveKind::zip, Status::corrupt, L"内嵌载荷缺少 ZIP 签名。");
+        catalog.input = path;
+        read_zip(0);
+        plan_paths(catalog);
     }
     void add(Entry file) {
         require(file.size <= max_file_bytes - catalog.total_size,
@@ -189,7 +201,7 @@ struct ArchivePackage::Impl {
     }
     void read_seven(std::size_t offset) {
         catalog.format = L"7z"; catalog.format_version = L"0.x";
-        seven = std::make_unique<Seven>(input.bytes().subspan(offset));
+        seven = std::make_unique<Seven>(bytes.subspan(offset));
         const auto& db = seven->database;
         std::uint64_t expanded = 0;
         for (std::uint32_t folder = 0; folder < db.db.NumFolders; ++folder) {
@@ -218,7 +230,7 @@ struct ArchivePackage::Impl {
     }
     void read_zip(std::size_t archive_offset);
     fs::path extract(const fs::path& parent) {
-        io::Output output(parent.empty() ? input.path().parent_path() : parent, input.path().stem().wstring());
+        io::Output output(parent.empty() ? catalog.input.parent_path() : parent, catalog.input.stem().wstring());
         std::unique_ptr<MappedFolder> folder_data;
         std::uint32_t current_folder = 0xffffffffU;
         std::array<std::byte, 65536> buffer{};
@@ -251,14 +263,17 @@ struct ArchivePackage::Impl {
                     }
                 } else require(entry.size == 0, Status::corrupt, L"7z 非空文件缺少数据流。");
             } else {
-                const auto& payload = zip[i]; codecs::Stream stream(payload.method, io::slice(input.bytes(), payload.data, payload.packed));
+                const auto& payload = zip[i]; codecs::Stream stream(payload.method, io::slice(bytes, payload.data, payload.packed));
                 std::uint64_t remaining = entry.size;
                 while (remaining) {
                     const auto n = static_cast<std::size_t>((std::min)(remaining, static_cast<std::uint64_t>(buffer.size())));
                     auto part = std::span(buffer).first(n); stream.read_exact(part);
+                    if (verifier) verifier(i, entry.size - remaining, part);
                     crc = CrcUpdate(crc, part.data(), part.size()); platform::write_payload(file.get(), part); remaining -= n;
                 }
                 stream.finish();
+                if (verifier) verifier(i, entry.size, {});
+                entry.block_hash_verified = !entry.block_hash_algorithm.empty();
             }
             if (entry.expected_crc32) {
                 require(CRC_GET_DIGEST(crc) == *entry.expected_crc32, Status::corrupt, L"归档文件 CRC-32 校验失败：" + entry.path.wstring());
@@ -278,7 +293,7 @@ struct ArchivePackage::Impl {
 };
 
 void ArchivePackage::Impl::read_zip(std::size_t archive_offset) {
-    const auto b = input.bytes();
+    const auto b = bytes;
     catalog.format = L"ZIP"; catalog.format_version = L"ZIP/ZIP64";
     require(b.size() >= 22, Status::corrupt, L"ZIP 尾记录缺失。");
     std::optional<std::size_t> end;
@@ -289,11 +304,15 @@ void ArchivePackage::Impl::read_zip(std::size_t archive_offset) {
     }
     require(end.has_value(), Status::corrupt, L"ZIP 尾记录或注释长度无效。");
     io::Reader eocd(io::slice(b, *end + 4, 16));
-    require(eocd.u16() == 0 && eocd.u16() == 0, Status::unsupported, L"当前不支持 ZIP 分卷。");
+    const auto disk_number = eocd.u16(), central_disk = eocd.u16();
+    // MakeAppx 的 ZIP64 尾记录也把卷号写成占位值；实际卷号在 ZIP64
+    // 记录中继续严格验证为零，不能因此接受真正的分卷。
+    require((disk_number == 0 || disk_number == 0xffff) && (central_disk == 0 || central_disk == 0xffff),
+            Status::unsupported, L"当前不支持 ZIP 分卷。");
     const auto disk_entries = eocd.u16(); std::uint64_t count = eocd.u16();
     std::uint64_t central_size = eocd.u32(), central_offset = eocd.u32(), central_end = *end;
     require(disk_entries == count, Status::unsupported, L"ZIP 跨卷文件数量不一致。");
-    if (count == 0xffff || central_size == 0xffffffffU || central_offset == 0xffffffffU) {
+    if (disk_number == 0xffff || central_disk == 0xffff || count == 0xffff || central_size == 0xffffffffU || central_offset == 0xffffffffU) {
         require(*end >= 20, Status::corrupt, L"ZIP64 定位记录缺失。");
         io::Reader locator(io::slice(b, *end - 20, 20));
         require(locator.u32() == 0x07064b50, Status::corrupt, L"ZIP64 定位签名错误。");
@@ -387,7 +406,7 @@ void ArchivePackage::Impl::read_zip(std::size_t archive_offset) {
         if (directory) { require(size == 0, Status::corrupt, L"ZIP 目录条目含文件数据。"); continue; }
         Entry file; file.id = L"zip-" + std::to_wstring(i); file.path = file.original_path = path;
         file.source_expression = name; file.size = size; file.expected_crc32 = crc; add(std::move(file));
-        zip.push_back({data, packed, method == 0 ? codecs::Compression::stored : (method == 8 ? codecs::Compression::raw_deflate : codecs::Compression::bzip2)});
+        zip.push_back({data, packed, method == 0 ? codecs::Compression::stored : (method == 8 ? codecs::Compression::raw_deflate : codecs::Compression::bzip2), data - local_start});
     }
     require(central.remaining() == 0, Status::corrupt, L"ZIP 中央目录含未知尾数据。");
     std::sort(spans.begin(), spans.end());
@@ -396,7 +415,60 @@ void ArchivePackage::Impl::read_zip(std::size_t archive_offset) {
 }
 
 ArchivePackage::ArchivePackage(const fs::path& path) : impl_(std::make_unique<Impl>(path)) {}
+ArchivePackage::ArchivePackage(const fs::path& path, io::Bytes bytes) : impl_(std::make_unique<Impl>(path, bytes)) {}
 ArchivePackage::~ArchivePackage() = default;
 const Catalog& ArchivePackage::catalog() const { return impl_->catalog; }
 fs::path ArchivePackage::extract(const fs::path& parent) { return impl_->extract(parent); }
+void ArchivePackage::read_member(std::size_t index, const std::function<void(io::Bytes)>& sink) const {
+    require(!impl_->seven && index < impl_->zip.size(), Status::internal_error, L"ZIP 成员索引无效。");
+    const auto& entry = impl_->catalog.files[index];
+    const auto& payload = impl_->zip[index];
+    codecs::Stream stream(payload.method, io::slice(impl_->bytes, payload.data, payload.packed));
+    std::array<std::byte, 65536> buffer{};
+    auto remaining = entry.size;
+    UInt32 crc = CRC_INIT_VAL;
+    while (remaining) {
+        const auto n = static_cast<std::size_t>((std::min)(remaining, static_cast<std::uint64_t>(buffer.size())));
+        const auto part = std::span(buffer).first(n);
+        stream.read_exact(part); crc = CrcUpdate(crc, part.data(), part.size());
+        sink(part); remaining -= n;
+    }
+    stream.finish();
+    require(entry.expected_crc32 && CRC_GET_DIGEST(crc) == *entry.expected_crc32,
+            Status::corrupt, L"ZIP 成员 CRC-32 校验失败：" + entry.original_path.wstring());
+}
+std::vector<std::byte> ArchivePackage::read_metadata(std::size_t index, std::size_t limit) const {
+    require(index < impl_->catalog.files.size(), Status::internal_error, L"ZIP 元数据索引无效。");
+    require(impl_->catalog.files[index].size <= limit, Status::limit_exceeded, L"更新包清单超过元数据预算。");
+    std::vector<std::byte> result;
+    result.reserve(static_cast<std::size_t>(impl_->catalog.files[index].size));
+    read_member(index, [&](io::Bytes bytes) { result.insert(result.end(), bytes.begin(), bytes.end()); });
+    return result;
+}
+ZipMember ArchivePackage::zip_member(std::size_t index) const {
+    require(!impl_->seven && index < impl_->zip.size(), Status::internal_error, L"ZIP 成员索引无效。");
+    const auto& member = impl_->zip[index];
+    return {member.data, member.local_header_size, member.method, io::slice(impl_->bytes, member.data, member.packed)};
+}
+void ArchivePackage::set_block_verifier(std::function<void(std::size_t, std::uint64_t, io::Bytes)> verifier,
+                                      const std::vector<std::wstring>& algorithms) {
+    require(!impl_->seven && algorithms.size() == impl_->catalog.files.size(), Status::internal_error, L"块校验配置无效。");
+    impl_->verifier = std::move(verifier);
+    for (std::size_t i = 0; i < algorithms.size(); ++i) impl_->catalog.files[i].block_hash_algorithm = algorithms[i];
+}
+void ArchivePackage::set_layout(std::wstring format, std::wstring version,
+                               const std::vector<fs::path>& paths, std::vector<std::wstring> notes,
+                               bool complete, const std::vector<std::wstring>& conditions) {
+    auto& catalog = impl_->catalog;
+    require(paths.size() == catalog.files.size(), Status::internal_error, L"更新包目录映射数量不一致。");
+    require(conditions.empty() || conditions.size() == paths.size(), Status::internal_error, L"包条件映射数量不一致。");
+    for (std::size_t i = 0; i < paths.size(); ++i) {
+        platform::validate_relative(paths[i]); catalog.files[i].path = paths[i];
+        if (!conditions.empty()) catalog.files[i].conditions = conditions[i];
+    }
+    catalog.format = std::move(format); catalog.format_version = std::move(version);
+    catalog.notes = std::move(notes);
+    catalog.content_complete = complete;
+    plan_paths(catalog);
+}
 }

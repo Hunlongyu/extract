@@ -1,6 +1,6 @@
 # Inno compatibility / Inno 兼容性
 
-Standard embedded packages are supported for the exact data layouts below. Compiler versions and data layout identifiers are different. Modified repacks, encrypted payloads, external volumes and downloaded files are not covered by this table.
+Standard embedded packages are supported for the exact data layouts below. Compiler versions and data layout identifiers are different. Modified repacks, encrypted payloads and downloaded files are not covered by this table. External split volumes are now implemented locally; their separate verification matrix and limitations are documented in [split packages](26-split-volumes.md).
 
 ## 精确布局与验证范围
 

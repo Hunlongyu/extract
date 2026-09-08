@@ -1,0 +1,1558 @@
+{
+  "scope": "Local Inno external volumes and standalone/MSI spanning CAB implementation",
+  "checkedAt": "2026-09-07T10:20:09.523015+00:00",
+  "baseCommit": "0f671d6b573ba787c0e272e3898bd75e5de44a00",
+  "workingTreeUncommitted": true,
+  "published": false,
+  "version": "0.7.0",
+  "inputInstallersExecuted": false,
+  "extractedProgramsExecuted": false,
+  "method": "Official ISCC and MakeCab inert split fixtures, MSI COM database generation; original bytes, SHA256, source hashes, unchanged inputs, rollback and scratch cleanup",
+  "fullRegression": [
+    {
+      "architecture": "x64",
+      "name": "Win32-ninja",
+      "tests": "14",
+      "failures": "0",
+      "disabled": "0",
+      "skipped": "0",
+      "hostname": "hly",
+      "time": "255",
+      "timestamp": "2026-09-07T18:12:29",
+      "cases": [
+        {
+          "name": "path_policy",
+          "seconds": "0.363524"
+        },
+        {
+          "name": "msi_integration",
+          "seconds": "8.72894"
+        },
+        {
+          "name": "msix_integration",
+          "seconds": "8.67999"
+        },
+        {
+          "name": "update_package_integration",
+          "seconds": "5.60158"
+        },
+        {
+          "name": "worker_integration",
+          "seconds": "9.49504"
+        },
+        {
+          "name": "progress_integration",
+          "seconds": "0.558554"
+        },
+        {
+          "name": "large_integration",
+          "seconds": "42.8232"
+        },
+        {
+          "name": "log_integration",
+          "seconds": "2.84821"
+        },
+        {
+          "name": "cab_burn_integration",
+          "seconds": "8.34166"
+        },
+        {
+          "name": "volume_integration",
+          "seconds": "26.3332"
+        },
+        {
+          "name": "inno_integration",
+          "seconds": "21.4082"
+        },
+        {
+          "name": "nsis_integration",
+          "seconds": "15.8198"
+        },
+        {
+          "name": "nested_integration",
+          "seconds": "95.1568"
+        },
+        {
+          "name": "archive_integration",
+          "seconds": "9.61375"
+        }
+      ]
+    },
+    {
+      "architecture": "x86",
+      "name": "Win32-ninja",
+      "tests": "14",
+      "failures": "0",
+      "disabled": "0",
+      "skipped": "0",
+      "hostname": "hly",
+      "time": "251",
+      "timestamp": "2026-09-07T18:15:54",
+      "cases": [
+        {
+          "name": "path_policy",
+          "seconds": "0.483109"
+        },
+        {
+          "name": "msi_integration",
+          "seconds": "7.55288"
+        },
+        {
+          "name": "msix_integration",
+          "seconds": "8.90409"
+        },
+        {
+          "name": "update_package_integration",
+          "seconds": "6.21342"
+        },
+        {
+          "name": "worker_integration",
+          "seconds": "9.19675"
+        },
+        {
+          "name": "progress_integration",
+          "seconds": "0.689936"
+        },
+        {
+          "name": "large_integration",
+          "seconds": "39.3075"
+        },
+        {
+          "name": "log_integration",
+          "seconds": "6.54267"
+        },
+        {
+          "name": "cab_burn_integration",
+          "seconds": "8.41781"
+        },
+        {
+          "name": "volume_integration",
+          "seconds": "25.0935"
+        },
+        {
+          "name": "inno_integration",
+          "seconds": "24.7759"
+        },
+        {
+          "name": "nsis_integration",
+          "seconds": "16.9917"
+        },
+        {
+          "name": "nested_integration",
+          "seconds": "88.7732"
+        },
+        {
+          "name": "archive_integration",
+          "seconds": "8.91816"
+        }
+      ]
+    }
+  ],
+  "volumeMatrices": [
+    {
+      "architecture": "x64",
+      "compiler": "C:\\Program Files (x86)\\Inno Setup 6\\ISCC.exe",
+      "compilerVersion": "6.7.3",
+      "cases": [
+        {
+          "input": "inno-none-False/split.exe",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split-1.bin": "abef8219678d971b705506021ed903ada6409d5148bd22322262f5cc22914357",
+            "split-2.bin": "cc97a480835453768309383e20316b746abe5b59f6367bb497fb404df5252425",
+            "split-3.bin": "705c3bb262285ddf38d76e15f0b62cb7c0df351f8b752f8dce8e97c5099e6ed3",
+            "split.exe": "d71e538bf8f6ac7cc0737b10c46cff289f678fa38696ce1786850c0dc871e673"
+          },
+          "format": "Inno Setup",
+          "files": 4
+        },
+        {
+          "input": "inno-none-True/split.exe",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split-1a.bin": "4208eb0094c027b9bfa9ae03d745041756e9b660d3337a8632aa4fdeef2c318d",
+            "split-1b.bin": "06ddb4bfcc4712db53878f5f146867dc7827285b99776ff97f038bcad8d03ac1",
+            "split-1c.bin": "388d99f69b8b4536fe53fbe713cf249094a483595f57e2321fb80483793a5205",
+            "split.exe": "cd1c60113a3c021d0e3940ddf5fd0610702b99146526bfc7b38f2fba3285af18"
+          },
+          "format": "Inno Setup",
+          "files": 4
+        },
+        {
+          "input": "inno-zip-False/split.exe",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split-1.bin": "9b978685ad79024387b29f99d438e1331b59eb9a81b7f11e41c8be41a4d01f53",
+            "split-2.bin": "4bf080196f3599bbb620d5d1417e346f3ee22622f8604b2ccbcde597e26700e4",
+            "split-3.bin": "bd4b4135d325734bda5a0257c05ab07d54993f0a8804d55609ff92d6db468450",
+            "split.exe": "763e15f86ccfc4390f719cc20d6c33d017c6c6ffed157cbc283f08aa558e0577"
+          },
+          "format": "Inno Setup",
+          "files": 4
+        },
+        {
+          "input": "inno-zip-True/split.exe",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split-1a.bin": "785b471a6c8911b02addb193b2182db9dd1ace8b61dae55e9d22acebd0fee19c",
+            "split-1b.bin": "98f358c4a36b345d5629148a978c51c4a057de03c5dbacd2704126614bccdf5c",
+            "split-1c.bin": "4d0463b31e1160c1690338be6fff2fce67cbff7748c235c83e4f95f360486a83",
+            "split.exe": "9aefade4d0b4a06c00d2f68aa6efb55672518445a9a9acb97678f1322c2ad132"
+          },
+          "format": "Inno Setup",
+          "files": 4
+        },
+        {
+          "input": "inno-bzip-False/split.exe",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split-1.bin": "2c64caf93e65dad2cc476bd3c0aa5432514cdad2b76e0d44aa2cabe5d242c277",
+            "split-2.bin": "7af4a7602aa6a99cf74631d7c625ea0576d7239839084b0d9ded4b47ad500936",
+            "split-3.bin": "674310bd42faadb988e7f574b6c6e24ab29940c176f6d034ac1ef230e669ac74",
+            "split.exe": "424ac0372fa260603704d8eca17ee4ce0b6991cf278e28f72a30c56caa1631bc"
+          },
+          "format": "Inno Setup",
+          "files": 4
+        },
+        {
+          "input": "inno-bzip-True/split.exe",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split-1a.bin": "33adde8b78a1b1a531fd8ae1fb7599fe1af2dc7552682f507e6e8969235e147d",
+            "split-1b.bin": "228a82da96d639804cab27ab9ce2c4859dc1a6128388e422d905cd53dddfa0b5",
+            "split-1c.bin": "723f066828b1945b02cf1cace67e54123f1176c6a5477b5395e60a13ee3b5d90",
+            "split.exe": "b3d6e29f2466bf0537ee2ac3dad2de199b766141fdfbb431e082e8ed7c762103"
+          },
+          "format": "Inno Setup",
+          "files": 4
+        },
+        {
+          "input": "inno-lzma-False/split.exe",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split-1.bin": "bd41eac1b261a4a3f1565c01bdf2089d0594ca2988d4dfa87d44314f2c753bf8",
+            "split-2.bin": "a43ee415cd8870fdc221f1a97f6a6ab78ab11b0c8eca9af62659bf76b927e163",
+            "split-3.bin": "32ca9fc472a4dcb0094e61dffdf1e0ff042330bcacf5186d6898779b4ba1378c",
+            "split.exe": "e26b502bab6bf535df71ea6c4393e96e5dea64d1cad07997172dc46c004377df"
+          },
+          "format": "Inno Setup",
+          "files": 4
+        },
+        {
+          "input": "inno-lzma-True/split.exe",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split-1a.bin": "70161917a91d7da5091bd7baee61ae9b382a20dc5f97cc3e2d33f50cb5271617",
+            "split-1b.bin": "620003426356fed91a869b2f3976e5c299c7aa517826769b691cb3f52ec34ece",
+            "split-1c.bin": "1fe73a0b3dd730743755fc1df253278f0ff013997f8034b29819cee7568cb812",
+            "split.exe": "58b7af9a388168cc56b6dc622c930128a00ecf674d57460144a7e6f575e98928"
+          },
+          "format": "Inno Setup",
+          "files": 4
+        },
+        {
+          "input": "inno-lzma2-False/split.exe",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split-1.bin": "8e2c87650b0e0b914479c325fa1c4ac8a62adea4583624a917f0acda7a08676a",
+            "split-2.bin": "8efe535eecb26e27f271110332e24ff4a0acc43969950fbb4f70c087e9fcea3c",
+            "split-3.bin": "f99240ed9cb151044cb69727bbbb8811c0b614977036d3a93f81633006adf705",
+            "split.exe": "2af9d5ad9e88734eeb6c92524bdf212dc0fbd2a1e45aa364f6dec9100fee9f66"
+          },
+          "format": "Inno Setup",
+          "files": 4
+        },
+        {
+          "input": "inno-lzma2-True/split.exe",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split-1a.bin": "012d6ba2a236cf1c91a033dad584aad15c71b3817533a5b8d964676a18215b55",
+            "split-1b.bin": "28ad1e0ee8970141c92c800e337924044fb654a64bbe38aa6654349fe6dfa837",
+            "split-1c.bin": "975915c22410f3842fd603c6350b5d7e42a88a73da1aea397663db87c014afc7",
+            "split.exe": "4ccb7f03bd6c74136883f043657fb5de8c03692803cfe490fb9dbeb296b3877c"
+          },
+          "format": "Inno Setup",
+          "files": 4
+        },
+        {
+          "input": "inno-missing/split.exe",
+          "expectedExitCode": 30,
+          "inputs": {
+            "split-1a.bin": "012d6ba2a236cf1c91a033dad584aad15c71b3817533a5b8d964676a18215b55",
+            "split-1c.bin": "975915c22410f3842fd603c6350b5d7e42a88a73da1aea397663db87c014afc7",
+            "split.exe": "4ccb7f03bd6c74136883f043657fb5de8c03692803cfe490fb9dbeb296b3877c"
+          }
+        },
+        {
+          "input": "inno-truncated/split.exe",
+          "expectedExitCode": 13,
+          "inputs": {
+            "split-1a.bin": "012d6ba2a236cf1c91a033dad584aad15c71b3817533a5b8d964676a18215b55",
+            "split-1b.bin": "28ad1e0ee8970141c92c800e337924044fb654a64bbe38aa6654349fe6dfa837",
+            "split-1c.bin": "433f4779501d1c863faa5acd3a68a25e35fada4f6944af979744ec7889ce038a",
+            "split.exe": "4ccb7f03bd6c74136883f043657fb5de8c03692803cfe490fb9dbeb296b3877c"
+          }
+        },
+        {
+          "input": "inno-bad-id/split.exe",
+          "expectedExitCode": 13,
+          "inputs": {
+            "split-1a.bin": "0ac5a0b1e20d6d3f0932fe109ff5ce9ce0fc59471df10ad4c90e50d2c27fb536",
+            "split-1b.bin": "28ad1e0ee8970141c92c800e337924044fb654a64bbe38aa6654349fe6dfa837",
+            "split-1c.bin": "975915c22410f3842fd603c6350b5d7e42a88a73da1aea397663db87c014afc7",
+            "split.exe": "4ccb7f03bd6c74136883f043657fb5de8c03692803cfe490fb9dbeb296b3877c"
+          }
+        },
+        {
+          "input": "inno-swapped/split.exe",
+          "expectedExitCode": 13,
+          "inputs": {
+            "split-1a.bin": "28ad1e0ee8970141c92c800e337924044fb654a64bbe38aa6654349fe6dfa837",
+            "split-1b.bin": "012d6ba2a236cf1c91a033dad584aad15c71b3817533a5b8d964676a18215b55",
+            "split-1c.bin": "975915c22410f3842fd603c6350b5d7e42a88a73da1aea397663db87c014afc7",
+            "split.exe": "4ccb7f03bd6c74136883f043657fb5de8c03692803cfe490fb9dbeb296b3877c"
+          }
+        },
+        {
+          "input": "inno-damaged/split.exe",
+          "expectedExitCode": 13,
+          "inputs": {
+            "split-1a.bin": "012d6ba2a236cf1c91a033dad584aad15c71b3817533a5b8d964676a18215b55",
+            "split-1b.bin": "6f8134d94d66e304fa298dfb95db5a078d56b377fea9645bc997f6e8126421b5",
+            "split-1c.bin": "975915c22410f3842fd603c6350b5d7e42a88a73da1aea397663db87c014afc7",
+            "split.exe": "4ccb7f03bd6c74136883f043657fb5de8c03692803cfe490fb9dbeb296b3877c"
+          }
+        },
+        {
+          "input": "cab-MSZIP/volume1.cab",
+          "expectedExitCode": 0,
+          "inputs": {
+            "volume1.cab": "5b13cbcfd701f6b401e932eac4585451cc53fb6905ab6ea2c540f9de0b2203df",
+            "volume2.cab": "143dcd3f8ea61c1b72bf44d2a323d7fac3bd68dee8851fec40acc7d66580b14e",
+            "volume3.cab": "af0904c33a602f3ce5da60f513f5174ead7087099b1c093b1fe165bf3f58eba1",
+            "volume4.cab": "779c59ee72e19c8e2099e88fb7bee24f29f88c514c66bd7fac0a95680a654384",
+            "volume5.cab": "0f305b2e6c0a1c8926948896c40178a4c90fca83d07dac7fdf858db8a9110173",
+            "volume6.cab": "f3a4b95d7584f730a426e1487ea66c8d6509cbf174586b32fad44ffb2714c2d4",
+            "volume7.cab": "2f1337f46b6b463af90380eae1a4d10b27d8e8bfba166a36424cd65e54f130e3"
+          },
+          "format": "CAB",
+          "files": 4
+        },
+        {
+          "input": "cab-MSZIP/volume4.cab",
+          "expectedExitCode": 0,
+          "inputs": {
+            "volume1.cab": "5b13cbcfd701f6b401e932eac4585451cc53fb6905ab6ea2c540f9de0b2203df",
+            "volume2.cab": "143dcd3f8ea61c1b72bf44d2a323d7fac3bd68dee8851fec40acc7d66580b14e",
+            "volume3.cab": "af0904c33a602f3ce5da60f513f5174ead7087099b1c093b1fe165bf3f58eba1",
+            "volume4.cab": "779c59ee72e19c8e2099e88fb7bee24f29f88c514c66bd7fac0a95680a654384",
+            "volume5.cab": "0f305b2e6c0a1c8926948896c40178a4c90fca83d07dac7fdf858db8a9110173",
+            "volume6.cab": "f3a4b95d7584f730a426e1487ea66c8d6509cbf174586b32fad44ffb2714c2d4",
+            "volume7.cab": "2f1337f46b6b463af90380eae1a4d10b27d8e8bfba166a36424cd65e54f130e3"
+          },
+          "format": "CAB",
+          "files": 4
+        },
+        {
+          "input": "cab-MSZIP/volume7.cab",
+          "expectedExitCode": 0,
+          "inputs": {
+            "volume1.cab": "5b13cbcfd701f6b401e932eac4585451cc53fb6905ab6ea2c540f9de0b2203df",
+            "volume2.cab": "143dcd3f8ea61c1b72bf44d2a323d7fac3bd68dee8851fec40acc7d66580b14e",
+            "volume3.cab": "af0904c33a602f3ce5da60f513f5174ead7087099b1c093b1fe165bf3f58eba1",
+            "volume4.cab": "779c59ee72e19c8e2099e88fb7bee24f29f88c514c66bd7fac0a95680a654384",
+            "volume5.cab": "0f305b2e6c0a1c8926948896c40178a4c90fca83d07dac7fdf858db8a9110173",
+            "volume6.cab": "f3a4b95d7584f730a426e1487ea66c8d6509cbf174586b32fad44ffb2714c2d4",
+            "volume7.cab": "2f1337f46b6b463af90380eae1a4d10b27d8e8bfba166a36424cd65e54f130e3"
+          },
+          "format": "CAB",
+          "files": 4
+        },
+        {
+          "input": "cab-case-name/VOLUME1.CAB",
+          "expectedExitCode": 0,
+          "inputs": {
+            "VOLUME1.CAB": "5b13cbcfd701f6b401e932eac4585451cc53fb6905ab6ea2c540f9de0b2203df",
+            "volume2.cab": "143dcd3f8ea61c1b72bf44d2a323d7fac3bd68dee8851fec40acc7d66580b14e",
+            "volume3.cab": "af0904c33a602f3ce5da60f513f5174ead7087099b1c093b1fe165bf3f58eba1",
+            "volume4.cab": "779c59ee72e19c8e2099e88fb7bee24f29f88c514c66bd7fac0a95680a654384",
+            "volume5.cab": "0f305b2e6c0a1c8926948896c40178a4c90fca83d07dac7fdf858db8a9110173",
+            "volume6.cab": "f3a4b95d7584f730a426e1487ea66c8d6509cbf174586b32fad44ffb2714c2d4",
+            "volume7.cab": "2f1337f46b6b463af90380eae1a4d10b27d8e8bfba166a36424cd65e54f130e3"
+          },
+          "format": "CAB",
+          "files": 4
+        },
+        {
+          "input": "cab-traversal/volume1.cab",
+          "expectedExitCode": 5,
+          "inputs": {
+            "volume1.cab": "b982e7bf3868bef9274b2b13ec05224b383c26efac5d1c20790eaed74eba1044",
+            "volume2.cab": "143dcd3f8ea61c1b72bf44d2a323d7fac3bd68dee8851fec40acc7d66580b14e",
+            "volume3.cab": "af0904c33a602f3ce5da60f513f5174ead7087099b1c093b1fe165bf3f58eba1",
+            "volume4.cab": "779c59ee72e19c8e2099e88fb7bee24f29f88c514c66bd7fac0a95680a654384",
+            "volume5.cab": "0f305b2e6c0a1c8926948896c40178a4c90fca83d07dac7fdf858db8a9110173",
+            "volume6.cab": "f3a4b95d7584f730a426e1487ea66c8d6509cbf174586b32fad44ffb2714c2d4",
+            "volume7.cab": "2f1337f46b6b463af90380eae1a4d10b27d8e8bfba166a36424cd65e54f130e3"
+          }
+        },
+        {
+          "input": "cab-cycle/volume1.cab",
+          "expectedExitCode": 13,
+          "inputs": {
+            "volume1.cab": "5b13cbcfd701f6b401e932eac4585451cc53fb6905ab6ea2c540f9de0b2203df",
+            "volume2.cab": "59b184d177a650a04cfe1c20795cd3c53177160d9b551247b27aa547851d38af",
+            "volume3.cab": "af0904c33a602f3ce5da60f513f5174ead7087099b1c093b1fe165bf3f58eba1",
+            "volume4.cab": "779c59ee72e19c8e2099e88fb7bee24f29f88c514c66bd7fac0a95680a654384",
+            "volume5.cab": "0f305b2e6c0a1c8926948896c40178a4c90fca83d07dac7fdf858db8a9110173",
+            "volume6.cab": "f3a4b95d7584f730a426e1487ea66c8d6509cbf174586b32fad44ffb2714c2d4",
+            "volume7.cab": "2f1337f46b6b463af90380eae1a4d10b27d8e8bfba166a36424cd65e54f130e3"
+          }
+        },
+        {
+          "input": "cab-continued-name/volume1.cab",
+          "expectedExitCode": 13,
+          "inputs": {
+            "volume1.cab": "5b13cbcfd701f6b401e932eac4585451cc53fb6905ab6ea2c540f9de0b2203df",
+            "volume2.cab": "3b8499d3503f90456e82cb7d50a17fa3cec01571fc663ed75ae92b2faf1664e6",
+            "volume3.cab": "af0904c33a602f3ce5da60f513f5174ead7087099b1c093b1fe165bf3f58eba1",
+            "volume4.cab": "779c59ee72e19c8e2099e88fb7bee24f29f88c514c66bd7fac0a95680a654384",
+            "volume5.cab": "0f305b2e6c0a1c8926948896c40178a4c90fca83d07dac7fdf858db8a9110173",
+            "volume6.cab": "f3a4b95d7584f730a426e1487ea66c8d6509cbf174586b32fad44ffb2714c2d4",
+            "volume7.cab": "2f1337f46b6b463af90380eae1a4d10b27d8e8bfba166a36424cd65e54f130e3"
+          }
+        },
+        {
+          "input": "msi-external/split.msi",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split.msi": "f5bb8121730b114d569ea60e44ef4d2378166aea548c147bae7ffa8b1a2c521b",
+            "volume1.cab": "5b13cbcfd701f6b401e932eac4585451cc53fb6905ab6ea2c540f9de0b2203df",
+            "volume2.cab": "143dcd3f8ea61c1b72bf44d2a323d7fac3bd68dee8851fec40acc7d66580b14e",
+            "volume3.cab": "af0904c33a602f3ce5da60f513f5174ead7087099b1c093b1fe165bf3f58eba1",
+            "volume4.cab": "779c59ee72e19c8e2099e88fb7bee24f29f88c514c66bd7fac0a95680a654384",
+            "volume5.cab": "0f305b2e6c0a1c8926948896c40178a4c90fca83d07dac7fdf858db8a9110173",
+            "volume6.cab": "f3a4b95d7584f730a426e1487ea66c8d6509cbf174586b32fad44ffb2714c2d4",
+            "volume7.cab": "2f1337f46b6b463af90380eae1a4d10b27d8e8bfba166a36424cd65e54f130e3"
+          },
+          "format": "MSI",
+          "files": 4
+        },
+        {
+          "input": "msi-missing/split.msi",
+          "expectedExitCode": 30,
+          "inputs": {
+            "split.msi": "f5bb8121730b114d569ea60e44ef4d2378166aea548c147bae7ffa8b1a2c521b",
+            "volume1.cab": "5b13cbcfd701f6b401e932eac4585451cc53fb6905ab6ea2c540f9de0b2203df",
+            "volume3.cab": "af0904c33a602f3ce5da60f513f5174ead7087099b1c093b1fe165bf3f58eba1",
+            "volume4.cab": "779c59ee72e19c8e2099e88fb7bee24f29f88c514c66bd7fac0a95680a654384",
+            "volume5.cab": "0f305b2e6c0a1c8926948896c40178a4c90fca83d07dac7fdf858db8a9110173",
+            "volume6.cab": "f3a4b95d7584f730a426e1487ea66c8d6509cbf174586b32fad44ffb2714c2d4",
+            "volume7.cab": "2f1337f46b6b463af90380eae1a4d10b27d8e8bfba166a36424cd65e54f130e3"
+          }
+        },
+        {
+          "input": "msi-embedded/split.msi",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split.msi": "b8cebe5743d32f1924bc48539b0205f1f6a633c57fa0458f14d88fb702b57320"
+          },
+          "format": "MSI",
+          "files": 4
+        },
+        {
+          "input": "msi-embedded/undeclared.msi",
+          "expectedExitCode": 13,
+          "inputs": {
+            "split.msi": "b8cebe5743d32f1924bc48539b0205f1f6a633c57fa0458f14d88fb702b57320",
+            "undeclared.msi": "e2370df068c968a3cfe33de7535b73d3daf1cad1ded5684d9222829c22c05ee2"
+          }
+        },
+        {
+          "input": "msi-mixed/split.msi",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split.msi": "937d8a98a98c1765ea9a521da00e2134d41045ede7f068204734e4e67374ac1d",
+            "volume2.cab": "143dcd3f8ea61c1b72bf44d2a323d7fac3bd68dee8851fec40acc7d66580b14e",
+            "volume4.cab": "779c59ee72e19c8e2099e88fb7bee24f29f88c514c66bd7fac0a95680a654384",
+            "volume6.cab": "f3a4b95d7584f730a426e1487ea66c8d6509cbf174586b32fad44ffb2714c2d4"
+          },
+          "format": "MSI",
+          "files": 4
+        },
+        {
+          "input": "cab-missing/volume1.cab",
+          "expectedExitCode": 30,
+          "inputs": {
+            "volume1.cab": "5b13cbcfd701f6b401e932eac4585451cc53fb6905ab6ea2c540f9de0b2203df",
+            "volume3.cab": "af0904c33a602f3ce5da60f513f5174ead7087099b1c093b1fe165bf3f58eba1",
+            "volume4.cab": "779c59ee72e19c8e2099e88fb7bee24f29f88c514c66bd7fac0a95680a654384",
+            "volume5.cab": "0f305b2e6c0a1c8926948896c40178a4c90fca83d07dac7fdf858db8a9110173",
+            "volume6.cab": "f3a4b95d7584f730a426e1487ea66c8d6509cbf174586b32fad44ffb2714c2d4",
+            "volume7.cab": "2f1337f46b6b463af90380eae1a4d10b27d8e8bfba166a36424cd65e54f130e3"
+          }
+        },
+        {
+          "input": "cab-wrong-set/volume1.cab",
+          "expectedExitCode": 13,
+          "inputs": {
+            "volume1.cab": "5b13cbcfd701f6b401e932eac4585451cc53fb6905ab6ea2c540f9de0b2203df",
+            "volume2.cab": "c8c293d83edc3e8d27eb213f18d393e68681576fab2dd8db70d0eb91b3b3c0da",
+            "volume3.cab": "af0904c33a602f3ce5da60f513f5174ead7087099b1c093b1fe165bf3f58eba1",
+            "volume4.cab": "779c59ee72e19c8e2099e88fb7bee24f29f88c514c66bd7fac0a95680a654384",
+            "volume5.cab": "0f305b2e6c0a1c8926948896c40178a4c90fca83d07dac7fdf858db8a9110173",
+            "volume6.cab": "f3a4b95d7584f730a426e1487ea66c8d6509cbf174586b32fad44ffb2714c2d4",
+            "volume7.cab": "2f1337f46b6b463af90380eae1a4d10b27d8e8bfba166a36424cd65e54f130e3"
+          }
+        },
+        {
+          "input": "cab-wrong-index/volume1.cab",
+          "expectedExitCode": 13,
+          "inputs": {
+            "volume1.cab": "5b13cbcfd701f6b401e932eac4585451cc53fb6905ab6ea2c540f9de0b2203df",
+            "volume2.cab": "dcdbd403dac2dfb52bbdced9a37893d70988801f2283750ee126301fff37c261",
+            "volume3.cab": "af0904c33a602f3ce5da60f513f5174ead7087099b1c093b1fe165bf3f58eba1",
+            "volume4.cab": "779c59ee72e19c8e2099e88fb7bee24f29f88c514c66bd7fac0a95680a654384",
+            "volume5.cab": "0f305b2e6c0a1c8926948896c40178a4c90fca83d07dac7fdf858db8a9110173",
+            "volume6.cab": "f3a4b95d7584f730a426e1487ea66c8d6509cbf174586b32fad44ffb2714c2d4",
+            "volume7.cab": "2f1337f46b6b463af90380eae1a4d10b27d8e8bfba166a36424cd65e54f130e3"
+          }
+        },
+        {
+          "input": "cab-truncated/volume1.cab",
+          "expectedExitCode": 13,
+          "inputs": {
+            "volume1.cab": "5b13cbcfd701f6b401e932eac4585451cc53fb6905ab6ea2c540f9de0b2203df",
+            "volume2.cab": "b72ebe7a0d218f8592aaef28034fbbc69e6b44c0f45b07e548dd3a50f0845298",
+            "volume3.cab": "af0904c33a602f3ce5da60f513f5174ead7087099b1c093b1fe165bf3f58eba1",
+            "volume4.cab": "779c59ee72e19c8e2099e88fb7bee24f29f88c514c66bd7fac0a95680a654384",
+            "volume5.cab": "0f305b2e6c0a1c8926948896c40178a4c90fca83d07dac7fdf858db8a9110173",
+            "volume6.cab": "f3a4b95d7584f730a426e1487ea66c8d6509cbf174586b32fad44ffb2714c2d4",
+            "volume7.cab": "2f1337f46b6b463af90380eae1a4d10b27d8e8bfba166a36424cd65e54f130e3"
+          }
+        },
+        {
+          "input": "cab-damaged/volume1.cab",
+          "expectedExitCode": 13,
+          "inputs": {
+            "volume1.cab": "5b13cbcfd701f6b401e932eac4585451cc53fb6905ab6ea2c540f9de0b2203df",
+            "volume2.cab": "3d354e1ffd1837b2ff02a5e8a3a25d09cb5798d777f65d7044835896c8710b42",
+            "volume3.cab": "af0904c33a602f3ce5da60f513f5174ead7087099b1c093b1fe165bf3f58eba1",
+            "volume4.cab": "779c59ee72e19c8e2099e88fb7bee24f29f88c514c66bd7fac0a95680a654384",
+            "volume5.cab": "0f305b2e6c0a1c8926948896c40178a4c90fca83d07dac7fdf858db8a9110173",
+            "volume6.cab": "f3a4b95d7584f730a426e1487ea66c8d6509cbf174586b32fad44ffb2714c2d4",
+            "volume7.cab": "2f1337f46b6b463af90380eae1a4d10b27d8e8bfba166a36424cd65e54f130e3"
+          }
+        },
+        {
+          "input": "cab-LZX/volume1.cab",
+          "expectedExitCode": 0,
+          "inputs": {
+            "volume1.cab": "9a3019cad8f51890c8df2f9c09cd8fbef09e403a47e1f465e8d8f1e6fe87df48",
+            "volume2.cab": "3ec9ad4b69dcdbd02720393d3cbfbe67f44e578f7146404070a84b7cf271f785",
+            "volume3.cab": "77c08877cf6b9c8502b161984a18ed47b8f1bd5b3bd6f1db70db2f54a03e95b8",
+            "volume4.cab": "6336f322a1e5db25f0b500f0d0ca03791485ff640070b8bb4d6b8a195a862f4a",
+            "volume5.cab": "28f05ecae117957596d9296c44a4eb55d237c65b10144322f3efe601fe1312c7",
+            "volume6.cab": "607487648811b4271056c1efd02595a04b847521dfdcd0777f0235a3bb4cd531",
+            "volume7.cab": "063fa5fcd2ff75dd3bd4be2f0274434f5caee6b903e834635066e2748d4bbc89"
+          },
+          "format": "CAB",
+          "files": 4
+        },
+        {
+          "input": "cab-LZX/volume4.cab",
+          "expectedExitCode": 0,
+          "inputs": {
+            "volume1.cab": "9a3019cad8f51890c8df2f9c09cd8fbef09e403a47e1f465e8d8f1e6fe87df48",
+            "volume2.cab": "3ec9ad4b69dcdbd02720393d3cbfbe67f44e578f7146404070a84b7cf271f785",
+            "volume3.cab": "77c08877cf6b9c8502b161984a18ed47b8f1bd5b3bd6f1db70db2f54a03e95b8",
+            "volume4.cab": "6336f322a1e5db25f0b500f0d0ca03791485ff640070b8bb4d6b8a195a862f4a",
+            "volume5.cab": "28f05ecae117957596d9296c44a4eb55d237c65b10144322f3efe601fe1312c7",
+            "volume6.cab": "607487648811b4271056c1efd02595a04b847521dfdcd0777f0235a3bb4cd531",
+            "volume7.cab": "063fa5fcd2ff75dd3bd4be2f0274434f5caee6b903e834635066e2748d4bbc89"
+          },
+          "format": "CAB",
+          "files": 4
+        },
+        {
+          "input": "cab-LZX/volume7.cab",
+          "expectedExitCode": 0,
+          "inputs": {
+            "volume1.cab": "9a3019cad8f51890c8df2f9c09cd8fbef09e403a47e1f465e8d8f1e6fe87df48",
+            "volume2.cab": "3ec9ad4b69dcdbd02720393d3cbfbe67f44e578f7146404070a84b7cf271f785",
+            "volume3.cab": "77c08877cf6b9c8502b161984a18ed47b8f1bd5b3bd6f1db70db2f54a03e95b8",
+            "volume4.cab": "6336f322a1e5db25f0b500f0d0ca03791485ff640070b8bb4d6b8a195a862f4a",
+            "volume5.cab": "28f05ecae117957596d9296c44a4eb55d237c65b10144322f3efe601fe1312c7",
+            "volume6.cab": "607487648811b4271056c1efd02595a04b847521dfdcd0777f0235a3bb4cd531",
+            "volume7.cab": "063fa5fcd2ff75dd3bd4be2f0274434f5caee6b903e834635066e2748d4bbc89"
+          },
+          "format": "CAB",
+          "files": 4
+        },
+        {
+          "input": "cab-NONE/volume1.cab",
+          "expectedExitCode": 0,
+          "inputs": {
+            "volume1.cab": "0e3e0fef91f67fe6d13364eb4e10f71f0f3a7bb6fbadb7829049b81684d16a75",
+            "volume2.cab": "2a27efd21cbf615ec34523aaad6109c3119a3a54e6720d9b56f5089158e02488",
+            "volume3.cab": "016e9797ba6db013de0d0585a31fbfa8921368afe56ddabbc02beb79eee0bf38",
+            "volume4.cab": "5b1478b2bdd7bb0e9fd9413716eda927bb70b3ddaf22f9e29cf8fa83c67f80cf",
+            "volume5.cab": "9e3285be2da6b3fe70be7e44db7931208e53f64829de27725aace160ddc0eb37",
+            "volume6.cab": "90db437b0abb310a3e2af7bf8a31398025d600fe1d2cdb7b0fc496be7938c468",
+            "volume7.cab": "51bb6ef0cc698665518adfe3d803c10b522b2d4daab001b24635cab0578e562d"
+          },
+          "format": "CAB",
+          "files": 4
+        },
+        {
+          "input": "cab-NONE/volume4.cab",
+          "expectedExitCode": 0,
+          "inputs": {
+            "volume1.cab": "0e3e0fef91f67fe6d13364eb4e10f71f0f3a7bb6fbadb7829049b81684d16a75",
+            "volume2.cab": "2a27efd21cbf615ec34523aaad6109c3119a3a54e6720d9b56f5089158e02488",
+            "volume3.cab": "016e9797ba6db013de0d0585a31fbfa8921368afe56ddabbc02beb79eee0bf38",
+            "volume4.cab": "5b1478b2bdd7bb0e9fd9413716eda927bb70b3ddaf22f9e29cf8fa83c67f80cf",
+            "volume5.cab": "9e3285be2da6b3fe70be7e44db7931208e53f64829de27725aace160ddc0eb37",
+            "volume6.cab": "90db437b0abb310a3e2af7bf8a31398025d600fe1d2cdb7b0fc496be7938c468",
+            "volume7.cab": "51bb6ef0cc698665518adfe3d803c10b522b2d4daab001b24635cab0578e562d"
+          },
+          "format": "CAB",
+          "files": 4
+        },
+        {
+          "input": "cab-NONE/volume7.cab",
+          "expectedExitCode": 0,
+          "inputs": {
+            "volume1.cab": "0e3e0fef91f67fe6d13364eb4e10f71f0f3a7bb6fbadb7829049b81684d16a75",
+            "volume2.cab": "2a27efd21cbf615ec34523aaad6109c3119a3a54e6720d9b56f5089158e02488",
+            "volume3.cab": "016e9797ba6db013de0d0585a31fbfa8921368afe56ddabbc02beb79eee0bf38",
+            "volume4.cab": "5b1478b2bdd7bb0e9fd9413716eda927bb70b3ddaf22f9e29cf8fa83c67f80cf",
+            "volume5.cab": "9e3285be2da6b3fe70be7e44db7931208e53f64829de27725aace160ddc0eb37",
+            "volume6.cab": "90db437b0abb310a3e2af7bf8a31398025d600fe1d2cdb7b0fc496be7938c468",
+            "volume7.cab": "51bb6ef0cc698665518adfe3d803c10b522b2d4daab001b24635cab0578e562d"
+          },
+          "format": "CAB",
+          "files": 4
+        }
+      ],
+      "resultPath": "out/build/win-x64-release/volume-fixtures/41e3989df1514944a5e7ec423925d50d/results.json",
+      "compilerSha256": "0a8757031b33777e4c9cbffee40f11a5062b36d25cbe144c1db73b6102b80ad7",
+      "summary": {
+        "total": 38,
+        "complete": 23,
+        "expectedRejection": 15
+      }
+    },
+    {
+      "architecture": "x86",
+      "compiler": "C:\\Program Files (x86)\\Inno Setup 6\\ISCC.exe",
+      "compilerVersion": "6.7.3",
+      "cases": [
+        {
+          "input": "inno-none-False/split.exe",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split-1.bin": "abef8219678d971b705506021ed903ada6409d5148bd22322262f5cc22914357",
+            "split-2.bin": "cc97a480835453768309383e20316b746abe5b59f6367bb497fb404df5252425",
+            "split-3.bin": "705c3bb262285ddf38d76e15f0b62cb7c0df351f8b752f8dce8e97c5099e6ed3",
+            "split.exe": "ca9d3efb1008eefdc2d3af72ca2305e4fe0c87b157c602a3964f37e1d797b3df"
+          },
+          "format": "Inno Setup",
+          "files": 4
+        },
+        {
+          "input": "inno-none-True/split.exe",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split-1a.bin": "4208eb0094c027b9bfa9ae03d745041756e9b660d3337a8632aa4fdeef2c318d",
+            "split-1b.bin": "06ddb4bfcc4712db53878f5f146867dc7827285b99776ff97f038bcad8d03ac1",
+            "split-1c.bin": "388d99f69b8b4536fe53fbe713cf249094a483595f57e2321fb80483793a5205",
+            "split.exe": "04745eca8a3bc854d8d30ad416a344abee3f688d7c8803148f50c0c26f6999ba"
+          },
+          "format": "Inno Setup",
+          "files": 4
+        },
+        {
+          "input": "inno-zip-False/split.exe",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split-1.bin": "9b978685ad79024387b29f99d438e1331b59eb9a81b7f11e41c8be41a4d01f53",
+            "split-2.bin": "4bf080196f3599bbb620d5d1417e346f3ee22622f8604b2ccbcde597e26700e4",
+            "split-3.bin": "bd4b4135d325734bda5a0257c05ab07d54993f0a8804d55609ff92d6db468450",
+            "split.exe": "f20679675e1c73521b1541d98ce778bcd33e5470c75c0d3e2513a61ca7c9f75e"
+          },
+          "format": "Inno Setup",
+          "files": 4
+        },
+        {
+          "input": "inno-zip-True/split.exe",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split-1a.bin": "785b471a6c8911b02addb193b2182db9dd1ace8b61dae55e9d22acebd0fee19c",
+            "split-1b.bin": "98f358c4a36b345d5629148a978c51c4a057de03c5dbacd2704126614bccdf5c",
+            "split-1c.bin": "4d0463b31e1160c1690338be6fff2fce67cbff7748c235c83e4f95f360486a83",
+            "split.exe": "2cc6a178582da3048b09521bbfed3d8fd8f237605d21b4401502c087fb4b7cd7"
+          },
+          "format": "Inno Setup",
+          "files": 4
+        },
+        {
+          "input": "inno-bzip-False/split.exe",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split-1.bin": "2c64caf93e65dad2cc476bd3c0aa5432514cdad2b76e0d44aa2cabe5d242c277",
+            "split-2.bin": "7af4a7602aa6a99cf74631d7c625ea0576d7239839084b0d9ded4b47ad500936",
+            "split-3.bin": "674310bd42faadb988e7f574b6c6e24ab29940c176f6d034ac1ef230e669ac74",
+            "split.exe": "8e07f540342156eb9e3acf284316be2621eee8a805ae741f7da21bbffcf21d21"
+          },
+          "format": "Inno Setup",
+          "files": 4
+        },
+        {
+          "input": "inno-bzip-True/split.exe",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split-1a.bin": "33adde8b78a1b1a531fd8ae1fb7599fe1af2dc7552682f507e6e8969235e147d",
+            "split-1b.bin": "228a82da96d639804cab27ab9ce2c4859dc1a6128388e422d905cd53dddfa0b5",
+            "split-1c.bin": "723f066828b1945b02cf1cace67e54123f1176c6a5477b5395e60a13ee3b5d90",
+            "split.exe": "67223b1294a2385d44fef1ddc0db7f35028a9d8e0e595a962bdb2f67775b84dd"
+          },
+          "format": "Inno Setup",
+          "files": 4
+        },
+        {
+          "input": "inno-lzma-False/split.exe",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split-1.bin": "bd41eac1b261a4a3f1565c01bdf2089d0594ca2988d4dfa87d44314f2c753bf8",
+            "split-2.bin": "a43ee415cd8870fdc221f1a97f6a6ab78ab11b0c8eca9af62659bf76b927e163",
+            "split-3.bin": "32ca9fc472a4dcb0094e61dffdf1e0ff042330bcacf5186d6898779b4ba1378c",
+            "split.exe": "3207a63c501b0e64c8076ac90f60107884b3add69e3269f1e26bed58bb9e7e2f"
+          },
+          "format": "Inno Setup",
+          "files": 4
+        },
+        {
+          "input": "inno-lzma-True/split.exe",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split-1a.bin": "70161917a91d7da5091bd7baee61ae9b382a20dc5f97cc3e2d33f50cb5271617",
+            "split-1b.bin": "620003426356fed91a869b2f3976e5c299c7aa517826769b691cb3f52ec34ece",
+            "split-1c.bin": "1fe73a0b3dd730743755fc1df253278f0ff013997f8034b29819cee7568cb812",
+            "split.exe": "7a7206cd605e132ed677c7853d6ae3da8cb0a547202efcd79f448a8f93383368"
+          },
+          "format": "Inno Setup",
+          "files": 4
+        },
+        {
+          "input": "inno-lzma2-False/split.exe",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split-1.bin": "8e2c87650b0e0b914479c325fa1c4ac8a62adea4583624a917f0acda7a08676a",
+            "split-2.bin": "8efe535eecb26e27f271110332e24ff4a0acc43969950fbb4f70c087e9fcea3c",
+            "split-3.bin": "f99240ed9cb151044cb69727bbbb8811c0b614977036d3a93f81633006adf705",
+            "split.exe": "6e84c3c5cdadd1dac0fa0d1c283962971cde715b53ac5fb9ca2bd617cfbc77ac"
+          },
+          "format": "Inno Setup",
+          "files": 4
+        },
+        {
+          "input": "inno-lzma2-True/split.exe",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split-1a.bin": "012d6ba2a236cf1c91a033dad584aad15c71b3817533a5b8d964676a18215b55",
+            "split-1b.bin": "28ad1e0ee8970141c92c800e337924044fb654a64bbe38aa6654349fe6dfa837",
+            "split-1c.bin": "975915c22410f3842fd603c6350b5d7e42a88a73da1aea397663db87c014afc7",
+            "split.exe": "140b0d5b7e3dde52d8c3c489118597c9c095eae480c2aca6941db3000d0aa753"
+          },
+          "format": "Inno Setup",
+          "files": 4
+        },
+        {
+          "input": "inno-missing/split.exe",
+          "expectedExitCode": 30,
+          "inputs": {
+            "split-1a.bin": "012d6ba2a236cf1c91a033dad584aad15c71b3817533a5b8d964676a18215b55",
+            "split-1c.bin": "975915c22410f3842fd603c6350b5d7e42a88a73da1aea397663db87c014afc7",
+            "split.exe": "140b0d5b7e3dde52d8c3c489118597c9c095eae480c2aca6941db3000d0aa753"
+          }
+        },
+        {
+          "input": "inno-truncated/split.exe",
+          "expectedExitCode": 13,
+          "inputs": {
+            "split-1a.bin": "012d6ba2a236cf1c91a033dad584aad15c71b3817533a5b8d964676a18215b55",
+            "split-1b.bin": "28ad1e0ee8970141c92c800e337924044fb654a64bbe38aa6654349fe6dfa837",
+            "split-1c.bin": "433f4779501d1c863faa5acd3a68a25e35fada4f6944af979744ec7889ce038a",
+            "split.exe": "140b0d5b7e3dde52d8c3c489118597c9c095eae480c2aca6941db3000d0aa753"
+          }
+        },
+        {
+          "input": "inno-bad-id/split.exe",
+          "expectedExitCode": 13,
+          "inputs": {
+            "split-1a.bin": "0ac5a0b1e20d6d3f0932fe109ff5ce9ce0fc59471df10ad4c90e50d2c27fb536",
+            "split-1b.bin": "28ad1e0ee8970141c92c800e337924044fb654a64bbe38aa6654349fe6dfa837",
+            "split-1c.bin": "975915c22410f3842fd603c6350b5d7e42a88a73da1aea397663db87c014afc7",
+            "split.exe": "140b0d5b7e3dde52d8c3c489118597c9c095eae480c2aca6941db3000d0aa753"
+          }
+        },
+        {
+          "input": "inno-swapped/split.exe",
+          "expectedExitCode": 13,
+          "inputs": {
+            "split-1a.bin": "28ad1e0ee8970141c92c800e337924044fb654a64bbe38aa6654349fe6dfa837",
+            "split-1b.bin": "012d6ba2a236cf1c91a033dad584aad15c71b3817533a5b8d964676a18215b55",
+            "split-1c.bin": "975915c22410f3842fd603c6350b5d7e42a88a73da1aea397663db87c014afc7",
+            "split.exe": "140b0d5b7e3dde52d8c3c489118597c9c095eae480c2aca6941db3000d0aa753"
+          }
+        },
+        {
+          "input": "inno-damaged/split.exe",
+          "expectedExitCode": 13,
+          "inputs": {
+            "split-1a.bin": "012d6ba2a236cf1c91a033dad584aad15c71b3817533a5b8d964676a18215b55",
+            "split-1b.bin": "6f8134d94d66e304fa298dfb95db5a078d56b377fea9645bc997f6e8126421b5",
+            "split-1c.bin": "975915c22410f3842fd603c6350b5d7e42a88a73da1aea397663db87c014afc7",
+            "split.exe": "140b0d5b7e3dde52d8c3c489118597c9c095eae480c2aca6941db3000d0aa753"
+          }
+        },
+        {
+          "input": "cab-MSZIP/volume1.cab",
+          "expectedExitCode": 0,
+          "inputs": {
+            "volume1.cab": "085ab7bd86dcc902a37f4224643475a0eb0c478c30e0ed906d1b04e13f609c3f",
+            "volume2.cab": "cc16d7f8410afde4aa3ee957fbc077c96e0f92a1379ce63bf95a433b971620d6",
+            "volume3.cab": "a7bfe1a7eef0ef21ce036b3433fae793ef52a6f068565dc055a46093bf7279c3",
+            "volume4.cab": "8bcae97e66c2bb0e26b25fe08307f9d6cb880e836aef6ac967055ecea5d61100",
+            "volume5.cab": "d984430e25baca0be72d803a2c063a37025fdc7b5037e8a1b89351232726b0ab",
+            "volume6.cab": "0b7a87cf8518ace377d60f9f0efb926f754d45809319fb2e82ad93d503074224",
+            "volume7.cab": "683773727735dca2ddeee3fdc3cbd78a1d4d43a2f045fb3bee2984aa9fac5279"
+          },
+          "format": "CAB",
+          "files": 4
+        },
+        {
+          "input": "cab-MSZIP/volume4.cab",
+          "expectedExitCode": 0,
+          "inputs": {
+            "volume1.cab": "085ab7bd86dcc902a37f4224643475a0eb0c478c30e0ed906d1b04e13f609c3f",
+            "volume2.cab": "cc16d7f8410afde4aa3ee957fbc077c96e0f92a1379ce63bf95a433b971620d6",
+            "volume3.cab": "a7bfe1a7eef0ef21ce036b3433fae793ef52a6f068565dc055a46093bf7279c3",
+            "volume4.cab": "8bcae97e66c2bb0e26b25fe08307f9d6cb880e836aef6ac967055ecea5d61100",
+            "volume5.cab": "d984430e25baca0be72d803a2c063a37025fdc7b5037e8a1b89351232726b0ab",
+            "volume6.cab": "0b7a87cf8518ace377d60f9f0efb926f754d45809319fb2e82ad93d503074224",
+            "volume7.cab": "683773727735dca2ddeee3fdc3cbd78a1d4d43a2f045fb3bee2984aa9fac5279"
+          },
+          "format": "CAB",
+          "files": 4
+        },
+        {
+          "input": "cab-MSZIP/volume7.cab",
+          "expectedExitCode": 0,
+          "inputs": {
+            "volume1.cab": "085ab7bd86dcc902a37f4224643475a0eb0c478c30e0ed906d1b04e13f609c3f",
+            "volume2.cab": "cc16d7f8410afde4aa3ee957fbc077c96e0f92a1379ce63bf95a433b971620d6",
+            "volume3.cab": "a7bfe1a7eef0ef21ce036b3433fae793ef52a6f068565dc055a46093bf7279c3",
+            "volume4.cab": "8bcae97e66c2bb0e26b25fe08307f9d6cb880e836aef6ac967055ecea5d61100",
+            "volume5.cab": "d984430e25baca0be72d803a2c063a37025fdc7b5037e8a1b89351232726b0ab",
+            "volume6.cab": "0b7a87cf8518ace377d60f9f0efb926f754d45809319fb2e82ad93d503074224",
+            "volume7.cab": "683773727735dca2ddeee3fdc3cbd78a1d4d43a2f045fb3bee2984aa9fac5279"
+          },
+          "format": "CAB",
+          "files": 4
+        },
+        {
+          "input": "cab-case-name/VOLUME1.CAB",
+          "expectedExitCode": 0,
+          "inputs": {
+            "VOLUME1.CAB": "085ab7bd86dcc902a37f4224643475a0eb0c478c30e0ed906d1b04e13f609c3f",
+            "volume2.cab": "cc16d7f8410afde4aa3ee957fbc077c96e0f92a1379ce63bf95a433b971620d6",
+            "volume3.cab": "a7bfe1a7eef0ef21ce036b3433fae793ef52a6f068565dc055a46093bf7279c3",
+            "volume4.cab": "8bcae97e66c2bb0e26b25fe08307f9d6cb880e836aef6ac967055ecea5d61100",
+            "volume5.cab": "d984430e25baca0be72d803a2c063a37025fdc7b5037e8a1b89351232726b0ab",
+            "volume6.cab": "0b7a87cf8518ace377d60f9f0efb926f754d45809319fb2e82ad93d503074224",
+            "volume7.cab": "683773727735dca2ddeee3fdc3cbd78a1d4d43a2f045fb3bee2984aa9fac5279"
+          },
+          "format": "CAB",
+          "files": 4
+        },
+        {
+          "input": "cab-traversal/volume1.cab",
+          "expectedExitCode": 5,
+          "inputs": {
+            "volume1.cab": "13170f9af61ab6d0fd38c9260fa262c16bb1d8e77ed3940bfd19ef67700b7d72",
+            "volume2.cab": "cc16d7f8410afde4aa3ee957fbc077c96e0f92a1379ce63bf95a433b971620d6",
+            "volume3.cab": "a7bfe1a7eef0ef21ce036b3433fae793ef52a6f068565dc055a46093bf7279c3",
+            "volume4.cab": "8bcae97e66c2bb0e26b25fe08307f9d6cb880e836aef6ac967055ecea5d61100",
+            "volume5.cab": "d984430e25baca0be72d803a2c063a37025fdc7b5037e8a1b89351232726b0ab",
+            "volume6.cab": "0b7a87cf8518ace377d60f9f0efb926f754d45809319fb2e82ad93d503074224",
+            "volume7.cab": "683773727735dca2ddeee3fdc3cbd78a1d4d43a2f045fb3bee2984aa9fac5279"
+          }
+        },
+        {
+          "input": "cab-cycle/volume1.cab",
+          "expectedExitCode": 13,
+          "inputs": {
+            "volume1.cab": "085ab7bd86dcc902a37f4224643475a0eb0c478c30e0ed906d1b04e13f609c3f",
+            "volume2.cab": "67928103b21dbe119ced97203c38f3b4ee3d9f58f7ec9f72cef3f728461811f4",
+            "volume3.cab": "a7bfe1a7eef0ef21ce036b3433fae793ef52a6f068565dc055a46093bf7279c3",
+            "volume4.cab": "8bcae97e66c2bb0e26b25fe08307f9d6cb880e836aef6ac967055ecea5d61100",
+            "volume5.cab": "d984430e25baca0be72d803a2c063a37025fdc7b5037e8a1b89351232726b0ab",
+            "volume6.cab": "0b7a87cf8518ace377d60f9f0efb926f754d45809319fb2e82ad93d503074224",
+            "volume7.cab": "683773727735dca2ddeee3fdc3cbd78a1d4d43a2f045fb3bee2984aa9fac5279"
+          }
+        },
+        {
+          "input": "cab-continued-name/volume1.cab",
+          "expectedExitCode": 13,
+          "inputs": {
+            "volume1.cab": "085ab7bd86dcc902a37f4224643475a0eb0c478c30e0ed906d1b04e13f609c3f",
+            "volume2.cab": "3535cba7f61e2316704f4d81305af001d8aa048cd9800312cc7cc7a1c09b8ff1",
+            "volume3.cab": "a7bfe1a7eef0ef21ce036b3433fae793ef52a6f068565dc055a46093bf7279c3",
+            "volume4.cab": "8bcae97e66c2bb0e26b25fe08307f9d6cb880e836aef6ac967055ecea5d61100",
+            "volume5.cab": "d984430e25baca0be72d803a2c063a37025fdc7b5037e8a1b89351232726b0ab",
+            "volume6.cab": "0b7a87cf8518ace377d60f9f0efb926f754d45809319fb2e82ad93d503074224",
+            "volume7.cab": "683773727735dca2ddeee3fdc3cbd78a1d4d43a2f045fb3bee2984aa9fac5279"
+          }
+        },
+        {
+          "input": "msi-external/split.msi",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split.msi": "8b39a2e6350b6ec2a2222833f27d2654b9de1f47ecb3981a50f9dbac0139af1f",
+            "volume1.cab": "085ab7bd86dcc902a37f4224643475a0eb0c478c30e0ed906d1b04e13f609c3f",
+            "volume2.cab": "cc16d7f8410afde4aa3ee957fbc077c96e0f92a1379ce63bf95a433b971620d6",
+            "volume3.cab": "a7bfe1a7eef0ef21ce036b3433fae793ef52a6f068565dc055a46093bf7279c3",
+            "volume4.cab": "8bcae97e66c2bb0e26b25fe08307f9d6cb880e836aef6ac967055ecea5d61100",
+            "volume5.cab": "d984430e25baca0be72d803a2c063a37025fdc7b5037e8a1b89351232726b0ab",
+            "volume6.cab": "0b7a87cf8518ace377d60f9f0efb926f754d45809319fb2e82ad93d503074224",
+            "volume7.cab": "683773727735dca2ddeee3fdc3cbd78a1d4d43a2f045fb3bee2984aa9fac5279"
+          },
+          "format": "MSI",
+          "files": 4
+        },
+        {
+          "input": "msi-missing/split.msi",
+          "expectedExitCode": 30,
+          "inputs": {
+            "split.msi": "8b39a2e6350b6ec2a2222833f27d2654b9de1f47ecb3981a50f9dbac0139af1f",
+            "volume1.cab": "085ab7bd86dcc902a37f4224643475a0eb0c478c30e0ed906d1b04e13f609c3f",
+            "volume3.cab": "a7bfe1a7eef0ef21ce036b3433fae793ef52a6f068565dc055a46093bf7279c3",
+            "volume4.cab": "8bcae97e66c2bb0e26b25fe08307f9d6cb880e836aef6ac967055ecea5d61100",
+            "volume5.cab": "d984430e25baca0be72d803a2c063a37025fdc7b5037e8a1b89351232726b0ab",
+            "volume6.cab": "0b7a87cf8518ace377d60f9f0efb926f754d45809319fb2e82ad93d503074224",
+            "volume7.cab": "683773727735dca2ddeee3fdc3cbd78a1d4d43a2f045fb3bee2984aa9fac5279"
+          }
+        },
+        {
+          "input": "msi-embedded/split.msi",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split.msi": "c4e87ab743636c755d792c26e827810253c497d490b05ed0f25e2064207855cf"
+          },
+          "format": "MSI",
+          "files": 4
+        },
+        {
+          "input": "msi-embedded/undeclared.msi",
+          "expectedExitCode": 13,
+          "inputs": {
+            "split.msi": "c4e87ab743636c755d792c26e827810253c497d490b05ed0f25e2064207855cf",
+            "undeclared.msi": "4417ee12d673610b0e7a095639f985c7203a373514ce648103642ed145509810"
+          }
+        },
+        {
+          "input": "msi-mixed/split.msi",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split.msi": "db37a0304962a4e49b2b981f14d6df34324bf0e34f2efaf5e11b636b5e2d2725",
+            "volume2.cab": "cc16d7f8410afde4aa3ee957fbc077c96e0f92a1379ce63bf95a433b971620d6",
+            "volume4.cab": "8bcae97e66c2bb0e26b25fe08307f9d6cb880e836aef6ac967055ecea5d61100",
+            "volume6.cab": "0b7a87cf8518ace377d60f9f0efb926f754d45809319fb2e82ad93d503074224"
+          },
+          "format": "MSI",
+          "files": 4
+        },
+        {
+          "input": "cab-missing/volume1.cab",
+          "expectedExitCode": 30,
+          "inputs": {
+            "volume1.cab": "085ab7bd86dcc902a37f4224643475a0eb0c478c30e0ed906d1b04e13f609c3f",
+            "volume3.cab": "a7bfe1a7eef0ef21ce036b3433fae793ef52a6f068565dc055a46093bf7279c3",
+            "volume4.cab": "8bcae97e66c2bb0e26b25fe08307f9d6cb880e836aef6ac967055ecea5d61100",
+            "volume5.cab": "d984430e25baca0be72d803a2c063a37025fdc7b5037e8a1b89351232726b0ab",
+            "volume6.cab": "0b7a87cf8518ace377d60f9f0efb926f754d45809319fb2e82ad93d503074224",
+            "volume7.cab": "683773727735dca2ddeee3fdc3cbd78a1d4d43a2f045fb3bee2984aa9fac5279"
+          }
+        },
+        {
+          "input": "cab-wrong-set/volume1.cab",
+          "expectedExitCode": 13,
+          "inputs": {
+            "volume1.cab": "085ab7bd86dcc902a37f4224643475a0eb0c478c30e0ed906d1b04e13f609c3f",
+            "volume2.cab": "5b867bbbdc1f43ea25b719baed0844de229306be1fa1a724937362077bcf9f1c",
+            "volume3.cab": "a7bfe1a7eef0ef21ce036b3433fae793ef52a6f068565dc055a46093bf7279c3",
+            "volume4.cab": "8bcae97e66c2bb0e26b25fe08307f9d6cb880e836aef6ac967055ecea5d61100",
+            "volume5.cab": "d984430e25baca0be72d803a2c063a37025fdc7b5037e8a1b89351232726b0ab",
+            "volume6.cab": "0b7a87cf8518ace377d60f9f0efb926f754d45809319fb2e82ad93d503074224",
+            "volume7.cab": "683773727735dca2ddeee3fdc3cbd78a1d4d43a2f045fb3bee2984aa9fac5279"
+          }
+        },
+        {
+          "input": "cab-wrong-index/volume1.cab",
+          "expectedExitCode": 13,
+          "inputs": {
+            "volume1.cab": "085ab7bd86dcc902a37f4224643475a0eb0c478c30e0ed906d1b04e13f609c3f",
+            "volume2.cab": "cc8dbbb16efcf43a1f3a80568c427f349b318bbb5e00ad60e98d9c7c09cfb22a",
+            "volume3.cab": "a7bfe1a7eef0ef21ce036b3433fae793ef52a6f068565dc055a46093bf7279c3",
+            "volume4.cab": "8bcae97e66c2bb0e26b25fe08307f9d6cb880e836aef6ac967055ecea5d61100",
+            "volume5.cab": "d984430e25baca0be72d803a2c063a37025fdc7b5037e8a1b89351232726b0ab",
+            "volume6.cab": "0b7a87cf8518ace377d60f9f0efb926f754d45809319fb2e82ad93d503074224",
+            "volume7.cab": "683773727735dca2ddeee3fdc3cbd78a1d4d43a2f045fb3bee2984aa9fac5279"
+          }
+        },
+        {
+          "input": "cab-truncated/volume1.cab",
+          "expectedExitCode": 13,
+          "inputs": {
+            "volume1.cab": "085ab7bd86dcc902a37f4224643475a0eb0c478c30e0ed906d1b04e13f609c3f",
+            "volume2.cab": "1fb284428d25a36771edef7679772ee6b35974b9808e5648dff534aacbb373fb",
+            "volume3.cab": "a7bfe1a7eef0ef21ce036b3433fae793ef52a6f068565dc055a46093bf7279c3",
+            "volume4.cab": "8bcae97e66c2bb0e26b25fe08307f9d6cb880e836aef6ac967055ecea5d61100",
+            "volume5.cab": "d984430e25baca0be72d803a2c063a37025fdc7b5037e8a1b89351232726b0ab",
+            "volume6.cab": "0b7a87cf8518ace377d60f9f0efb926f754d45809319fb2e82ad93d503074224",
+            "volume7.cab": "683773727735dca2ddeee3fdc3cbd78a1d4d43a2f045fb3bee2984aa9fac5279"
+          }
+        },
+        {
+          "input": "cab-damaged/volume1.cab",
+          "expectedExitCode": 13,
+          "inputs": {
+            "volume1.cab": "085ab7bd86dcc902a37f4224643475a0eb0c478c30e0ed906d1b04e13f609c3f",
+            "volume2.cab": "e2c8e6c7ccf97fa0cfa13c9451cae9cf50e79c202e54dc085069d314b1b1dade",
+            "volume3.cab": "a7bfe1a7eef0ef21ce036b3433fae793ef52a6f068565dc055a46093bf7279c3",
+            "volume4.cab": "8bcae97e66c2bb0e26b25fe08307f9d6cb880e836aef6ac967055ecea5d61100",
+            "volume5.cab": "d984430e25baca0be72d803a2c063a37025fdc7b5037e8a1b89351232726b0ab",
+            "volume6.cab": "0b7a87cf8518ace377d60f9f0efb926f754d45809319fb2e82ad93d503074224",
+            "volume7.cab": "683773727735dca2ddeee3fdc3cbd78a1d4d43a2f045fb3bee2984aa9fac5279"
+          }
+        },
+        {
+          "input": "cab-LZX/volume1.cab",
+          "expectedExitCode": 0,
+          "inputs": {
+            "volume1.cab": "a1584bd6ab2cf0415f286b591c768fc03ff57bf0429f4b0c0bfee2c3f1d70023",
+            "volume2.cab": "b0fc7432d14529ce6dff29e445698da8dd12cf1914034339e97397ab35d6e9bb",
+            "volume3.cab": "1762e39988901d113a5e0c722134b34c16a370a7ebc96e4339bdb4e27a4239ca",
+            "volume4.cab": "984f04d60abde00363f13b55d86c613765cb8596fc1f610771cc4956e9ff0e43",
+            "volume5.cab": "b579f5e38bd1c5b03e67a993ee1e5c267ee80a132568fd09a3b0c6d53c2cb1d2",
+            "volume6.cab": "b874529b3c875eadea3b31b8e3cc068739e1e857d74907ba79709a70467b1baf",
+            "volume7.cab": "f589b9ba483078fe5370280fe550d533757ae95fa16df904db422a1f377bc721"
+          },
+          "format": "CAB",
+          "files": 4
+        },
+        {
+          "input": "cab-LZX/volume4.cab",
+          "expectedExitCode": 0,
+          "inputs": {
+            "volume1.cab": "a1584bd6ab2cf0415f286b591c768fc03ff57bf0429f4b0c0bfee2c3f1d70023",
+            "volume2.cab": "b0fc7432d14529ce6dff29e445698da8dd12cf1914034339e97397ab35d6e9bb",
+            "volume3.cab": "1762e39988901d113a5e0c722134b34c16a370a7ebc96e4339bdb4e27a4239ca",
+            "volume4.cab": "984f04d60abde00363f13b55d86c613765cb8596fc1f610771cc4956e9ff0e43",
+            "volume5.cab": "b579f5e38bd1c5b03e67a993ee1e5c267ee80a132568fd09a3b0c6d53c2cb1d2",
+            "volume6.cab": "b874529b3c875eadea3b31b8e3cc068739e1e857d74907ba79709a70467b1baf",
+            "volume7.cab": "f589b9ba483078fe5370280fe550d533757ae95fa16df904db422a1f377bc721"
+          },
+          "format": "CAB",
+          "files": 4
+        },
+        {
+          "input": "cab-LZX/volume7.cab",
+          "expectedExitCode": 0,
+          "inputs": {
+            "volume1.cab": "a1584bd6ab2cf0415f286b591c768fc03ff57bf0429f4b0c0bfee2c3f1d70023",
+            "volume2.cab": "b0fc7432d14529ce6dff29e445698da8dd12cf1914034339e97397ab35d6e9bb",
+            "volume3.cab": "1762e39988901d113a5e0c722134b34c16a370a7ebc96e4339bdb4e27a4239ca",
+            "volume4.cab": "984f04d60abde00363f13b55d86c613765cb8596fc1f610771cc4956e9ff0e43",
+            "volume5.cab": "b579f5e38bd1c5b03e67a993ee1e5c267ee80a132568fd09a3b0c6d53c2cb1d2",
+            "volume6.cab": "b874529b3c875eadea3b31b8e3cc068739e1e857d74907ba79709a70467b1baf",
+            "volume7.cab": "f589b9ba483078fe5370280fe550d533757ae95fa16df904db422a1f377bc721"
+          },
+          "format": "CAB",
+          "files": 4
+        },
+        {
+          "input": "cab-NONE/volume1.cab",
+          "expectedExitCode": 0,
+          "inputs": {
+            "volume1.cab": "547293a91da4180d788309215c5b48c7148bf6f26c05fe998fc3571617721bc9",
+            "volume2.cab": "e5e4b642f4edd04f0456fe3c8923985ded056c4a1e80a244f427528b157cf8e5",
+            "volume3.cab": "d0ed66e74ea279d3e03cb46cbbb57813716cb5c773167c7fb95ffb83db8869c3",
+            "volume4.cab": "c3bee3d6be9a0098194e38155cd154e317ec991f8f935f14a474a3a6aa105f05",
+            "volume5.cab": "d163aea41624183c02dce659e3ba5a04e7ea96a9d69eebc643c81ad31018a109",
+            "volume6.cab": "aaa053979d23d76dfa2209658498fa7ad38b000e0886cd70063b2b369e77de62",
+            "volume7.cab": "a4019772c6cfe3c45fc1f787b38853df1f62e4f8f7331301a04359b7b4be64aa"
+          },
+          "format": "CAB",
+          "files": 4
+        },
+        {
+          "input": "cab-NONE/volume4.cab",
+          "expectedExitCode": 0,
+          "inputs": {
+            "volume1.cab": "547293a91da4180d788309215c5b48c7148bf6f26c05fe998fc3571617721bc9",
+            "volume2.cab": "e5e4b642f4edd04f0456fe3c8923985ded056c4a1e80a244f427528b157cf8e5",
+            "volume3.cab": "d0ed66e74ea279d3e03cb46cbbb57813716cb5c773167c7fb95ffb83db8869c3",
+            "volume4.cab": "c3bee3d6be9a0098194e38155cd154e317ec991f8f935f14a474a3a6aa105f05",
+            "volume5.cab": "d163aea41624183c02dce659e3ba5a04e7ea96a9d69eebc643c81ad31018a109",
+            "volume6.cab": "aaa053979d23d76dfa2209658498fa7ad38b000e0886cd70063b2b369e77de62",
+            "volume7.cab": "a4019772c6cfe3c45fc1f787b38853df1f62e4f8f7331301a04359b7b4be64aa"
+          },
+          "format": "CAB",
+          "files": 4
+        },
+        {
+          "input": "cab-NONE/volume7.cab",
+          "expectedExitCode": 0,
+          "inputs": {
+            "volume1.cab": "547293a91da4180d788309215c5b48c7148bf6f26c05fe998fc3571617721bc9",
+            "volume2.cab": "e5e4b642f4edd04f0456fe3c8923985ded056c4a1e80a244f427528b157cf8e5",
+            "volume3.cab": "d0ed66e74ea279d3e03cb46cbbb57813716cb5c773167c7fb95ffb83db8869c3",
+            "volume4.cab": "c3bee3d6be9a0098194e38155cd154e317ec991f8f935f14a474a3a6aa105f05",
+            "volume5.cab": "d163aea41624183c02dce659e3ba5a04e7ea96a9d69eebc643c81ad31018a109",
+            "volume6.cab": "aaa053979d23d76dfa2209658498fa7ad38b000e0886cd70063b2b369e77de62",
+            "volume7.cab": "a4019772c6cfe3c45fc1f787b38853df1f62e4f8f7331301a04359b7b4be64aa"
+          },
+          "format": "CAB",
+          "files": 4
+        }
+      ],
+      "resultPath": "out/build/win-x86-release/volume-fixtures/bd8dfbc5755a43009c60f3e4595aa35d/results.json",
+      "compilerSha256": "0a8757031b33777e4c9cbffee40f11a5062b36d25cbe144c1db73b6102b80ad7",
+      "summary": {
+        "total": 38,
+        "complete": 23,
+        "expectedRejection": 15
+      }
+    }
+  ],
+  "additionalInnoMatrices": [
+    {
+      "architecture": "x64",
+      "compiler": "C:\\Users\\hunlo\\AppData\\Local\\Extract\\development-tools\\inno-compilers\\6.0.5\\innosetup-6.0.5_extracted\\app\\ISCC.exe",
+      "compilerVersion": "6.0.5",
+      "cases": [
+        {
+          "input": "inno-none-False/split.exe",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split-1.bin": "0700083b816ade783d520104f2ed0648c9f9c7cd75d5fb2f0812c0cd0bdcbbb8",
+            "split-2.bin": "a3b4c507a9de0a33f97a90eddfcf9775988b615e3701c90c15778e01bc6dda4e",
+            "split-3.bin": "887cc63f938b66bbd5182fdd9a5b716f10e2e64fc5ca431f60d20e780f1c1e64",
+            "split.exe": "e0014d8dfb0d715c3039be4b19ee441e34c40556e0cb59d3450a707a16cfd68f"
+          },
+          "format": "Inno Setup",
+          "files": 4
+        },
+        {
+          "input": "inno-none-True/split.exe",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split-1a.bin": "a92df3264ab123825de269b27aa16d332cca7799e7f7d7ee53b5064cd1c9f0f2",
+            "split-1b.bin": "c6a0202715d5ea56d1d6ba828de5fd9865063bf2c88469a2ed306aa538b97e34",
+            "split-1c.bin": "f31e5e2f2cd44f802e892de2157ba35a2ad93036c8b1a8903d6edaecf1abd6b1",
+            "split.exe": "101001e52ef5a7f922a38c0cc99edb01a088f50ed1b56adae868c36e27eea6d9"
+          },
+          "format": "Inno Setup",
+          "files": 4
+        },
+        {
+          "input": "inno-zip-False/split.exe",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split-1.bin": "513cbc4067a0e989e2a7593a923b2e1fdeeca0fd1cd9811e5e39481753bd0c4b",
+            "split-2.bin": "c335143180facab00290c3c42a932eb781f79b0ddcc8e6c840987f657e2558a1",
+            "split-3.bin": "6ecfa365499da63db8321394f9fec7d6b97477fd30ba630a345801be887a20ed",
+            "split.exe": "797bd12ddb5f3105aee3981f3e941c68b34b88edea0e1a04e5e8f62a659586dc"
+          },
+          "format": "Inno Setup",
+          "files": 4
+        },
+        {
+          "input": "inno-zip-True/split.exe",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split-1a.bin": "525a4fce0ce1e1b73a4f03149ca2b19a14e19bc1a166030b657bf414f4ca82a8",
+            "split-1b.bin": "574ee87f130b7d771e54a2e02a5179cf1de764fb75d46866ecdccf4c3656e552",
+            "split-1c.bin": "f26ec79e1393d056f1f35bdd1c41877b6dd60f4bd2566e3701bfa9fe2964905e",
+            "split.exe": "e97eb964a97630a590c7dffe39ac4fd29e33fc2702bcbba62f01e9565ae0e785"
+          },
+          "format": "Inno Setup",
+          "files": 4
+        },
+        {
+          "input": "inno-bzip-False/split.exe",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split-1.bin": "daf3b95af428d0cf609fdfad71ea8b7e5512c44976202a501aeff9b76ab683e9",
+            "split-2.bin": "1596862d678c116b369a97bf929a9d1388b480f498228dd7553c0014d0ac62c4",
+            "split-3.bin": "dd835d07d7ad0deca4834226dea24094232a9fa6f2a2df45add571faf9429be7",
+            "split.exe": "3ed5aea4acff21f4c9b654bf7eba727db4b9b3bcde7821aa98119bc59827abe5"
+          },
+          "format": "Inno Setup",
+          "files": 4
+        },
+        {
+          "input": "inno-bzip-True/split.exe",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split-1a.bin": "6a5db2acf982ca865cbe26abb5f2dd434d5139067d346f5b2bfebe4c158c5af8",
+            "split-1b.bin": "737990c4323124bc63eecd797a64307f05ee919c39664ae2ac0fd4be1ff9d64e",
+            "split-1c.bin": "0aa1dc15f0d6868fa04964f3f15a28ca21ff7e432cae54a50f86276de1ec80ca",
+            "split.exe": "e5200aed936abebc3ada7b5ad992a4e83a2fab6efd809dd51d14f8b98a49eefd"
+          },
+          "format": "Inno Setup",
+          "files": 4
+        },
+        {
+          "input": "inno-lzma-False/split.exe",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split-1.bin": "a36b2f2a02a88e7332c8ef8a9b812a7f3835681c2f24d6054669aad019002603",
+            "split-2.bin": "ccf5650fe4854aa532c61799b0c3da2bc120d525e910fb69ba1b74fe808de209",
+            "split-3.bin": "6ade4ce9cde5fafde7cb8f436976107dd4175a05833b7562701ca3dcf611b566",
+            "split.exe": "62275ce75d6ab9a1a06cc34e9764f82852ddf5dba9514792f59b7e44e091a7e2"
+          },
+          "format": "Inno Setup",
+          "files": 4
+        },
+        {
+          "input": "inno-lzma-True/split.exe",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split-1a.bin": "4a05e6748ed71611fec6ee7f662148a0360f8d858c93a52999c903a1a048949a",
+            "split-1b.bin": "3a7efb71db1bba2a9175079a17baa396944242fd8e1c24c3bac9482a64fcc50c",
+            "split-1c.bin": "a95c84501d8bbfb2698fee488bf2ec0599c739cc378720028bb282485ba958dc",
+            "split.exe": "758ead033061310e0ab546ad24cd580759b03640922115bbf4c3dad3b083c00a"
+          },
+          "format": "Inno Setup",
+          "files": 4
+        },
+        {
+          "input": "inno-lzma2-False/split.exe",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split-1.bin": "bb7518f670dc9ba8812ba12cfeb8a1a68482e3a551b57d901a61e0ec7e2bb717",
+            "split-2.bin": "b7e7d5326e70d35fd59cd12b0bac0347ec12ca1c16d3920b75a65b92cf7aceaa",
+            "split-3.bin": "d0e07e8ff5bf7ad75c338f481774c432b04c329b25012f3777f32b7dbc4ede78",
+            "split.exe": "b94bb5ad29c14ae1aa3b8d23cfc32acaf3cb9652502d6957f5e7f3baf063a47f"
+          },
+          "format": "Inno Setup",
+          "files": 4
+        },
+        {
+          "input": "inno-lzma2-True/split.exe",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split-1a.bin": "69256f28c1bd31631d31a65e525996253d1d028e990d5268dce02e0f08e18701",
+            "split-1b.bin": "6269f6f920480888d89bceac77d2159ddb76f0019e8b7e48a901d7553974170f",
+            "split-1c.bin": "cbc258aea3be0060fc9e9c728dc3f5079e3c91eadc09b71346da108085f5a656",
+            "split.exe": "83374b2e35ff8f337d154d8e6d89a437dfb1cc9556c6ee320e8718f1cad96560"
+          },
+          "format": "Inno Setup",
+          "files": 4
+        },
+        {
+          "input": "inno-missing/split.exe",
+          "expectedExitCode": 30,
+          "inputs": {
+            "split-1a.bin": "69256f28c1bd31631d31a65e525996253d1d028e990d5268dce02e0f08e18701",
+            "split-1c.bin": "cbc258aea3be0060fc9e9c728dc3f5079e3c91eadc09b71346da108085f5a656",
+            "split.exe": "83374b2e35ff8f337d154d8e6d89a437dfb1cc9556c6ee320e8718f1cad96560"
+          }
+        },
+        {
+          "input": "inno-truncated/split.exe",
+          "expectedExitCode": 13,
+          "inputs": {
+            "split-1a.bin": "69256f28c1bd31631d31a65e525996253d1d028e990d5268dce02e0f08e18701",
+            "split-1b.bin": "6269f6f920480888d89bceac77d2159ddb76f0019e8b7e48a901d7553974170f",
+            "split-1c.bin": "2e1a861ad35e079d7f2148b46385a5c5823943484e8cff2a465afb8ebf3a525a",
+            "split.exe": "83374b2e35ff8f337d154d8e6d89a437dfb1cc9556c6ee320e8718f1cad96560"
+          }
+        },
+        {
+          "input": "inno-bad-id/split.exe",
+          "expectedExitCode": 13,
+          "inputs": {
+            "split-1a.bin": "593fdb1ba844aebd383eb18d27d54b5517a3cfffea1334c29805e97aae3f8dbb",
+            "split-1b.bin": "6269f6f920480888d89bceac77d2159ddb76f0019e8b7e48a901d7553974170f",
+            "split-1c.bin": "cbc258aea3be0060fc9e9c728dc3f5079e3c91eadc09b71346da108085f5a656",
+            "split.exe": "83374b2e35ff8f337d154d8e6d89a437dfb1cc9556c6ee320e8718f1cad96560"
+          }
+        },
+        {
+          "input": "inno-swapped/split.exe",
+          "expectedExitCode": 13,
+          "inputs": {
+            "split-1a.bin": "6269f6f920480888d89bceac77d2159ddb76f0019e8b7e48a901d7553974170f",
+            "split-1b.bin": "69256f28c1bd31631d31a65e525996253d1d028e990d5268dce02e0f08e18701",
+            "split-1c.bin": "cbc258aea3be0060fc9e9c728dc3f5079e3c91eadc09b71346da108085f5a656",
+            "split.exe": "83374b2e35ff8f337d154d8e6d89a437dfb1cc9556c6ee320e8718f1cad96560"
+          }
+        },
+        {
+          "input": "inno-damaged/split.exe",
+          "expectedExitCode": 13,
+          "inputs": {
+            "split-1a.bin": "69256f28c1bd31631d31a65e525996253d1d028e990d5268dce02e0f08e18701",
+            "split-1b.bin": "2ba5b1527c48c13be67247410151f120aeae0a10778cc683ed9b14bb0f62c299",
+            "split-1c.bin": "cbc258aea3be0060fc9e9c728dc3f5079e3c91eadc09b71346da108085f5a656",
+            "split.exe": "83374b2e35ff8f337d154d8e6d89a437dfb1cc9556c6ee320e8718f1cad96560"
+          }
+        }
+      ],
+      "resultPath": "out/build/win-x64-release/volume-fixtures-legacy-final/453eb38349fe4e749312683be73d25ed/results.json",
+      "compilerSha256": "fb1eae60165f94b8604eaf2181e67a55c7f61547e3647cdbd5e30df99368338f",
+      "summary": {
+        "total": 15,
+        "complete": 10,
+        "expectedRejection": 5
+      }
+    },
+    {
+      "architecture": "x86",
+      "compiler": "C:\\Users\\hunlo\\AppData\\Local\\Extract\\development-tools\\inno-compilers\\6.6.0\\innosetup-6.6.0_extracted\\app\\ISCC.exe",
+      "compilerVersion": "6.6.0",
+      "cases": [
+        {
+          "input": "inno-none-False/split.exe",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split-1.bin": "543fe55e4bca7a357aef14e5f62166d940c05e01d1ace7c16ea3415e68d28e9d",
+            "split-2.bin": "731d0416930780d6294e2238889d7231e7ca9b14234e8bafb16e054e02d15e4b",
+            "split-3.bin": "3fa147d7bebba4a45d1134808c5f7b99b4b7ea1c0e99fe207dc12b7d4cdeda57",
+            "split.exe": "d8b5fc14ddd83c0a1b14b1e7f0411957fd4cc3e27908343925be8e7041b53487"
+          },
+          "format": "Inno Setup",
+          "files": 4
+        },
+        {
+          "input": "inno-none-True/split.exe",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split-1a.bin": "d63e6d30f3f1f82693e0aa4d17c2c22a015213bbdd3b2836aaee8d0348c450ef",
+            "split-1b.bin": "47fcb19bd7ee6845139526c90e65abb08feded600f9fa2b53fbcbb8f3a654284",
+            "split-1c.bin": "511d7f6cbc39b27b33673f88f81260a7adbcdaf150436293140fa073af5a4acf",
+            "split.exe": "a4fffa20289f0af1dea5f2452c3cf8f88031f2106dd1ed84e6ddaed8356b1c03"
+          },
+          "format": "Inno Setup",
+          "files": 4
+        },
+        {
+          "input": "inno-zip-False/split.exe",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split-1.bin": "1784f2c02ca593147ab598f58f83157c8252448731693f071c1e29c64810388d",
+            "split-2.bin": "d2cd9635b466d468a59dfe66cafc9d26d7c309cb00e3ce72bd5be026d115ffab",
+            "split-3.bin": "660103404d506cec094f4ec019ebd7e9198105c1b2fad1c2def68409a3b24f2a",
+            "split.exe": "f0775e4dc46b2b5df43274efaf04cdb2cacd5989b058e7e3479e16351a73b756"
+          },
+          "format": "Inno Setup",
+          "files": 4
+        },
+        {
+          "input": "inno-zip-True/split.exe",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split-1a.bin": "7b5daa0bd6383636b825dd52eff4cc2ede2edd3963290bc69855b13e06efc8fa",
+            "split-1b.bin": "1fd30fed06789a9511606fd5c1145ba3e38ca9194f4546eb39ae73b321636b87",
+            "split-1c.bin": "44b2f1a705b34fe8bde21eb97f586a20571b8434017ad8b5f71c5c86a9d7baab",
+            "split.exe": "b6bb394dbe233d3d60abef205baad1b99387ed5f0f59c02686ef8950ea0460db"
+          },
+          "format": "Inno Setup",
+          "files": 4
+        },
+        {
+          "input": "inno-bzip-False/split.exe",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split-1.bin": "17c2b92ae05f717f17d2aef6476f2a7c991f1b7279052a40fd125cfe6b4c1f5c",
+            "split-2.bin": "ed4de0126e606721c0061d2d3ea2e3044dff34cb4a69bac17bdb732dd2530bb2",
+            "split-3.bin": "a87ef2bbad2c65ab71f400fd5433b0b3e559a5aabb4ff86604d17eba64c078c1",
+            "split.exe": "3f10cf35e23d2c843d7465f1fd6159fcb617d38e550b226bc89a36bcf3774b96"
+          },
+          "format": "Inno Setup",
+          "files": 4
+        },
+        {
+          "input": "inno-bzip-True/split.exe",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split-1a.bin": "70dc1184e4fc0344bcdb81898163406e5807f39f3812c9dbbcb71599f33ef938",
+            "split-1b.bin": "78af08ed4127259c9bfab439ccc79a2dbbcfd62a41bbf8db1f1ab7f3d85748b2",
+            "split-1c.bin": "6b862c587af9c7d55674b8c0a0629f9e323c90d8390e813e379944f3119059c4",
+            "split.exe": "335deacbe4603554b858d6a564a22fa1b5e637ae2dc29b7b91a2807984352699"
+          },
+          "format": "Inno Setup",
+          "files": 4
+        },
+        {
+          "input": "inno-lzma-False/split.exe",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split-1.bin": "14244be42704ace4afcf7584b12ac86b4635162128617f42ee01597f0cc71c1b",
+            "split-2.bin": "7f80e48d56e414acbc5d16b91b570a7681faba013b092f21a81a965364e5b06e",
+            "split-3.bin": "d5a84c0ebf329dd77aa75feedbe1773502aae827df12bb94a0b405f16dc26335",
+            "split.exe": "7fdfa6b89fdd38635dd672a85ac142dd603e98065b166c8764873d68ef34096d"
+          },
+          "format": "Inno Setup",
+          "files": 4
+        },
+        {
+          "input": "inno-lzma-True/split.exe",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split-1a.bin": "f1bc752591a761363feafaffaa62028bdf410d1f215ad6e30670df6ba8513ae3",
+            "split-1b.bin": "3b48f3df4face2b0705596dcb320b47bedbb584af51f5d090f23912339e43daa",
+            "split-1c.bin": "15b0185fd22e21cd4011eb7fb0d1be2408556e158bb0d6a3a68d76f1f11e8ca6",
+            "split.exe": "0efd59fbef1e195082a33b6eb61648504f333e88579dcc012f034ac707041555"
+          },
+          "format": "Inno Setup",
+          "files": 4
+        },
+        {
+          "input": "inno-lzma2-False/split.exe",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split-1.bin": "e3b9b72fb1bccf873f6bc9fa7fccf029d7036ec0d31a19a4e169cd22eb0b1ff5",
+            "split-2.bin": "710aae6051361ad712e52ad083a17950ade74ffa5ec8e93ef759423253a1fbb8",
+            "split-3.bin": "b445a0c5f4b1a4148dc7fce6921c972031c941e6cd9da808a913ebfb8c5bcfc9",
+            "split.exe": "69d44bebb6f9775d60c226d6d6d3a6735ac251dd6e9edceefdade347521e1bc7"
+          },
+          "format": "Inno Setup",
+          "files": 4
+        },
+        {
+          "input": "inno-lzma2-True/split.exe",
+          "expectedExitCode": 0,
+          "inputs": {
+            "split-1a.bin": "01ad9883c9654d40932d78c76346dcb8bd64c6d632a95274cf499eef43b08a62",
+            "split-1b.bin": "274be7f431586c3bb8ea7ea3bf85caddcb8f339e8e0b5d942ab0370547ee3eb4",
+            "split-1c.bin": "888a125eee5eb6d6e9b9b3e82bfd1bc9c7878b3edd86ef4d061844256f5425dd",
+            "split.exe": "88654b910ceca45a4b294871b3dc72ef054980f219a12f5c49b6f1b0f0c5ed92"
+          },
+          "format": "Inno Setup",
+          "files": 4
+        },
+        {
+          "input": "inno-missing/split.exe",
+          "expectedExitCode": 30,
+          "inputs": {
+            "split-1a.bin": "01ad9883c9654d40932d78c76346dcb8bd64c6d632a95274cf499eef43b08a62",
+            "split-1c.bin": "888a125eee5eb6d6e9b9b3e82bfd1bc9c7878b3edd86ef4d061844256f5425dd",
+            "split.exe": "88654b910ceca45a4b294871b3dc72ef054980f219a12f5c49b6f1b0f0c5ed92"
+          }
+        },
+        {
+          "input": "inno-truncated/split.exe",
+          "expectedExitCode": 13,
+          "inputs": {
+            "split-1a.bin": "01ad9883c9654d40932d78c76346dcb8bd64c6d632a95274cf499eef43b08a62",
+            "split-1b.bin": "274be7f431586c3bb8ea7ea3bf85caddcb8f339e8e0b5d942ab0370547ee3eb4",
+            "split-1c.bin": "8a5301e5441ace8e1fb214ac698519c2e4a53846818d68d0ff1441ba7ca3e6a0",
+            "split.exe": "88654b910ceca45a4b294871b3dc72ef054980f219a12f5c49b6f1b0f0c5ed92"
+          }
+        },
+        {
+          "input": "inno-bad-id/split.exe",
+          "expectedExitCode": 13,
+          "inputs": {
+            "split-1a.bin": "ce7eceeafc9d017e02752035413f004a96f071c5fd8c4647bf7f5f0de85692b4",
+            "split-1b.bin": "274be7f431586c3bb8ea7ea3bf85caddcb8f339e8e0b5d942ab0370547ee3eb4",
+            "split-1c.bin": "888a125eee5eb6d6e9b9b3e82bfd1bc9c7878b3edd86ef4d061844256f5425dd",
+            "split.exe": "88654b910ceca45a4b294871b3dc72ef054980f219a12f5c49b6f1b0f0c5ed92"
+          }
+        },
+        {
+          "input": "inno-swapped/split.exe",
+          "expectedExitCode": 13,
+          "inputs": {
+            "split-1a.bin": "274be7f431586c3bb8ea7ea3bf85caddcb8f339e8e0b5d942ab0370547ee3eb4",
+            "split-1b.bin": "01ad9883c9654d40932d78c76346dcb8bd64c6d632a95274cf499eef43b08a62",
+            "split-1c.bin": "888a125eee5eb6d6e9b9b3e82bfd1bc9c7878b3edd86ef4d061844256f5425dd",
+            "split.exe": "88654b910ceca45a4b294871b3dc72ef054980f219a12f5c49b6f1b0f0c5ed92"
+          }
+        },
+        {
+          "input": "inno-damaged/split.exe",
+          "expectedExitCode": 13,
+          "inputs": {
+            "split-1a.bin": "01ad9883c9654d40932d78c76346dcb8bd64c6d632a95274cf499eef43b08a62",
+            "split-1b.bin": "39bbb7970ec7a3d5d35984134574609f047d7590c473d4f213a250de788ae5ed",
+            "split-1c.bin": "888a125eee5eb6d6e9b9b3e82bfd1bc9c7878b3edd86ef4d061844256f5425dd",
+            "split.exe": "88654b910ceca45a4b294871b3dc72ef054980f219a12f5c49b6f1b0f0c5ed92"
+          }
+        }
+      ],
+      "resultPath": "out/build/win-x86-release/volume-fixtures-660/c218eb783e5a47daaebadde4a4784dd7/results.json",
+      "compilerSha256": "7e52a23553490619ba57c726d980a953480bcabe25f4ff2de72d14fc828db007",
+      "summary": {
+        "total": 15,
+        "complete": 10,
+        "expectedRejection": 5
+      }
+    }
+  ],
+  "artifacts": [
+    {
+      "architecture": "x64",
+      "path": "out/dist/win-x64-release/Extract.exe",
+      "bytes": 1144832,
+      "sha256": "5402a56053f4e3694fbb620e4edcad73ab94fcc5d242b9293237c8f985bbf1a1",
+      "versionOutput": "Extract 0.7.0 (MSI / CAB / Burn / Inno Setup / NSIS / Velopack / Squirrel / MSIX / APPX / Bundle / ZIP / 7z)",
+      "staticCRT": true,
+      "systemDllsOnly": true,
+      "ASLR": true,
+      "DEP": true,
+      "CFG": true,
+      "localPackageVerificationLog": "C:\\Users\\hunlo\\AppData\\Local\\Temp\\extract-volumes-package-x64.log",
+      "packageVerification": "已验证并打包：C:\\Users\\hunlo\\AppData\\Local\\Temp\\Extract-volumes-static-check\\x64\\Extract-v0.7.0-windows-x64.exe\n系统依赖：advapi32.dll, api-ms-win-core-winrt-l1-1-0.dll, api-ms-win-core-winrt-string-l1-1-0.dll, bcrypt.dll, cabinet.dll, kernel32.dll, msi.dll, ntdll.dll, ole32.dll, propsys.dll, shell32.dll, shlwapi.dll, xmllite.dll"
+    },
+    {
+      "architecture": "x86",
+      "path": "out/dist/win-x86-release/Extract.exe",
+      "bytes": 1027584,
+      "sha256": "d8aa2f52c107aca481777876dba3eb5f34defc937cd21ef9a841052fdbae2fa9",
+      "versionOutput": "Extract 0.7.0 (MSI / CAB / Burn / Inno Setup / NSIS / Velopack / Squirrel / MSIX / APPX / Bundle / ZIP / 7z)",
+      "staticCRT": true,
+      "systemDllsOnly": true,
+      "ASLR": true,
+      "DEP": true,
+      "CFG": true,
+      "localPackageVerificationLog": "C:\\Users\\hunlo\\AppData\\Local\\Temp\\extract-volumes-package-x86.log",
+      "packageVerification": "已验证并打包：C:\\Users\\hunlo\\AppData\\Local\\Temp\\Extract-volumes-static-check\\x86\\Extract-v0.7.0-windows-x86.exe\n系统依赖：advapi32.dll, api-ms-win-core-winrt-l1-1-0.dll, api-ms-win-core-winrt-string-l1-1-0.dll, bcrypt.dll, cabinet.dll, kernel32.dll, msi.dll, ntdll.dll, ole32.dll, propsys.dll, shell32.dll, shlwapi.dll, xmllite.dll"
+    }
+  ],
+  "limitations": [
+    "Generated fixtures, not a survey of all third-party recent packages",
+    "Burn internal CAB spanning, split ZIP/7z, encrypted and modified Inno payloads remain unsupported",
+    "Original Ant/QQMusic/Beyond Compare files unavailable in the inspected Downloads/out paths; no new real-sample result claimed",
+    "ARM64 Extract build/runtime and clean Windows 10/11 desktop visual acceptance not performed in this round"
+  ],
+  "initialRegressionCorrections": [
+    "Inline Inno FirstSlice greater than LastSlice now correctly expects corrupt (13), not unsupported (50)",
+    "CAB previous-volume flag without inserting the required name fields now correctly expects unsafe path (5), not unsupported (50)"
+  ],
+  "makecab": {
+    "path": "C:\\Windows\\System32\\makecab.exe",
+    "sha256": "070a98b4f7c03f99048a10f490d5916a9a98417e0d0de2c414c76b3dd00cb35e"
+  },
+  "notificationRegistration": {
+    "restoredTo": "out/dist/win-x64-release/Extract.exe",
+    "exitCode": 0,
+    "visualClickTest": false
+  }
+}

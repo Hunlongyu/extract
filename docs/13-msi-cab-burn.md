@@ -1,5 +1,7 @@
 # MSI/CAB 优化与 Burn 实现
 
+> 后续本地开发已增加独立 CAB 与 MSI 内嵌/外置/混合 CAB 跨卷续接，见 [分卷说明](26-split-volumes.md)。下文保留本阶段历史验证与限制；Burn 内部 CAB 跨卷仍未接入。
+
 日期：2026-09-07。对应 Extract 0.5.0。
 
 本轮扩展已有 MSI/CAB 能力，并新增 Burn 静态提取。解析和路径规划由本项目 C++20 模块实现，CAB 解压使用 Windows FDI，XML 使用系统 XmlLite，哈希使用 BCrypt；发布程序没有新增外部解包工具依赖。

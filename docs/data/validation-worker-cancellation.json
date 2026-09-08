@@ -1,0 +1,106 @@
+{
+  "scope": "Local worker isolation, batch cancellation, optional timeout and interruption marking after v0.7.0",
+  "published": false,
+  "checkedAt": "2026-09-07T09:02:09.4118742Z",
+  "fullRegression": [
+    {
+      "tests": 11,
+      "failures": 0,
+      "note": "Full suite before final 128-bit file-ID cleanup guard and help wording; final worker suite repeated after these changes",
+      "architecture": "x64",
+      "skipped": 0
+    },
+    {
+      "tests": 11,
+      "failures": 0,
+      "note": "Full suite before final 128-bit file-ID cleanup guard and help wording; final worker suite repeated after these changes",
+      "architecture": "x86",
+      "skipped": 0
+    }
+  ],
+  "finalWorkerRegression": [
+    {
+      "count": 7,
+      "scenarios": [
+        "isolated extraction/list, Unicode, CLI validation",
+        "protocol cancel, batch not-started count, cooperative rollback",
+        "abnormal worker exit, identity cleanup, batch continuation",
+        "timeout force-stops suspended worker and continues batch",
+        "cancel force-stop fallback",
+        "replacement file identity and unregistered files preserved",
+        "parent death reaps child; next invocation marks interrupted and preserves files"
+      ],
+      "architecture": "x64"
+    },
+    {
+      "count": 7,
+      "scenarios": [
+        "isolated extraction/list, Unicode, CLI validation",
+        "protocol cancel, batch not-started count, cooperative rollback",
+        "abnormal worker exit, identity cleanup, batch continuation",
+        "timeout force-stops suspended worker and continues batch",
+        "cancel force-stop fallback",
+        "replacement file identity and unregistered files preserved",
+        "parent death reaps child; next invocation marks interrupted and preserves files"
+      ],
+      "architecture": "x86"
+    }
+  ],
+  "nativeNotifications": [
+    {
+      "architecture": "x64",
+      "finalXml": [
+        "<toast activationType=\"protocol\" launch=\"hunlongyu-extract://job/BFB0FED3-8AC9-4597-BD38-DE40DC8DD6C7\"><visual><binding template=\"ToastGeneric\"><text>已取消 · progress-c3d770fbba1b47849d2781a51d964823.zip</text><text>原因：任务已取消，已提交的结果保留。</text></binding></visual><actions><action content=\"查看结果\" activationType=\"protocol\" arguments=\"hunlongyu-extract://job/BFB0FED3-8AC9-4597-BD38-DE40DC8DD6C7\"/></actions><audio silent=\"true\"/></toast>"
+      ],
+      "mode": "cancel",
+      "resultMode": "updated-existing",
+      "snapshots": 1,
+      "exitCode": 1223
+    },
+    {
+      "architecture": "x64",
+      "finalXml": [
+        "<toast activationType=\"protocol\" launch=\"hunlongyu-extract://job/29178C16-0603-48EC-92AA-F02A1166670D\"><visual><binding template=\"ToastGeneric\"><text>已完成 · progress-e891c1c8b4194a2b8e8a5b5d9a53bb5d.zip</text><text>输出：E:\\Hunlongyu\\extract\\out\\notification-worker\\e891c1c8b4194a2b8e8a5b5d9a53bb5d\\progress-e891c1c8b4194a2b8e8a5b5d9a53bb5d_extracted</text><progress value=\"1\" valueStringOverride=\"100%\" status=\"\"/></binding></visual><actions><action content=\"打开文件夹\" activationType=\"protocol\" arguments=\"hunlongyu-extract://job/29178C16-0603-48EC-92AA-F02A1166670D\"/></actions><audio silent=\"true\"/></toast>"
+      ],
+      "mode": "normal",
+      "resultMode": "updated-existing",
+      "snapshots": 30,
+      "exitCode": 0
+    },
+    {
+      "architecture": "x64",
+      "finalXml": [
+        "<toast activationType=\"protocol\" launch=\"hunlongyu-extract://job/9E72071A-D23E-4811-9EBA-B61C065AFA8C\"><visual><binding template=\"ToastGeneric\"><text>已完成 · progress-f60878b31bff4d0db6ccdf9a32d75d70.zip</text><text>输出：E:\\Hunlongyu\\extract\\out\\notification-worker\\f60878b31bff4d0db6ccdf9a32d75d70\\progress-f60878b31bff4d0db6ccdf9a32d75d70_extracted</text><progress value=\"1\" valueStringOverride=\"100%\" status=\"\"/></binding></visual><actions><action content=\"打开文件夹\" activationType=\"protocol\" arguments=\"hunlongyu-extract://job/9E72071A-D23E-4811-9EBA-B61C065AFA8C\"/></actions><audio silent=\"true\"/></toast>"
+      ],
+      "mode": "short",
+      "resultMode": "updated-existing",
+      "snapshots": 13,
+      "exitCode": 0
+    }
+  ],
+  "artifacts": [
+    {
+      "architecture": "x64",
+      "fileVersion": "0.7.0",
+      "staticCRT": true,
+      "path": "E:\\Hunlongyu\\extract\\out\\dist\\win-x64-release\\Extract.exe",
+      "bytes": 924672,
+      "systemDLLsOnly": true,
+      "sha256": "9971eddfb77793dd308033542c1074c0f67796b8da777ad6494885cb158c29d3"
+    },
+    {
+      "architecture": "x86",
+      "fileVersion": "0.7.0",
+      "staticCRT": true,
+      "path": "E:\\Hunlongyu\\extract\\out\\dist\\win-x86-release\\Extract.exe",
+      "bytes": 821760,
+      "systemDLLsOnly": true,
+      "sha256": "5f8d4a38d58cc31038ecd45058c92063048b0f34595544aeab9b6a42879453b7"
+    }
+  ],
+  "limitations": [
+    "ARM64 runtime not tested",
+    "Native notification XML and protocol activation verified; no screenshot acceptance",
+    "Parent termination can leave temporary files; later invocation marks interrupted without automatic deletion or retry"
+  ]
+}

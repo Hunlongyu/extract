@@ -1,5 +1,6 @@
 #include "io/output.h"
 #include "platform/log.h"
+#include "core/control.h"
 
 namespace extract::io {
 Output::Output(const fs::path& parent, std::wstring stem)
@@ -7,12 +8,15 @@ Output::Output(const fs::path& parent, std::wstring stem)
     // 给最终目录的序号后缀预留空间。
     require(stem_.size() <= 220, Status::limit_exceeded, L"安装包名称过长，请先缩短文件名。");
     platform::validate_component(stem_);
+    control::checkpoint();
     staging_ = parent_ / (L".extract-" + platform::unique_id() + L".tmp");
     log::detail(log::Level::info, L"output.staging", [&] { return staging_.wstring(); });
     if (!CreateDirectoryW(platform::extended_path(staging_).c_str(), nullptr)) platform::io_failure(L"无法创建临时目录");
     try {
         directories_.push_back({staging_, platform::lock_directory(staging_, true)});
+        control::created(staging_, directories_.back().lock.get());
     } catch (...) {
+        directories_.clear();
         RemoveDirectoryW(platform::extended_path(staging_).c_str());
         throw;
     }
@@ -37,6 +41,7 @@ Output::~Output() {
 }
 
 platform::Handle Output::create_file(const fs::path& relative, bool read_access) {
+    control::checkpoint();
     log::Scope step(L"file.create", nullptr, &relative);
     platform::validate_relative(relative);
     fs::path current = staging_;
@@ -54,6 +59,7 @@ platform::Handle Output::create_file(const fs::path& relative, bool read_access)
                 platform::io_failure(L"无法创建输出子目录");
             }
             directories_.back().lock = platform::lock_directory(current);
+            control::created(current, directories_.back().lock.get());
         }
     }
     const auto path = staging_ / relative;
@@ -61,10 +67,12 @@ platform::Handle Output::create_file(const fs::path& relative, bool read_access)
     platform::Handle file(CreateFileW(platform::extended_path(path).c_str(), GENERIC_WRITE | (read_access ? GENERIC_READ : 0),
         FILE_SHARE_READ, nullptr, CREATE_NEW, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OPEN_REPARSE_POINT, nullptr));
     if (!file) { files_.pop_back(); platform::io_failure(L"无法创建输出文件"); }
+    control::created(path, file.get());
     return file;
 }
 
 fs::path Output::commit() {
+    control::checkpoint();
     log::Scope step(L"output.commit", nullptr, &staging_);
     // Windows 重命名父目录前必须释放子目录锁。此后不再写载荷或按路径清理；
     // 提交失败时保留临时结果，避免释放锁后的清理竞争跟随被替换的路径。
@@ -85,6 +93,7 @@ fs::path Output::commit() {
         }
         if (error == ERROR_SUCCESS) {
             committed_ = true;
+            control::committed(destination);
             log::detail(log::Level::info, L"output.committed", [&] { return destination.wstring(); });
             return destination;
         }

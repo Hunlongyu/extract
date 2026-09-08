@@ -294,7 +294,8 @@ struct ProgressNotification::Impl {
             const auto xml = L"<toast activationType=\"protocol\" launch=\"hunlongyu-extract://job/" + xml_escape(job)
                 + L"\"><visual><binding template=\"ToastGeneric\"><text>{heading}</text><text>{context}</text>"
                   L"<progress title=\"{progressTitle}\" value=\"{fraction}\" valueStringOverride=\"{amount}\" status=\"{status}\"/>"
-                  L"</binding></visual><audio silent=\"true\"/></toast>";
+                  L"</binding></visual><actions><action content=\"取消任务\" activationType=\"protocol\" arguments=\"hunlongyu-extract://cancel/"
+                + xml_escape(job) + L"\"/></actions><audio silent=\"true\"/></toast>";
             const auto notification = make_notification(xml, job);
             ComPtr<IToastNotification4> binding;
             check(notification.As(&binding), L"获取进度通知数据绑定接口失败");
@@ -356,6 +357,12 @@ HRESULT ProgressNotification::complete(std::wstring_view title, std::wstring_vie
 
 void activate_notification(std::wstring_view uri) {
     if (uri == L"hunlongyu-extract://help" || uri == L"hunlongyu-extract://help/") return;
+    constexpr std::wstring_view cancel_prefix = L"hunlongyu-extract://cancel/";
+    if (uri.starts_with(cancel_prefix)) {
+        try { cancel_job(uri.substr(cancel_prefix.size())); }
+        catch (const Failure& failure) { if (failure.native_code != ERROR_FILE_NOT_FOUND) throw; }
+        return;
+    }
     constexpr std::wstring_view prefix = L"hunlongyu-extract://job/";
     require(uri.starts_with(prefix) && valid_job_id(uri.substr(prefix.size())),
             Status::unsafe_path, L"通知链接无效。");

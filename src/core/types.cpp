@@ -74,6 +74,8 @@ std::wstring catalog_json(const Catalog& catalog, bool extracted) {
             + L", \"conditions\": " + json_string(file.conditions)
             + L", \"sourceHashAlgorithm\": " + json_string(!file.expected_sha512.empty() ? L"SHA-512" : (!file.expected_sha1.empty() ? L"SHA-1" : (!file.expected_sha256.empty() ? L"SHA-256" : (file.expected_crc32 ? L"CRC-32" : L""))))
             + L", \"sourceHashVerified\": " + (extracted && file.source_hash_verified ? L"true" : L"false")
+            + L", \"blockHashAlgorithm\": " + json_string(file.block_hash_algorithm)
+            + L", \"blockHashVerified\": " + (extracted && file.block_hash_verified ? L"true" : L"false")
             + L", \"msiHashVerified\": " + (extracted && file.msi_hash ? L"true" : L"false") + L"}";
     }
     return text + L"\n  ]\n}\n";
@@ -86,6 +88,9 @@ int exit_code(Status status) noexcept {
     case Status::io_error: return ERROR_READ_FAULT;
     case Status::unsafe_path: return ERROR_ACCESS_DENIED;
     case Status::limit_exceeded: return ERROR_FILE_TOO_LARGE;
+    case Status::cancelled: return ERROR_CANCELLED;
+    case Status::timeout: return ERROR_TIMEOUT;
+    case Status::worker_crashed: return ERROR_PROCESS_ABORTED;
     default: return ERROR_UNHANDLED_EXCEPTION;
     }
 }

@@ -27,20 +27,29 @@ std::optional<CabLocation> cab_probe(io::Bytes input) {
 struct CabPackage::Impl {
     io::Input input;
     io::Bytes bytes;
+    std::vector<std::unique_ptr<io::Input>> volumes;
+    std::unique_ptr<codecs::CabinetSet> cabinets;
     Catalog catalog;
     explicit Impl(const fs::path& path) : input(path) {
         const auto location = cab_probe(input.bytes());
         require(location.has_value(), Status::unsupported, L"没有找到标准 CAB 载荷。");
         bytes = io::slice(input.bytes(), location->offset, location->size);
         catalog.input = input.path(); catalog.format = L"CAB"; catalog.format_version = L"1.3";
-        const auto members = codecs::cab_members(bytes);
+        io::Reader header(bytes); header.skip(30); const bool spanning = (header.u16() & 3) != 0;
+        const auto name = spanning ? codecs::cabinet_name(input.path().filename().wstring()) : std::string("payload.cab");
+        cabinets = std::make_unique<codecs::CabinetSet>(bytes, name, [&](const std::string& next) {
+            auto volume = std::make_unique<io::Input>(input.path().parent_path() / codecs::cabinet_path(next));
+            auto view = volume->bytes(); volumes.push_back(std::move(volume)); return view;
+        });
+        const auto& members = cabinets->members();
         for (const auto& member : members) {
             Entry entry; entry.id = L"cab-" + std::to_wstring(catalog.files.size());
             entry.path = entry.original_path = member.decoded_name; platform::validate_relative(entry.path);
             entry.size = member.size; entry.source_expression = member.decoded_name;
-            catalog.total_size += entry.size; catalog.files.push_back(std::move(entry));
+            catalog.total_size = checked_size_sum(catalog.total_size, entry.size); catalog.files.push_back(std::move(entry));
         }
         if (location->offset) catalog.notes.push_back(L"静态提取 PE 附加区 CAB；不执行 SFX 指令。");
+        if (cabinets->volume_count() > 1) catalog.notes.push_back(L"静态读取完整 CAB 卷链，共 " + std::to_wstring(cabinets->volume_count()) + L" 卷；已核对集合、卷序号和跨卷文件关系。");
         plan_paths(catalog);
     }
 };
@@ -51,7 +60,7 @@ fs::path CabPackage::extract(const fs::path& parent) {
     auto& catalog = impl_->catalog;
     io::Output output(parent.empty() ? catalog.input.parent_path() : parent, catalog.input.stem().wstring());
     std::vector<Entry*> targets; for (auto& entry : catalog.files) targets.push_back(&entry);
-    codecs::extract_cab(impl_->bytes, targets, output);
+    impl_->cabinets->extract(targets, output);
     progress::Scope finalizing(progress::Phase::finalizing);
     const auto report = platform::utf8(catalog_json(catalog, true));
     { auto file = output.create_file(L"_extract-report.json"); platform::write_all(file.get(), std::as_bytes(std::span(report)));

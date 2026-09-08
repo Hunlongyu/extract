@@ -1,6 +1,6 @@
 # 构建与开发
 
-更新日期：2026-09-07。适用于 0.6.0 MSI + CAB + Burn + Inno + NSIS + ZIP/7z/SFX 版。
+更新日期：2026-09-07。适用于 v0.7.0 及发布后的本地开发版。
 
 ## 工具链与构建
 
@@ -17,6 +17,8 @@
 
 链接保留 `/guard:cf`，并使用 `/INCREMENTAL:NO` 完整生成 CFG 目标表。本机 MSVC 预览工具链曾在增量链接后遗漏 CAB 析构跳板，触发 `0xC0000409 / FAST_FAIL_GUARD_ICALL_CHECK_FAILURE`；完整链接后同一回归包恢复预期的 299 部分完成，不关闭 CFG 来绕过检查。
 
+`-CleanFirst` 先清理目标文件再完整构建，适用于修复过依赖跟踪的旧缓存。部分中文 MSVC/CMake 组合会把 `/showIncludes` 的 UTF-8 前缀误转成乱码；项目只纠正已观察到的错误前缀，防止 Ninja 漏记公共头文件依赖。正常语言探测结果不变。此次修复后，旧缓存首次使用 `-CleanFirst`，必要时同时使用 `-Fresh`。
+
 NSIS 测试使用官方 `makensis.exe` 生成惰性包，参数示例：
 
 ```powershell
@@ -25,7 +27,7 @@ NSIS 测试使用官方 `makensis.exe` 生成惰性包，参数示例：
 
 此参数存入 `EXTRACT_NSIS_COMPILER` CMake 缓存；未指定时测试查找 `Program Files (x86)/NSIS/Bin/makensis.exe`。缺少编译器时对应 CTest 标记 skipped，不代表格式回归通过。编译器与测试样本不随产品分发。
 
-归档测试另外使用已核对来源的官方 LZMA SDK `7zr.exe`，生成已知内容的 7z 和 SFX 数据。通过 `-SevenZipTestTool` 设置 `EXTRACT_7Z_TEST_TOOL` 后添加 `archive_integration`；未提供时该项不注册，不能算完整归档回归。0.5.0 新增不依赖安装器编译器的 `cab_burn_integration`，0.6.0 新增 `log_integration`；新增大包与多文件回归 `large_integration`；工具齐备时共 9 项 CTest：
+归档测试另外使用已核对来源的官方 LZMA SDK `7zr.exe`，生成已知内容的 7z 和 SFX 数据。通过 `-SevenZipTestTool` 设置 `EXTRACT_7Z_TEST_TOOL` 后添加 `archive_integration`；未提供时该项不注册，不能算完整归档回归。当前工具齐备时共 14 项 CTest，包含 CAB/Burn、日志、大包、进度、工作进程、更新包、MSIX 及分卷回归：
 
 ```powershell
 .\scripts\build.ps1 -Configuration Release -Test -Install `
@@ -64,6 +66,10 @@ python tests/inno_integration.py --executable out/build/win-x64-release/bin/Extr
 
 ## 使用与退出码
 
+v0.8.0 增加 [工作进程、取消和超时](22-worker-cancellation.md)、[Velopack/Squirrel 完整包](24-update-packages.md)和 [MSIX/APPX/Bundle](25-msix-appx.md)，工具齐备时 CTest 共 14 项。`update_package_integration` 使用 Python 生成无入口点的惰性 PE/ZIP，不联网、不执行样本；官方固定摘要样本另做可选本地验证。
+
+`msix_integration` 查找 Windows SDK 最新版本目录中的 `x64/MakeAppx.exe`，生成已知内容的单包、资源包和 Bundle；用 Python 独立 ZIP 读取及打包前内容核对提取结果，并运行损坏、缺失、路径与哈希反例。缺少 SDK 打包器返回 77，发布工作流要求 14 项均通过且无跳过。MakeAppx 仅为测试工具，不链接或附带到产品，不运行包内程序。
+
 GUI 子系统程序不创建控制台。Explorer 拖拽会把路径作为启动参数传入；终端场景复用父控制台或重定向输出。命令行自动化必须等待程序退出。
 
 ```powershell
@@ -79,6 +85,8 @@ $process.ExitCode
 | `--output <父目录> <安装包路径...>` | 使用已存在的本地父目录 |
 | `--list <一个安装包>` | 输出 JSON 清单和详细过程日志，不生成提取结果或 jobs 任务摘要；Inno 检查元数据，NSIS 检查包 CRC 并解码载荷计算大小，Solid 使用自动清理的磁盘缓存；不声称完成逐文件哈希核对 |
 | `--quiet <安装包路径...>` | 提取及记录日志，但不注册/发送通知 |
+| `--timeout <秒> <安装包路径...>` | 每个输入包的总处理时限；默认 0，不限时；到期停止当前输入并继续批次 |
+| `--cancel <任务 GUID>` / `--cancel-last` | 取消指定/最近任务，停止当前输入及未开始的批次项目 |
 | `--open-last-result` | 打开最近任务保存的结果目录 |
 | `--repair-notifications` | 将当前用户通知注册更新到本 EXE 的路径 |
 | `--unregister-notifications` | 清理本程序快捷方式、协议与 AUMID 注册和通知历史，保留任务记录 |
@@ -94,9 +102,12 @@ $process.ExitCode
 | 30 | 文件、目录、任务记录等 I/O 失败；具体系统错误见日志 |
 | 50 | 当前结构不支持 |
 | 160 | 启动参数无效；无参数启动也返回此值并提示拖入文件 |
-| 223 | 达到文件数、输入/输出大小等上限 |
+| 223 | 达到具体格式的元数据、解码、地址空间或递归保护边界；不是统一体积或文件数限制 |
 | 299 | 批次成功与失败混合，必需载荷动态路径，或识别出的内层包不支持/损坏/超限等部分完成结果；已识别卸载器的路径问题不计入 |
 | 574 | 内部异常 |
+| 1067 | 工作进程异常退出，具体系统退出码记录在摘要与日志 |
+| 1223 | 用户取消批次；已提交的输出保留 |
+| 1460 | 单包超过指定时限 |
 
 全部失败的批次返回首个失败类型。解包后通知或最终日志写入失败不推翻已提交的解包结果。
 
@@ -114,12 +125,13 @@ $process.ExitCode
 | `src/formats/inno.*` | 精确数据版本、文件表、固实块、路径表达式与包内摘要校验 |
 | `src/formats/nsis.*` | PE 附加区、包 CRC、块/指令/语言/字符串表、基本块路径传播、Solid 缓存 |
 | `src/formats/archive.*` | ZIP/ZIP64 自研解析、7z C 基础层适配、SFX 附加区、CRC 校验与磁盘缓存 |
-| `src/codecs/cab.*` | FDI 受控回调、内容校验 |
+| `src/formats/msix.*` | MSIX/APPX 清单、OPC 路径、块哈希、Bundle 身份及架构/资源映射 |
+| `src/codecs/cab.*` | CAB 卷链预检、跨卷清单、FDI 受控回调、内容校验 |
 | `src/codecs/stream.*` | 有界 LZMA/LZMA2/Deflate/bzip2 解码 |
 | `src/codecs/nsis_bzip.*` | 隔离 NSIS bzip2 修改格式与标准 bzip2 的 C 接口 |
 | `src/io/input.*` | 只读输入映射与有界小端读取 |
 | `src/io/output.*` | 输出路径、独立临时目录、提交和清理 |
-| `src/platform/files.*` | Win32 句柄、路径规则、SHA-1/SHA-256/SHA-512、同目录句柄重命名 |
+| `src/platform/files.*` | Win32 句柄、路径规则、SHA-1/SHA-256/SHA-384/SHA-512、同目录句柄重命名 |
 | `src/platform/jobs.*` | 本地任务摘要与打开结果 |
 | `src/platform/log.*` | 原生 UTF-8 日志、步骤上下文、大小轮转、保留策略及 AppData 回退 |
 | `src/platform/notifications.*` | AUMID、快捷方式、协议激活、原生 Toast |
@@ -133,6 +145,7 @@ $process.ExitCode
 | `src/core/tree.*` | 内嵌 MSI/Inno/NSIS 展开、共享预算、去重、部分完成与报告 |
 | `tests/nested_integration.py` | 官方 NSIS/Inno 惰性嵌套包、普通 EXE、不支持/损坏/动态路径、去重和深度/文件/字节/包数上限 |
 | `tests/archive_integration.py` | 已知 ZIP/7z/SFX、ZIP64/描述符/Unicode、损坏与路径反例、NSIS 内嵌归档 |
+| `tests/msix_integration.py` | 官方 MakeAppx 惰性包、Bundle、独立文件比较、块校验/清单/路径/成员关系反例 |
 | `tests/verify-installers.py` | 逐个检查指定目录安装包，逐文件摘要复核，并用官方 7zr 与独立 Inno 表读取核验载荷 |
 | `tests/verify-nsis.py` | 用户 XnView 外壳逐字节对照，内层 1080 文件与独立读取的 Inno 位置表摘要比较 |
 | `tests/path_tests.cpp` | 路径规则、目录共享锁、失败清理与短暂占用后的提交 |
@@ -141,6 +154,8 @@ $process.ExitCode
 | `tests/verify-putty.ps1` | 真实 PuTTY 样本和官方摘要对照 |
 | `tests/verify-inno.ps1` | 官方 Inno 安装包、已提取文件与生产方源码文件对照 |
 | `tests/verify-textify.ps1` | 用户 Textify 样本与独立读取的包内 SHA-1 基准 |
+
+`volume_integration` 使用官方 ISCC 与 MakeCab 生成跨卷载荷，覆盖缺卷、错卷、损坏、卷链及 MSI Media 反例；`tests/make_spanned_msi.ps1` 仅构建惰性 MSI 数据库。可用 `--compiler` 切换 Inno 编译器、`--only inno|cab` 运行专项，具体见 [分卷说明](26-split-volumes.md)。
 
 自动测试使用系统 `makecab.exe` 和 Windows Installer COM 接口生成开发样本；它们不是产品的外部解包依赖。每轮使用独立目录，不执行安装器或输出文件。测试保留结果以便检查，生成物不进入 Git。
 

@@ -149,7 +149,8 @@ def main():
     invalid = bytearray(cab(files)); struct.pack_into('<I', invalid, 8, len(invalid) + 1)
     run('cab-length.cab', invalid, 13)
     invalid = bytearray(cab(files)); struct.pack_into('<H', invalid, 30, 1)
-    run('cab-volume.cab', invalid, 50)
+    # Setting a volume flag without inserting its strings yields an invalid name.
+    run('cab-volume.cab', invalid, 5)
     invalid = bytearray(cab(files)); struct.pack_into('<I', invalid, 16, 0xfffffff0)
     run('cab-offset.cab', invalid, 13)
     invalid = bytearray(cab([('safe',b'data')])); invalid[44+16:44+20] = b'\xff\xff\xff\xff'

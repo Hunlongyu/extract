@@ -298,7 +298,8 @@ Test=Known custom message
     mutate('file-hash', lambda p: p.blocks[1].__setitem__(p.hash_offset, p.blocks[1][p.hash_offset] ^ 1))
     mutate('output-integer-overflow', lambda p: struct.pack_into('<Q', p.blocks[1], p.size_offset, 1 << 63), 223)
     mutate('chunk-offset', lambda p: struct.pack_into('<I' if p.short_offset else '<Q', p.blocks[1], 8, 2**32 - 1 if p.short_offset else 2**64 - 1))
-    mutate('external-volume', lambda p: struct.pack_into('<I', p.blocks[1], 0, 1), 50)
+    # Inline payload with FirstSlice > LastSlice is corrupt, not an external set.
+    mutate('external-volume', lambda p: struct.pack_into('<I', p.blocks[1], 0, 1), 13)
     mutate('encrypted-location', lambda p: p.blocks[1].__setitem__(p.flag_offset, p.blocks[1][p.flag_offset] | p.encrypted_flag), 50)
     if version < (6, 4, 0):
         def unsupported_header(p):

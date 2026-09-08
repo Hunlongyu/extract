@@ -9,7 +9,7 @@
   <img src="https://img.shields.io/badge/Windows-10%20%2F%2011-0078D4?style=flat-square" alt="Windows 10 / 11">
   <img src="https://img.shields.io/badge/Arch-x86%20%7C%20x64%20%7C%20ARM64-64748B?style=flat-square" alt="Architectures: x86, x64, ARM64">
   <img src="https://img.shields.io/badge/Portable-Single%20EXE-16A34A?style=flat-square" alt="Portable: single EXE">
-  <img src="https://img.shields.io/badge/Version-v0.7.0-7C3AED?style=flat-square" alt="Version v0.7.0">
+  <img src="https://img.shields.io/badge/Version-v0.8.0-7C3AED?style=flat-square" alt="Version v0.8.0">
 </p>
 <p align="center"><strong>English</strong> | <a href="README.zh-CN.md">简体中文</a></p>
 
@@ -39,7 +39,7 @@ Extract is a lightweight Windows installer extractor. Drop one or more packages 
 
 Files are saved **next to the input package** in `<package-name>_extracted`. Existing folders are preserved by adding ` (2)`, ` (3)`, and so on. Nested packages are retained alongside their extracted subfolders.
 
-Longer tasks show the current package and stage. The progress bar tracks file bytes written for the current package; preparation and other stages show activity and processed bytes instead of an estimated percentage. Nested packages have their own progress. The same notification then shows the result and package name without another popup; short tasks show only the result. Check Notification Center if the banner closes.
+Longer tasks show the current package and stage. The progress bar tracks file bytes written for the current package; preparation and other stages show activity and processed bytes instead of an estimated percentage. Nested packages have their own progress. The same notification then shows the result and package name without another popup; short tasks show only the result. Check Notification Center if the banner closes. Use **Cancel task** in the progress notification to stop the current package and the remaining batch; already completed output is kept.
 
 A **partial result** means extracted files were retained, but some content is missing, paths could not be restored, or a nested package failed. The job record explains the issue. If no notification appears, run `Extract.exe --open-last-result` to open the latest result.
 
@@ -49,18 +49,24 @@ A **partial result** means extracted files were retained, but some content is mi
 
 | Format | Typical files | Current support |
 | :--- | :--- | :--- |
-| **Inno Setup** | `.exe` | Selected standard layouts from 6.0–6.7 and 7.1; see [compatibility notes](docs/20-inno-compatibility.md) |
+| **Inno Setup** | `.exe`, accompanying `.bin` | Selected standard layouts from 6.0–6.7 and 7.1, including [external volumes](docs/26-split-volumes.md); see [compatibility notes](docs/20-inno-compatibility.md) |
 | **NSIS** | `.exe` | Tested Unicode 3.x and selected [ANSI 2.x layouts](docs/21-nsis-ansi-compatibility.md), ordinary and solid compression, selected Electron / Tauri wrappers, and separate folders for recognized architecture branches |
-| **Windows Installer** | `.msi` | Embedded or external CABs, loose files, and mixed source layouts |
+| **Windows Installer** | `.msi` | Embedded, external, or mixed CAB sets including spanning files; loose files and mixed source layouts |
 | **WiX Burn** | `.exe` | Layout 2 CAB containers with v3 / v4 manifests; embedded or local external payloads |
-| **CAB** | `.cab` | Standard Microsoft CAB 1.3: stored, MSZIP, and LZX |
+| **Velopack / Squirrel.Windows** | `.exe`, `*-full.nupkg` | [Tested offline layouts](docs/24-update-packages.md); application files collected in `app`, with separate target folders when needed |
+| **MSIX / APPX / Bundle** | `.msix`, `.appx`, `.msixbundle`, `.appxbundle` | [Unencrypted offline packages](docs/25-msix-appx.md), block hash verification, and separate folders for embedded architectures and resource packages |
+| **CAB** | `.cab` | Standard Microsoft CAB 1.3: stored, MSZIP, and LZX, including spanning sets |
 | **ZIP / ZIP64** | `.zip` | Stored, Deflate, and bzip2 |
 | **7z** | `.7z` | Copy, LZMA, and LZMA2; ordinary and solid blocks, BCJ / BCJ2 |
 | **Self-extracting wrappers (SFX)** | `.exe` | Recognized ZIP, 7z, and CAB archives in PE overlays |
 
-Compatibility depends on the package's internal format, not its `.exe` extension. Customized packages and untested versions may be unsupported.
+Compatibility depends on the package's internal format, not its `.exe` extension. Customized packages and untested versions may be unsupported. Delta update packages cannot be restored without their base version.
 
-Currently unsupported: RAR, encrypted or multi-volume archives, spanning CABs, InstallShield private CABs, MST / MSP, MSIX / APPX, and content that must be downloaded. For MSI packages, keep external CABs beside the MSI and preserve the original source directory layout for loose files.
+MSIX / APPX extraction preserves manifests, resources, and the original `VFS` layout. It does not deploy the app or restore its installation identity; extracted apps may still need installation. Bundles keep all embedded architectures and resources; missing external members produce a partial result.
+
+For split packages, keep all volumes together with their original names. Drag the Inno EXE, the MSI, or any CAB in a standard CAB set. Missing volumes are reported by name. MSI loose files must retain their original source directory layout.
+
+Currently unsupported: RAR, encrypted packages, split ZIP / 7z archives, InstallShield private CABs, MST / MSP, and content that must be downloaded. Spanning CAB containers inside Burn are not yet supported.
 
 Only regular files on local drives are supported. There is no fixed package-size, output-size, or file-count ceiling, but available disk space, memory, and format limits still apply. Prefer x64 or ARM64 over x86 for large packages; see [resource handling](docs/17-large-packages.md) for details.
 
@@ -78,7 +84,10 @@ Use `--quiet` to suppress notifications or `--list <package>` to output a JSON f
 
 Built with **C++20 / C17, CMake, and Win32**, with project-owned package parsers and statically linked compression libraries. Detailed developer documents are currently in Chinese.
 
+Version 0.8.0 adds Velopack / Squirrel, MSIX / APPX, Inno / CAB split packages, and task cancellation. See the [release notes](docs/releases/v0.8.0.md).
+
 - [Build and development](docs/05-build-and-development.md)
 - [Release workflow](docs/16-release.md) — version tags trigger builds; ordinary pushes do not publish. ARM64 runtime testing is pending.
 - [Roadmap](docs/04-roadmap-and-acceptance.md)
+- [Worker isolation and cancellation](docs/22-worker-cancellation.md) — cancellation, optional timeouts, and recovery from worker failures.
 - [Third-party libraries and licenses](third_party/README.md) — retain the notices when redistributing the program.

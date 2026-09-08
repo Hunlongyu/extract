@@ -1,6 +1,7 @@
 #include "platform/files.h"
 #include "platform/log.h"
 #include "core/progress.h"
+#include "core/control.h"
 
 #include <bcrypt.h>
 #include <objbase.h>
@@ -128,6 +129,7 @@ std::string utf8(std::wstring_view text) {
 
 static void write_bytes(HANDLE file, std::span<const std::byte> bytes, bool payload) {
     while (!bytes.empty()) {
+        if (payload) control::checkpoint();
         const auto chunk = static_cast<DWORD>((std::min)(bytes.size(), std::size_t{1 << 20}));
         DWORD written = 0;
         if (!WriteFile(file, bytes.data(), chunk, &written, nullptr) || written == 0) io_failure(L"写入文件失败");
@@ -159,6 +161,7 @@ static std::wstring file_hash(const fs::path& path, LPCWSTR algorithm_name, ULON
     std::array<UCHAR, 65536> bytes{};
     DWORD read = 0;
     for (;;) {
+        control::checkpoint();
         if (!ReadFile(file.get(), bytes.data(), static_cast<DWORD>(bytes.size()), &read, nullptr)) io_failure(L"校验读取失败");
         if (read == 0) break;
         if (BCryptHashData(hash, bytes.data(), read, 0) < 0) throw Failure(Status::internal_error, L"文件摘要计算失败。");
@@ -177,15 +180,16 @@ std::wstring sha256(const fs::path& path) { return file_hash(path, BCRYPT_SHA256
 std::wstring sha1(const fs::path& path) { return file_hash(path, BCRYPT_SHA1_ALGORITHM, 20); }
 std::wstring sha512(const fs::path& path) { return file_hash(path, BCRYPT_SHA512_ALGORITHM, 64); }
 std::wstring hash_bytes(std::span<const std::byte> bytes, std::size_t size) {
-    require(size == 20 || size == 32 || size == 64, Status::unsupported, L"不支持此哈希算法。");
+    require(size == 20 || size == 32 || size == 48 || size == 64, Status::unsupported, L"不支持此哈希算法。");
     BCRYPT_ALG_HANDLE algorithm = nullptr;
-    const auto name = size == 20 ? BCRYPT_SHA1_ALGORITHM : (size == 32 ? BCRYPT_SHA256_ALGORITHM : BCRYPT_SHA512_ALGORITHM);
+    const auto name = size == 20 ? BCRYPT_SHA1_ALGORITHM : (size == 32 ? BCRYPT_SHA256_ALGORITHM : (size == 48 ? BCRYPT_SHA384_ALGORITHM : BCRYPT_SHA512_ALGORITHM));
     require(BCryptOpenAlgorithmProvider(&algorithm, name, nullptr, 0) >= 0, Status::internal_error, L"无法初始化哈希。");
     struct Guard { BCRYPT_ALG_HANDLE value; ~Guard() { BCryptCloseAlgorithmProvider(value, 0); } } guard{algorithm};
     BCRYPT_HASH_HANDLE hash = nullptr;
     require(BCryptCreateHash(algorithm, &hash, nullptr, 0, nullptr, 0, 0) >= 0, Status::internal_error, L"无法创建哈希。");
     struct HashGuard { BCRYPT_HASH_HANDLE value; ~HashGuard() { BCryptDestroyHash(value); } } hash_guard{hash};
     while (!bytes.empty()) {
+        control::checkpoint();
         const auto count = (std::min)(bytes.size(), std::size_t{65536});
         require(BCryptHashData(hash, reinterpret_cast<PUCHAR>(const_cast<std::byte*>(bytes.data())), static_cast<ULONG>(count), 0) >= 0,
                 Status::internal_error, L"哈希计算失败。");

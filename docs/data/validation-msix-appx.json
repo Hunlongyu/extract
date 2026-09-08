@@ -1,0 +1,818 @@
+{
+  "scope": "Local MSIX / APPX / Bundle development after v0.7.0",
+  "checkedAt": "2026-09-07T09:51:27.321976+00:00",
+  "baseCommit": "0f671d6b573ba787c0e272e3898bd75e5de44a00",
+  "published": false,
+  "version": "0.7.0",
+  "inputInstallersExecuted": false,
+  "extractedProgramsExecuted": false,
+  "reference": {
+    "repository": "https://github.com/microsoft/msix-packaging",
+    "commit": "25a65f5c1690930813bcc10cdf1d59fa865f2bb1"
+  },
+  "validationMethod": "Official MakeAppx pack /nv and bundle of inert known payloads; independent Python ZIP reader and original bytes; malformed and partial-result fixtures",
+  "fullRegression": [
+    {
+      "architecture": "x64",
+      "name": "Win32-ninja",
+      "tests": "13",
+      "failures": "0",
+      "disabled": "0",
+      "skipped": "0",
+      "hostname": "hly",
+      "time": "328",
+      "timestamp": "2026-09-07T17:40:11",
+      "cases": [
+        {
+          "name": "path_policy",
+          "seconds": "0.508473"
+        },
+        {
+          "name": "msi_integration",
+          "seconds": "9.63446"
+        },
+        {
+          "name": "msix_integration",
+          "seconds": "28.8408"
+        },
+        {
+          "name": "update_package_integration",
+          "seconds": "7.64885"
+        },
+        {
+          "name": "worker_integration",
+          "seconds": "10.2587"
+        },
+        {
+          "name": "progress_integration",
+          "seconds": "0.90947"
+        },
+        {
+          "name": "large_integration",
+          "seconds": "57.7717"
+        },
+        {
+          "name": "log_integration",
+          "seconds": "3.69216"
+        },
+        {
+          "name": "cab_burn_integration",
+          "seconds": "11.1674"
+        },
+        {
+          "name": "inno_integration",
+          "seconds": "29.3968"
+        },
+        {
+          "name": "nsis_integration",
+          "seconds": "21.8596"
+        },
+        {
+          "name": "nested_integration",
+          "seconds": "133.656"
+        },
+        {
+          "name": "archive_integration",
+          "seconds": "13.0447"
+        }
+      ]
+    },
+    {
+      "architecture": "x86",
+      "name": "Win32-ninja",
+      "tests": "13",
+      "failures": "0",
+      "disabled": "0",
+      "skipped": "0",
+      "hostname": "hly",
+      "time": "310",
+      "timestamp": "2026-09-07T17:45:59",
+      "cases": [
+        {
+          "name": "path_policy",
+          "seconds": "0.525468"
+        },
+        {
+          "name": "msi_integration",
+          "seconds": "10.4877"
+        },
+        {
+          "name": "msix_integration",
+          "seconds": "11.4923"
+        },
+        {
+          "name": "update_package_integration",
+          "seconds": "7.96041"
+        },
+        {
+          "name": "worker_integration",
+          "seconds": "10.1286"
+        },
+        {
+          "name": "progress_integration",
+          "seconds": "0.90659"
+        },
+        {
+          "name": "large_integration",
+          "seconds": "52.6238"
+        },
+        {
+          "name": "log_integration",
+          "seconds": "4.12989"
+        },
+        {
+          "name": "cab_burn_integration",
+          "seconds": "11.4782"
+        },
+        {
+          "name": "inno_integration",
+          "seconds": "29.5095"
+        },
+        {
+          "name": "nsis_integration",
+          "seconds": "23.2892"
+        },
+        {
+          "name": "nested_integration",
+          "seconds": "135.322"
+        },
+        {
+          "name": "archive_integration",
+          "seconds": "13.0933"
+        }
+      ]
+    }
+  ],
+  "msixMatrices": [
+    {
+      "architecture": "x64",
+      "resultPath": "out/build/win-x64-release/msix-fixtures/93b86108d9fa482b8bec73e3cb15565d/results.json",
+      "cases": [
+        {
+          "name": "official-x64.msix",
+          "exitCode": 0,
+          "sha256": "7e6b79ca188721b75a93ec6bca2f0dee30582f250da603674616442829a83cd4",
+          "format": "MSIX/APPX",
+          "files": 9,
+          "nested": []
+        },
+        {
+          "name": "official-SHA384.appx",
+          "exitCode": 0,
+          "sha256": "b6b0a8a0e4c9abd17c3444474d7499acb669db09add24fc7f21585b96217a37f",
+          "format": "MSIX/APPX",
+          "files": 9,
+          "nested": []
+        },
+        {
+          "name": "official-SHA512.appx",
+          "exitCode": 0,
+          "sha256": "64db0ce961c8c7f87db295bf218255ed4f4ecb3733a7d5e62f34b0228477ca72",
+          "format": "MSIX/APPX",
+          "files": 9,
+          "nested": []
+        },
+        {
+          "name": "official-stored.msix",
+          "exitCode": 0,
+          "sha256": "3f2ec45d7a209aeae3183e0188214e5f38b632d13d527319917c3ef004b85834",
+          "format": "MSIX/APPX",
+          "files": 9,
+          "nested": []
+        },
+        {
+          "name": "official-x86.msix",
+          "exitCode": 0,
+          "sha256": "3906fb0ee5baee2558a9ada9cd2f7cac49cb4747c563a459d0f867d30375ed83",
+          "format": "MSIX/APPX",
+          "files": 9,
+          "nested": []
+        },
+        {
+          "name": "official-arm64.msix",
+          "exitCode": 0,
+          "sha256": "2fec1872df7ca02a5569b0884fc9333a49b96d96f7dda442c5d4bfc340af1907",
+          "format": "MSIX/APPX",
+          "files": 9,
+          "nested": []
+        },
+        {
+          "name": "official-neutral.msix",
+          "exitCode": 0,
+          "sha256": "f0cdf083a38c8ef032c2e2be866b47ad9f47ec6ebb2231bea293345bf3c72c32",
+          "format": "MSIX/APPX",
+          "files": 8,
+          "nested": []
+        },
+        {
+          "name": "official.msixbundle",
+          "exitCode": 0,
+          "sha256": "ad92f8331990a77647560efa82bff2f05b7a23c6ec76ed00bde7ff91b0b24551",
+          "format": "MSIX/APPX Bundle",
+          "files": 7,
+          "nested": [
+            "complete",
+            "complete",
+            "complete",
+            "complete"
+          ]
+        },
+        {
+          "name": "synthetic.appx",
+          "exitCode": 0,
+          "sha256": "76b242624e19f7c7bcd6d94eb586587ee24342ae5cfc85bd2d0f84634d270f94",
+          "format": "MSIX/APPX",
+          "files": 6,
+          "nested": []
+        },
+        {
+          "name": "renamed.zip",
+          "exitCode": 0,
+          "sha256": "76b242624e19f7c7bcd6d94eb586587ee24342ae5cfc85bd2d0f84634d270f94",
+          "format": "MSIX/APPX",
+          "files": 6,
+          "nested": []
+        },
+        {
+          "name": "encrypted.emsix",
+          "exitCode": 50,
+          "sha256": "45cae64a8ff5cc76f484e8aa131fdd0cd2182a386529c561cb1e500326093391"
+        },
+        {
+          "name": "bad-block.msix",
+          "exitCode": 13,
+          "sha256": "c4e917bedd499a8fe0e69e8a6419897fe1f0557e2cdf8cc0cc8d28c7879abe77"
+        },
+        {
+          "name": "missing-block.msix",
+          "exitCode": 13,
+          "sha256": "6eae796c976ba48ae076881606d35feb3a187ca10fd015adfd5aa21e7f019739"
+        },
+        {
+          "name": "extra-block.msix",
+          "exitCode": 13,
+          "sha256": "6b0f18e7fcd8fccb2a812e6d397e353cf04aa6ae9a17b35e389dd97e5ba0a5c7"
+        },
+        {
+          "name": "bad-base64.msix",
+          "exitCode": 13,
+          "sha256": "0db62761b7c5c1d3254361d973f7101eb1fc63fd1dfae6312e3cefb14b915d25"
+        },
+        {
+          "name": "bad-lfh.msix",
+          "exitCode": 13,
+          "sha256": "35f4a330887d84d3233a82959362848252b236fedf3b408457eaaf5148d0fa00"
+        },
+        {
+          "name": "bad-size.msix",
+          "exitCode": 13,
+          "sha256": "baa63c0030d6ba72acf6254268a3f8f68275f9de7429839d68e09267fabd895c"
+        },
+        {
+          "name": "bad-compressed-size.msix",
+          "exitCode": 13,
+          "sha256": "7b8698fcff7b6cfc2af3a03b9bb0db289a8971ad5b811bf93b1b90d7ed89a7c6"
+        },
+        {
+          "name": "missing-file.msix",
+          "exitCode": 13,
+          "sha256": "181dca4b5819584644346ae7ebc17fb1f0e44831aee9d564150bc06c14965042"
+        },
+        {
+          "name": "duplicate-file.msix",
+          "exitCode": 13,
+          "sha256": "fd346d639df7f6c5f00ebec3fc0f813fc6fbecd0a70e9fd1c98e06092f60388f"
+        },
+        {
+          "name": "extra-file.msix",
+          "exitCode": 13,
+          "sha256": "d043d5be86b20f71c2e4450241d0f34ba3c542f20a21e1b0cfa3c0fb613b72c9"
+        },
+        {
+          "name": "unknown-hash.msix",
+          "exitCode": 50,
+          "sha256": "3192c30f9b2c36227e3360279243c7c24d933a14f5ca5d08238b8fa0b08b1879"
+        },
+        {
+          "name": "filehash.msix",
+          "exitCode": 0,
+          "sha256": "bf856471e820e609b207136a1688995a6515da8512708626d9321b20ac8029a9",
+          "format": "MSIX/APPX",
+          "files": 6,
+          "nested": []
+        },
+        {
+          "name": "bad-filehash.msix",
+          "exitCode": 13,
+          "sha256": "d1a7dc730d150f9d51b3efc054fc446f6d81e2c6407c950b7897995568d2d8b3"
+        },
+        {
+          "name": "missing-identity.msix",
+          "exitCode": 13,
+          "sha256": "6d3798490136cd56d245ef9032045423aeb4432eee50793c807f3b421da9c318"
+        },
+        {
+          "name": "missing-executable.msix",
+          "exitCode": 13,
+          "sha256": "a3b2a0b0746fafb98e4263fdeebf63d10dc7f9726b2115bd7515c18c2707a236"
+        },
+        {
+          "name": "wrong-namespace.msix",
+          "exitCode": 13,
+          "sha256": "b59f206a9530891163d213f2cd46dd9336d6d5915690489993fcf2ee94b3bb0f"
+        },
+        {
+          "name": "empty-resource-property.msix",
+          "exitCode": 13,
+          "sha256": "5869d3c7cd0a145bad32706bd5555143908366d7020172307feaab4a58f7189f"
+        },
+        {
+          "name": "duplicate-resource-property.msix",
+          "exitCode": 13,
+          "sha256": "1cd3c2a79f8798803b1accc97c577d6a5bca3564184303e119bb5d25c6c564b6"
+        },
+        {
+          "name": "non-xml.msix",
+          "exitCode": 13,
+          "sha256": "fbdeb921a6470ad18e8694c430d15c1d19ac361a3651c8b647e356dcdd12733c"
+        },
+        {
+          "name": "dtd.msix",
+          "exitCode": 13,
+          "sha256": "5a473e06c20dba8f85dc28300caa5be4d7fc7208c21ab25956fd810ff4f3ba01"
+        },
+        {
+          "name": "traversal.msix",
+          "exitCode": 5,
+          "sha256": "a6c80c168840e87ce98b9cb6c0c0b7c7072f2d8faa01a1e62e603976e8488b96"
+        },
+        {
+          "name": "encoded-traversal.msix",
+          "exitCode": 5,
+          "sha256": "f3712319896408181e30d9181a946e583af61306ffc863326d8274b6df4af98c"
+        },
+        {
+          "name": "encoded-slash.msix",
+          "exitCode": 5,
+          "sha256": "81396caf390e0e66a4c4e291110e2ddbd50c01a3b039c75cdab9f15f8bcdc7ad"
+        },
+        {
+          "name": "decoded-collision.msix",
+          "exitCode": 13,
+          "sha256": "61a1dc13a2b8ecd2284c88819bba5ae38c5909abf987feee944d8c3145481182"
+        },
+        {
+          "name": "encoded-colon.msix",
+          "exitCode": 5,
+          "sha256": "a02f816bc0e5428ebb5f97dcac396cf5fab4f3213c22a704f48e4bb260703ac7"
+        },
+        {
+          "name": "file-directory-collision.msix",
+          "exitCode": 13,
+          "sha256": "077f6bf770875b47db9a4e83e8fb9453681036cc9738ac80f60f4493656a0bea"
+        },
+        {
+          "name": "no-blockmap.msix",
+          "exitCode": 13,
+          "sha256": "0fee4a8a28f725db6ec0d6c718cb36287e3184b490d1bb60b5c5dba82fa5c9a8"
+        },
+        {
+          "name": "synthetic.appxbundle",
+          "exitCode": 0,
+          "sha256": "742111a7ad78a9be26472cf30425412655142cf0c1ec6280700c287216418420",
+          "format": "MSIX/APPX Bundle",
+          "files": 4,
+          "nested": [
+            "complete"
+          ]
+        },
+        {
+          "name": "flat-missing.msixbundle",
+          "exitCode": 299,
+          "sha256": "9ed298cdf92260b6022604f415aef890599942b8e3e1a4727a173439c9b94709",
+          "format": "MSIX/APPX Bundle",
+          "files": 4,
+          "nested": [
+            "complete"
+          ]
+        },
+        {
+          "name": "wrong-offset.msixbundle",
+          "exitCode": 13,
+          "sha256": "4ea0d6740a9d1de87b5a9c6434f981e336099e76364b83c1b6990a6f81aa324a"
+        },
+        {
+          "name": "wrong-arch.msixbundle",
+          "exitCode": 13,
+          "sha256": "d86edab2745678738e20c7e039bde7241cb784ec970c2c1554089fd34befec65"
+        },
+        {
+          "name": "wrong-identity.msixbundle",
+          "exitCode": 13,
+          "sha256": "c389aa7943def1ee26cef853478d031bcb8473c8fe1c52b7cea2db98a644c27c"
+        },
+        {
+          "name": "wrong-resource.msixbundle",
+          "exitCode": 13,
+          "sha256": "7b59355591a592f5dda40893c897ad5c2defe2149247b60ca9d0af166e8e0d52"
+        },
+        {
+          "name": "missing-embedded.msixbundle",
+          "exitCode": 13,
+          "sha256": "13d06afe5661a3beb1ee791c114c35fe93998a7b3751ed3915d451c69063bdd7"
+        },
+        {
+          "name": "duplicate-member.msixbundle",
+          "exitCode": 13,
+          "sha256": "8801a5ecbbbb123ab80bb3a9687808b0830360005b6eacc80ffeaaa914f36d2d"
+        },
+        {
+          "name": "optional.msixbundle",
+          "exitCode": 50,
+          "sha256": "dfde35dbc3c6e9c7573d3dd7c10359c12309332670a3a3103f0fd3f3c597c782"
+        },
+        {
+          "name": "unknown-member.msixbundle",
+          "exitCode": 50,
+          "sha256": "ed212409544c28706f9dd85544506142c52313f05a559203ef0db36b15a6cb0a"
+        },
+        {
+          "name": "stub.msixbundle",
+          "exitCode": 299,
+          "sha256": "a0eca4428336c2498b3ca2ea69446dcd03a5ca8d8bd1f88453f37f3f7c0e4886",
+          "format": "MSIX/APPX Bundle",
+          "files": 4,
+          "nested": [
+            "complete"
+          ]
+        },
+        {
+          "name": "bad-inner-hash.msixbundle",
+          "exitCode": 299,
+          "sha256": "0fbc37231bddb458a90a9884d11eded8f7f2b3f52aaa1560f49e0c7abd20e952",
+          "format": "MSIX/APPX Bundle",
+          "files": 4,
+          "nested": [
+            "failed"
+          ]
+        }
+      ]
+    },
+    {
+      "architecture": "x86",
+      "resultPath": "out/build/win-x86-release/msix-fixtures/ec4697a9b61249698a18db21dd8d1d31/results.json",
+      "cases": [
+        {
+          "name": "official-x64.msix",
+          "exitCode": 0,
+          "sha256": "9a0633ef3cbfb53fdb6ccf12a1e73270ca1deb3e7edd3a1537c7db88c7eb2551",
+          "format": "MSIX/APPX",
+          "files": 9,
+          "nested": []
+        },
+        {
+          "name": "official-SHA384.appx",
+          "exitCode": 0,
+          "sha256": "924fb63cda4b063240b9cb35bb047ee922b35d898b94c3d006386ee1fd1dbb14",
+          "format": "MSIX/APPX",
+          "files": 9,
+          "nested": []
+        },
+        {
+          "name": "official-SHA512.appx",
+          "exitCode": 0,
+          "sha256": "2c94d639c9c3e5de922f79024a0a7d660f9e444564d95db3e74cd6e7c270e3e0",
+          "format": "MSIX/APPX",
+          "files": 9,
+          "nested": []
+        },
+        {
+          "name": "official-stored.msix",
+          "exitCode": 0,
+          "sha256": "f633b9e92f9dabf8f027da013af7c19449fb804f1dfbaf578d44420d9391c8f8",
+          "format": "MSIX/APPX",
+          "files": 9,
+          "nested": []
+        },
+        {
+          "name": "official-x86.msix",
+          "exitCode": 0,
+          "sha256": "46dfaf069f04eaaf441abe7a4853bef4ac7e006c25171579771572c328902b1e",
+          "format": "MSIX/APPX",
+          "files": 9,
+          "nested": []
+        },
+        {
+          "name": "official-arm64.msix",
+          "exitCode": 0,
+          "sha256": "738307af13312bc2af838f6db652a65c8c0d28783322173a2d78d87832f4d3fa",
+          "format": "MSIX/APPX",
+          "files": 9,
+          "nested": []
+        },
+        {
+          "name": "official-neutral.msix",
+          "exitCode": 0,
+          "sha256": "69e634c7b39a407707dd2c131fd6991dca04ac3f90149a233b96e255e0fe07e7",
+          "format": "MSIX/APPX",
+          "files": 8,
+          "nested": []
+        },
+        {
+          "name": "official.msixbundle",
+          "exitCode": 0,
+          "sha256": "a0fe59c3d2ec022bcbf035f53feef758ee6f8def21d5d53797e93b7fd7364069",
+          "format": "MSIX/APPX Bundle",
+          "files": 7,
+          "nested": [
+            "complete",
+            "complete",
+            "complete",
+            "complete"
+          ]
+        },
+        {
+          "name": "synthetic.appx",
+          "exitCode": 0,
+          "sha256": "0d9e06f23695f6839ea9518ae5b0f41dac1794b0cf8a95332d008f98eb4c1772",
+          "format": "MSIX/APPX",
+          "files": 6,
+          "nested": []
+        },
+        {
+          "name": "renamed.zip",
+          "exitCode": 0,
+          "sha256": "0d9e06f23695f6839ea9518ae5b0f41dac1794b0cf8a95332d008f98eb4c1772",
+          "format": "MSIX/APPX",
+          "files": 6,
+          "nested": []
+        },
+        {
+          "name": "encrypted.emsix",
+          "exitCode": 50,
+          "sha256": "45cae64a8ff5cc76f484e8aa131fdd0cd2182a386529c561cb1e500326093391"
+        },
+        {
+          "name": "bad-block.msix",
+          "exitCode": 13,
+          "sha256": "c31345b9906f7582c6bd8630bb47b81bb73d16060746e3dabefa3144e88bd5f9"
+        },
+        {
+          "name": "missing-block.msix",
+          "exitCode": 13,
+          "sha256": "582959ba43d8f0d819616a12368f432f8a7a1194ef01642eaad8f61c6a4d995a"
+        },
+        {
+          "name": "extra-block.msix",
+          "exitCode": 13,
+          "sha256": "04b11f09551784962b78ca8755ae3ab1fda2edaa45ab54db94b9e1f5c3e45761"
+        },
+        {
+          "name": "bad-base64.msix",
+          "exitCode": 13,
+          "sha256": "04324eca03ec3af6042e8a6ca8e69343dbc5e4c53cf2b7269082d1cac08c576d"
+        },
+        {
+          "name": "bad-lfh.msix",
+          "exitCode": 13,
+          "sha256": "cf062614608c57a6f0134dfc58b16479bb02b467bbac168f3efa8ed3d7bafd9d"
+        },
+        {
+          "name": "bad-size.msix",
+          "exitCode": 13,
+          "sha256": "8d64030f39ed48402bfafc432ff3364209b8686a964c2d06bd1286ab4fad6444"
+        },
+        {
+          "name": "bad-compressed-size.msix",
+          "exitCode": 13,
+          "sha256": "51b0c55d6c7a4e0ef8fc91fff0dfd08dfcafe6e1ba139f913b42ce21f12a33c6"
+        },
+        {
+          "name": "missing-file.msix",
+          "exitCode": 13,
+          "sha256": "b552b4fb84378718e56659918ce05f08be361da105756f1543e0f3796f8646a6"
+        },
+        {
+          "name": "duplicate-file.msix",
+          "exitCode": 13,
+          "sha256": "f26e493c3328ac1f68e6cfae848871d8604285fbf7fd76812f346b2d05fc2110"
+        },
+        {
+          "name": "extra-file.msix",
+          "exitCode": 13,
+          "sha256": "3d9ded0a1a0619cff6243abd871b9b01ce0ae43e958beeb3898f39c1e1110f56"
+        },
+        {
+          "name": "unknown-hash.msix",
+          "exitCode": 50,
+          "sha256": "bba4e68ca87024a11d86153bf6f3dd221b47a53c0fe73364a4e5372e8c2caa0c"
+        },
+        {
+          "name": "filehash.msix",
+          "exitCode": 0,
+          "sha256": "11b7410b839a97b070289df92655ec34a88c9e43a48602461f650e400a239a2d",
+          "format": "MSIX/APPX",
+          "files": 6,
+          "nested": []
+        },
+        {
+          "name": "bad-filehash.msix",
+          "exitCode": 13,
+          "sha256": "b95cd47bbf76dec8b3dc2b59d52f353aaf240148d66cff4f93e5b48d58e44b90"
+        },
+        {
+          "name": "missing-identity.msix",
+          "exitCode": 13,
+          "sha256": "3fccec0d7746326dec7690483bfcd6fbc994837a98e4969443a774b601bf6e5b"
+        },
+        {
+          "name": "missing-executable.msix",
+          "exitCode": 13,
+          "sha256": "c71d886dfbc14424147b2c043c5190cc8077502f8658f819379e50bcbfd4063d"
+        },
+        {
+          "name": "wrong-namespace.msix",
+          "exitCode": 13,
+          "sha256": "352976ec2fc7fbadd86f9fd1bbc483d6489b0200cb0301db21e3da06d4b59d41"
+        },
+        {
+          "name": "empty-resource-property.msix",
+          "exitCode": 13,
+          "sha256": "af25f6f0d511448aed91bf29c813fe5579286fe9cb34e00f688d61a5ef97abe6"
+        },
+        {
+          "name": "duplicate-resource-property.msix",
+          "exitCode": 13,
+          "sha256": "19245f58057e4ac822e7281dabad28f227c45877a81864bf691db9be8599952c"
+        },
+        {
+          "name": "non-xml.msix",
+          "exitCode": 13,
+          "sha256": "2739b7bc33a5aa10d59b310efc82fddc9cda619930ca578c5c05fde229d3de37"
+        },
+        {
+          "name": "dtd.msix",
+          "exitCode": 13,
+          "sha256": "2354bf9a185f72be6075c118e057636f2a8fddd052b910305d25379ccffdf8be"
+        },
+        {
+          "name": "traversal.msix",
+          "exitCode": 5,
+          "sha256": "37fb6460f834cd4875f454afe999fb7123be0e88784b5af111bd8bec80e66cf4"
+        },
+        {
+          "name": "encoded-traversal.msix",
+          "exitCode": 5,
+          "sha256": "412a5626d3ad03c6179ad605182e58aa641fdffeb97d2eef495f7f8bb7e7d0bd"
+        },
+        {
+          "name": "encoded-slash.msix",
+          "exitCode": 5,
+          "sha256": "68f0529268c1aad12625ee0a08cec934315016ba2e80c60cbf5254ea86b7184b"
+        },
+        {
+          "name": "decoded-collision.msix",
+          "exitCode": 13,
+          "sha256": "fc892a903692e146eb58a69e8d7311b5f25c6c49f07514cf3acbc6f6b31f763e"
+        },
+        {
+          "name": "encoded-colon.msix",
+          "exitCode": 5,
+          "sha256": "a4a4ba42637acb1aeb023818e90554e4ce95d95fcad5715a2d8aa1b1656c6d33"
+        },
+        {
+          "name": "file-directory-collision.msix",
+          "exitCode": 13,
+          "sha256": "155e75936c559f6f292eceda35910ad397849a26f11ab9f8e5419a2ec8d5da46"
+        },
+        {
+          "name": "no-blockmap.msix",
+          "exitCode": 13,
+          "sha256": "a10cb7f33897156bb6cecdc9cd8eb7e3c7ee8b847f7819b26f3c5a7a7de42f51"
+        },
+        {
+          "name": "synthetic.appxbundle",
+          "exitCode": 0,
+          "sha256": "5958931aa76a19d24a3776f7b706a02ff821e858e88c3bdb692dd5767ad28bbb",
+          "format": "MSIX/APPX Bundle",
+          "files": 4,
+          "nested": [
+            "complete"
+          ]
+        },
+        {
+          "name": "flat-missing.msixbundle",
+          "exitCode": 299,
+          "sha256": "8d4b316f66dbe77f3b5119b5e51f1173a248721b87471bc3555b62ee469aedf1",
+          "format": "MSIX/APPX Bundle",
+          "files": 4,
+          "nested": [
+            "complete"
+          ]
+        },
+        {
+          "name": "wrong-offset.msixbundle",
+          "exitCode": 13,
+          "sha256": "9a758d12ffd1500416c00a68df7fde46d800873f4b4ed151d85ed2e49b696e08"
+        },
+        {
+          "name": "wrong-arch.msixbundle",
+          "exitCode": 13,
+          "sha256": "ed15466d4cc770915c59df196f54127755303fc6116ff6219ff68c0fd98d3ac4"
+        },
+        {
+          "name": "wrong-identity.msixbundle",
+          "exitCode": 13,
+          "sha256": "4290988f9c17d120f30b3bda362ed69105e84c5bf392d161569c6c3df40cbbfd"
+        },
+        {
+          "name": "wrong-resource.msixbundle",
+          "exitCode": 13,
+          "sha256": "360fb30f11c923a0cb91652821e79af99b5cbc33978e0f7519a7f20a296b0107"
+        },
+        {
+          "name": "missing-embedded.msixbundle",
+          "exitCode": 13,
+          "sha256": "4604ac5ec00fec5006c2b277001fc8cbd8bce52d9f64a59156bd0ce8f46eefd2"
+        },
+        {
+          "name": "duplicate-member.msixbundle",
+          "exitCode": 13,
+          "sha256": "363649a0cc41b957eb3d81c5791c2fbba1409b00540594114461c7867830cff5"
+        },
+        {
+          "name": "optional.msixbundle",
+          "exitCode": 50,
+          "sha256": "13bbae5816c26b1bb1b7eae1bd7fdcdfd0f711d66e4c674042bd9365e97a6e83"
+        },
+        {
+          "name": "unknown-member.msixbundle",
+          "exitCode": 50,
+          "sha256": "59854c2996c882b817d20168eb4abc23464534aa6d8f9f26cb5ad7458ca4d866"
+        },
+        {
+          "name": "stub.msixbundle",
+          "exitCode": 299,
+          "sha256": "9646467306976562dfa8bbfedf51bb9daa237ca0db7460f7e659322dec56bc8a",
+          "format": "MSIX/APPX Bundle",
+          "files": 4,
+          "nested": [
+            "complete"
+          ]
+        },
+        {
+          "name": "bad-inner-hash.msixbundle",
+          "exitCode": 299,
+          "sha256": "83cc02174ab874e6b1c9fd2fba188c5bd0ac71c2335e5694ba66fec8d3c5efd8",
+          "format": "MSIX/APPX Bundle",
+          "files": 4,
+          "nested": [
+            "failed"
+          ]
+        }
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "architecture": "x64",
+      "path": "out/dist/win-x64-release/Extract.exe",
+      "bytes": 1102336,
+      "sha256": "64c8bfe6b070fe56b84454e9d61f2243cbcf9382f9373d5d19c12f529eb51b87",
+      "versionOutput": "Extract 0.7.0 (MSI / CAB / Burn / Inno Setup / NSIS / Velopack / Squirrel / MSIX / APPX / Bundle / ZIP / 7z)",
+      "staticCRT": true,
+      "systemDllsOnly": true,
+      "ASLR": true,
+      "DEP": true,
+      "CFG": true,
+      "listDoesNotClaimPayloadBlockVerification": true,
+      "dependencyCheck": "scripts/package-release.ps1 local verification, no release API"
+    },
+    {
+      "architecture": "x86",
+      "path": "out/dist/win-x86-release/Extract.exe",
+      "bytes": 986112,
+      "sha256": "dd1fe067f68ae527f8c99829241f6d8963dc2cb31ca07bf4223214f013d381e1",
+      "versionOutput": "Extract 0.7.0 (MSI / CAB / Burn / Inno Setup / NSIS / Velopack / Squirrel / MSIX / APPX / Bundle / ZIP / 7z)",
+      "staticCRT": true,
+      "systemDllsOnly": true,
+      "ASLR": true,
+      "DEP": true,
+      "CFG": true,
+      "listDoesNotClaimPayloadBlockVerification": true,
+      "dependencyCheck": "scripts/package-release.ps1 local verification, no release API"
+    }
+  ],
+  "limitations": [
+    "Generated fixtures, not a current third-party application compatibility survey",
+    "No deployment, publisher trust validation, or extracted application execution",
+    "ARM64 payload extraction only; ARM64 Extract toolchain absent and runtime not tested",
+    "Clean Windows 10/11 desktop and Explorer/notification visual acceptance pending"
+  ],
+  "buildDependencyRepair": "Correct observed mojibake MSVC showIncludes prefix; clean builds; Ninja deps contain types.h and archive.h on x86/x64",
+  "makeappx": {
+    "path": "C:\\Program Files (x86)\\Windows Kits\\10\\bin\\10.0.26100.0\\x64\\makeappx.exe",
+    "fileVersion": "10.0.26100.8249",
+    "sha256": "408273fecacd211b9e9001f79f33ff38dfb8203d516ff4afb3685c7bab26d122"
+  }
+}

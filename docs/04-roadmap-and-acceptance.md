@@ -1,16 +1,30 @@
 # 开发计划与验收
 
-更新日期：2026-09-07。方案：本项目原生解析安装包，允许使用 C/C++ 基础库。
+更新日期：2026-09-08。方案：本项目原生解析安装包，允许使用 C/C++ 基础库。
+
+## 当前状态（优先于下文历史阶段记录）
+
+v0.8.0 发布范围见 [双语版本说明](releases/v0.8.0.md)；正式发布状态以 GitHub Releases 为准。
+
+- v0.7.0 基础功能：核心静态解包、MSI/CAB/Burn、ZIP/7z/SFX、选定 Inno 6.0–6.7/7.1、NSIS Unicode 3.x 与部分 ANSI 2.x、内层展开、多架构目录、日志、进度通知和三架构单 EXE 标签发布。
+- v0.8.0 增加：独立工作进程、批次取消、可选单包超时、异常退出后继续批次、登记临时文件的身份校验清理，以及历史任务中断标记。设计和验证边界见 [工作进程与取消](22-worker-cancellation.md)。纳入 v0.8.0。
+- v0.8.0 新增 [Velopack/Squirrel 完整离线包](24-update-packages.md)：分别解析固定标记与 DATA/131 资源，整理应用目录；差分、缺载荷和损坏包明确报错。纳入 v0.8.0。
+- v0.8.0 新增 [MSIX/APPX/Bundle](25-msix-appx.md)：清单与块哈希校验，保留 VFS，多架构/资源包分开提取，缺少外置成员明确标为部分完成。纳入 v0.8.0。
+- v0.8.0 新增 [Inno 外置分卷与 CAB 跨卷续接](26-split-volumes.md)，包含 MSI 内嵌、外置及混合 CAB 卷链。纳入 v0.8.0。
+- 下一阶段：继续维护 [失败与回归样本清单](23-compatibility-backlog.md)，补已有格式的真实兼容缺口；InstallShield/Advanced Installer 私有封装需近期样本调查，Burn 内部 CAB 跨卷仍待实现。
+- 验证缺口：ARM64 实机运行、Windows 10/11 干净桌面矩阵，以及持续模糊测试。未逐项复核的历史验收框保留未勾选，不代表相应代码全部缺失。
+
+下文为最初阶段计划和历史验证记录。与上述现状冲突时按上述状态及对应实现文档判断；不恢复已取消的体积/文件数量限制，不把历史工时估计当作后续排期。
 
 0.5.1：卸载器作为非必需的辅助文件，已识别卸载器的路径问题不再影响解包完成状态；单一内层应用优先作为通知打开目标。见 [完成状态优化](14-uninstaller-completion.md)。
 
 0.5.0 最新进度：MSI 扩展到内嵌/外置多 CAB、松散和混合源，新增独立 CAB、CAB SFX 与 Burn 首批结构。真实 Python Burn 内的 22 个 MSI 已完成 File 表处理；包外载荷缺失如实报告 partial。详见 [本轮实现与验收](13-msi-cab-burn.md)。0.4.0 的 ZIP/7z/SFX 与 Electron/Tauri 功能继续保留，5 个用户安装包完成回归。下文保留分阶段目标，实际支持范围以 README 和验收记录为准。
 
-已完成首批 MSI、Inno、NSIS、ZIP/7z/CAB 和 Burn 静态解包及递归处理。M1 的 worker/硬超时、跨卷续接、其它 Inno 结构/外置卷，以及 MSIX/APPX、Velopack/Squirrel 专用语义仍待实现。历史阶段证据见 [MSI 报告](06-msi-first-slice.md)、[Inno 报告](07-inno-implementation.md)、[NSIS 报告](09-nsis-implementation.md)和 [嵌套提取](10-nested-extraction.md)。
+已完成首批 MSI、Inno、NSIS、ZIP/7z/CAB 和 Burn 静态解包及递归处理，Velopack/Squirrel 完整包、MSIX/APPX/Bundle、Inno 外置分卷与独立/MSI CAB 跨卷续接已在本地实现。未覆盖的 Inno 结构、修改版或加密载荷仍需独立适配。历史阶段证据见 [MSI 报告](06-msi-first-slice.md)、[Inno 报告](07-inno-implementation.md)、[NSIS 报告](09-nsis-implementation.md)和 [嵌套提取](10-nested-extraction.md)。
 
 ## 1. 交付目标
 
-0.2.1 样本反馈补充：Textify 使用的 `6.1.0 (u)` 结构已实现，官方 6.2.2 生成包纳入测试；6.3/6.4 及其它未列出的结构仍待适配，详见 [兼容修复记录](08-textify-compatibility.md)。
+0.2.1 样本反馈补充：Textify 使用的 `6.1.0 (u)` 结构已实现，官方 6.2.2 生成包纳入测试。v0.7.0 已进一步适配选定的 6.3/6.4 等结构，当前精确范围见 [Inno 兼容性](20-inno-compatibility.md)。
 
 交付无主界面的 Windows 便携解包工具。用户拖入安装包后，由本项目模块完成识别、文件规划、解压与校验，右下角系统通知结果。
 
@@ -108,7 +122,7 @@ M0–M5 算术合计为 **25–43 人日，约 5–9 个工作周**，属于规�
 
 - [ ] 超时或主进程退出时回收本项目 worker。
 - [ ] 损坏计数/偏移/长度、超大字典、CRC 错误、路径穿越和链接输入测试通过。
-- [ ] 内存、文件数、磁盘展开量和嵌套预算共享，子包不能绕过总上限。
+- [ ] 按实际资源处理大包、校验累计整数范围，并保持嵌套深度/数量及循环保护；不设置统一输入/输出体积和文件数上限。
 - [ ] 清理临时目录不跟随重解析点；输入替换和输出路径竞争得到处理。
 - [ ] Release 在目标 Windows 的干净环境完成运行验证，公布未覆盖场景。
 

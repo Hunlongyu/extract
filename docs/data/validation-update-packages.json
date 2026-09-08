@@ -1,0 +1,650 @@
+{
+  "scope": "Local Velopack / Squirrel full offline extraction after v0.7.0",
+  "published": false,
+  "checkedAt": "2026-09-07T09:20:48.915653+00:00",
+  "baseCommit": "0f671d6b573ba787c0e272e3898bd75e5de44a00",
+  "staticOnly": true,
+  "inputInstallersExecuted": false,
+  "extractedProgramsExecuted": false,
+  "fullRegression": [
+    {
+      "architecture": "x64",
+      "tests": 12,
+      "failures": 0,
+      "skipped": 0,
+      "seconds": "264",
+      "note": "Full suite before final help/version text-only update; final 45-case format suite then repeated on installed binaries",
+      "cases": [
+        "path_policy",
+        "msi_integration",
+        "update_package_integration",
+        "worker_integration",
+        "progress_integration",
+        "large_integration",
+        "log_integration",
+        "cab_burn_integration",
+        "inno_integration",
+        "nsis_integration",
+        "nested_integration",
+        "archive_integration"
+      ]
+    },
+    {
+      "architecture": "x86",
+      "tests": 12,
+      "failures": 0,
+      "skipped": 0,
+      "seconds": "268",
+      "note": "Full suite before final help/version text-only update; final 45-case format suite then repeated on installed binaries",
+      "cases": [
+        "path_policy",
+        "msi_integration",
+        "update_package_integration",
+        "worker_integration",
+        "progress_integration",
+        "large_integration",
+        "log_integration",
+        "cab_burn_integration",
+        "inno_integration",
+        "nsis_integration",
+        "nested_integration",
+        "archive_integration"
+      ]
+    }
+  ],
+  "finalFormatRegression": [
+    {
+      "architecture": "x64",
+      "passed": 45,
+      "cases": [
+        {
+          "name": "Velopack 离线包.exe",
+          "exitCode": 0,
+          "sha256": "21f8b943c5aa97de040518eba809f666a4249e4a2ec0f328d39bd154388d442e",
+          "format": "Velopack",
+          "files": 10
+        },
+        {
+          "name": "signed-layout.exe",
+          "exitCode": 0,
+          "sha256": "5e19453c271348c32debc5f9074f33ae3e2f7f25c465a6fc7e6d16f4414e62cc",
+          "format": "Velopack",
+          "files": 10
+        },
+        {
+          "name": "StaticFixture-1.2.3-full.nupkg",
+          "exitCode": 0,
+          "sha256": "7ff5b645aa2a3adef29f17f06c2240d9436b3f0de2c9b0e5fbf6dc844665e1b8",
+          "format": "Velopack",
+          "files": 10
+        },
+        {
+          "name": "stored.exe",
+          "exitCode": 0,
+          "sha256": "a7d440cc8defdb538ce10809a3b51a2c5f2cc47ae0e1b0c7abeb5726ecf7ef39",
+          "format": "Velopack",
+          "files": 10
+        },
+        {
+          "name": "with-sq-version.exe",
+          "exitCode": 0,
+          "sha256": "36f587b248e5d2ec3b89c6b4f21c1171ecf912acf743027c18283f024bad580d",
+          "format": "Velopack",
+          "files": 11
+        },
+        {
+          "name": "Squirrel 离线包.exe",
+          "exitCode": 0,
+          "sha256": "15960e809d3479a1b86407d776fa4150835d90df1cf7bf441f70ca41d27b50de",
+          "format": "Squirrel.Windows",
+          "files": 10
+        },
+        {
+          "name": "Squirrel-1.2.3-full.nupkg",
+          "exitCode": 0,
+          "sha256": "70d7c54cad0ee5765323a162272366d1275edd53a72ab7e0a1a6577b90cdbab7",
+          "format": "Squirrel release package",
+          "files": 10
+        },
+        {
+          "name": "Multiple-1.2.3-full.nupkg",
+          "exitCode": 0,
+          "sha256": "9d5528ad6fc95b0ea3f8919213a4aafb83aae3a1bb9a3cf4d70dc58d63b1d6c4",
+          "format": "Squirrel release package",
+          "files": 3
+        },
+        {
+          "name": "Library.1.0.nupkg",
+          "exitCode": 0,
+          "sha256": "70d7c54cad0ee5765323a162272366d1275edd53a72ab7e0a1a6577b90cdbab7",
+          "format": "ZIP",
+          "files": 10
+        },
+        {
+          "name": "ordinary.zip",
+          "exitCode": 0,
+          "sha256": "2f61936f807bd0ead70ddc8b22c82e5796323e9939200b1683a44c2e170d85b3",
+          "format": "ZIP",
+          "files": 2
+        },
+        {
+          "name": "wrapper.zip",
+          "exitCode": 0,
+          "sha256": "3abc70abf1a87e375aedcf77aef369a658637ef956aaef4d35c8217e6d79501e",
+          "format": "ZIP",
+          "files": 1
+        },
+        {
+          "name": "renamed-delta-diff.exe",
+          "exitCode": 50,
+          "sha256": "3147dba35930369781ad580b368670f3b85dc5a8a91c5fff8d73d70049cace15"
+        },
+        {
+          "name": "renamed-delta-bsdiff.exe",
+          "exitCode": 50,
+          "sha256": "b263a269d2ae2ed0d89ef6344561286298c9b8ab6110b604e8a61e08c9853704"
+        },
+        {
+          "name": "renamed-delta-zsdiff.exe",
+          "exitCode": 50,
+          "sha256": "f89dd6872975f427d447b64518e2a36a21b1ca61fac45c47f14381dfefd3977b"
+        },
+        {
+          "name": "StaticFixture-1.2.3-delta.nupkg",
+          "exitCode": 50,
+          "sha256": "7ff5b645aa2a3adef29f17f06c2240d9436b3f0de2c9b0e5fbf6dc844665e1b8"
+        },
+        {
+          "name": "delta-only.exe",
+          "exitCode": 50,
+          "sha256": "f59e8ff3b1c2e16ef1a8d7978917a161a45868f6fea434712cd3109fa9447614"
+        },
+        {
+          "name": "online.exe",
+          "exitCode": 50,
+          "sha256": "e813bcab991faa48934d92e1d264f057a053707c6d2b9e4fb972acab5d57137c"
+        },
+        {
+          "name": "empty-velopack.exe",
+          "exitCode": 50,
+          "sha256": "2809ba2a9baf3711683e72f8172a8b4ce90afaf94b6bc596278d5fe96ef7bd87"
+        },
+        {
+          "name": "two-full.exe",
+          "exitCode": 50,
+          "sha256": "58f98f13fb053c9520cffd2952e2191438170f3b9431629700e9593faf3fe457"
+        },
+        {
+          "name": "missing-releases.exe",
+          "exitCode": 13,
+          "sha256": "9a42aede0591da8913ecf0aca47fa660a67dd66aa0418f06dfd761bae0a2408d"
+        },
+        {
+          "name": "bad-release-hash.exe",
+          "exitCode": 13,
+          "sha256": "d2f74b2c76c3733850d1ce20d0b71632e9cb8726f99a4f1a42ff82644c810598"
+        },
+        {
+          "name": "bad-release-size.exe",
+          "exitCode": 13,
+          "sha256": "df95d18007b3a92bfda3fa4fae87fadbbf0282071d5dd50420b9f92218e8783c"
+        },
+        {
+          "name": "path-59b54641a6fa4d88a2f5b21e8fd743d3.exe",
+          "exitCode": 5,
+          "sha256": "59b836ccdee2a2137f4a80ceba8cda08b49b46ee69af2c5fa74b727188449615"
+        },
+        {
+          "name": "path-842d5a8aa85b4e829693d3fbbe27946f.exe",
+          "exitCode": 5,
+          "sha256": "492313768d73f4709c261dcbd99c000f39f55da115a02645d9c87061ca81b64d"
+        },
+        {
+          "name": "path-006494ee04e14a479fd366ec9f778699.exe",
+          "exitCode": 5,
+          "sha256": "22810703ff320949870193ec4d4a5473c7f99ea7848efb380409d8b63da86bcf"
+        },
+        {
+          "name": "symlink.exe",
+          "exitCode": 50,
+          "sha256": "f966283a38467d08dc26acf2b82a69918a57a7559e4d21e4af4ec289d4c00820"
+        },
+        {
+          "name": "dtd.exe",
+          "exitCode": 13,
+          "sha256": "ac32d83483ec7c2fdf39083dd015dca635c15092d76e48fbb2caa50f5b3bd12d"
+        },
+        {
+          "name": "duplicate.exe",
+          "exitCode": 13,
+          "sha256": "6bcd25147629380f468169f0f9c203b1b64ba1945595dc8c213775c7247bb728"
+        },
+        {
+          "name": "nested-field.exe",
+          "exitCode": 13,
+          "sha256": "22a4e410fc4208aeb4c36143b7ae1b7cd8fd640ee67c6a6ea2ac24c6fda2079c"
+        },
+        {
+          "name": "missing-main.exe",
+          "exitCode": 13,
+          "sha256": "c37abfb1244699d3ae7a2bc8499beaf9d0a68e7debc989d4cd33994b83c5d5a8"
+        },
+        {
+          "name": "linux.exe",
+          "exitCode": 50,
+          "sha256": "39d55a81fa24c629de091d6f081d95bde0563a222c551936603ab4a996587cb3"
+        },
+        {
+          "name": "large-metadata.exe",
+          "exitCode": 223,
+          "sha256": "0a489c660a17aa695ecc233ac5e28832cc2e798fd9b982b1486b758d31160c09"
+        },
+        {
+          "name": "offset-overflow.exe",
+          "exitCode": 13,
+          "sha256": "15c875e8cc9753b1056e18b51a5882a404d5246c1befeff3412cd28ca06e574b"
+        },
+        {
+          "name": "length-overflow.exe",
+          "exitCode": 13,
+          "sha256": "2ef52631b13dd783b2c3c481b8d98629afba9d19ea12d176dac72883d4ced167"
+        },
+        {
+          "name": "certificate-overlap.exe",
+          "exitCode": 13,
+          "sha256": "d1af28edd950704d668ca5a841a6dc3a2b91a7ec8f392503028da0950d53ed45"
+        },
+        {
+          "name": "crc-or-header.exe",
+          "exitCode": 13,
+          "sha256": "54615287b29866c66154707379e3fa0d5d2eea790984a68aba7f455753d96391"
+        },
+        {
+          "name": "duplicate-marker.exe",
+          "exitCode": 13,
+          "sha256": "2988bd46d47b56c0349a8b60d42a38df7a7f75e55cc88d75d9cc4e1c755dbe0c"
+        },
+        {
+          "name": "case-collision.exe",
+          "exitCode": 0,
+          "sha256": "52a98eab84dd046cbe3c2df5b3cf1fa1a7f762a15e446cef9c2d7d1439fe7b82",
+          "format": "Velopack",
+          "files": 12
+        },
+        {
+          "name": "resource-name-overflow.exe",
+          "exitCode": 13,
+          "sha256": "b1a9602578ada9a45d04ea0a7b3c52cdd7b41a1d39bd0d0f354775323e39217f"
+        },
+        {
+          "name": "resource-data-overflow.exe",
+          "exitCode": 13,
+          "sha256": "ce23ad3670495084a1c4739e09e960964859f73f8230eddccf7ca7612e2107c0"
+        },
+        {
+          "name": "official-velopack-1.2.0-inert.exe",
+          "exitCode": 0,
+          "sha256": "5214792a7b5fdadc1716c7eccc9f44ecad83fc5425d0ca06a3de12f941d54b5b",
+          "format": "Velopack",
+          "files": 10
+        },
+        {
+          "name": "LegacyTestApp-Velopack1298-Setup.exe",
+          "exitCode": 0,
+          "sha256": "fca012feb5482751b24758db9a79c00fc48b4b3d989fec4cd6a4bc80545be626",
+          "format": "Velopack",
+          "files": 12
+        },
+        {
+          "name": "LegacyTestApp-SquirrelWinV2-Setup.exe",
+          "exitCode": 0,
+          "sha256": "349509cc90e0797f2665eaed4571593767359a3fa19767d1b755565d17d7e626",
+          "format": "Squirrel.Windows",
+          "files": 17
+        },
+        {
+          "name": "AvaloniaCrossPlat-1.0.15-win-full.nupkg",
+          "exitCode": 0,
+          "sha256": "55572e5b8c3c6d22a621e8b643d5669e10364d0fa266c4f7b7bd9cf520192d0b",
+          "format": "Velopack",
+          "files": 43
+        },
+        {
+          "name": "Clowd-3.4.288-delta.nupkg",
+          "exitCode": 50,
+          "sha256": "6a5bd0f6a92d8a79a7fc5c6d2eb10709bd3803e5c237a2064be1908ad597688b"
+        }
+      ]
+    },
+    {
+      "architecture": "x86",
+      "passed": 45,
+      "cases": [
+        {
+          "name": "Velopack 离线包.exe",
+          "exitCode": 0,
+          "sha256": "3af8d55309d38d865c19d7c5bd6a555eebced698b5fe45c014fe39deb9e10658",
+          "format": "Velopack",
+          "files": 10
+        },
+        {
+          "name": "signed-layout.exe",
+          "exitCode": 0,
+          "sha256": "c46ab7597e9fb4a397c8a651c2531cae0913634b127b0cdc8a53710cd81c8848",
+          "format": "Velopack",
+          "files": 10
+        },
+        {
+          "name": "StaticFixture-1.2.3-full.nupkg",
+          "exitCode": 0,
+          "sha256": "c3747557d892fb77d3b7ef1bf6d4010265888ff6274e441ef532de923108a05c",
+          "format": "Velopack",
+          "files": 10
+        },
+        {
+          "name": "stored.exe",
+          "exitCode": 0,
+          "sha256": "140fb6992f0c8368082ccf340b767eba0e522d3d3fedb5b0cfc347f9bfe4131b",
+          "format": "Velopack",
+          "files": 10
+        },
+        {
+          "name": "with-sq-version.exe",
+          "exitCode": 0,
+          "sha256": "5358c7f1bf691b969a798a14fe84774d216ba238422e47ae6de4972febe28e51",
+          "format": "Velopack",
+          "files": 11
+        },
+        {
+          "name": "Squirrel 离线包.exe",
+          "exitCode": 0,
+          "sha256": "2b645ee3c27afdcde5888b13fa72b71ca1e14321b564ed4ecd308541beb922f4",
+          "format": "Squirrel.Windows",
+          "files": 10
+        },
+        {
+          "name": "Squirrel-1.2.3-full.nupkg",
+          "exitCode": 0,
+          "sha256": "52240f3a7ccb6ee627be46ad61ced24d952f331026cf6698a8de296411b452cf",
+          "format": "Squirrel release package",
+          "files": 10
+        },
+        {
+          "name": "Multiple-1.2.3-full.nupkg",
+          "exitCode": 0,
+          "sha256": "d8c1e70251ab73d8d38cc419d4dd82788786fad573fc2903db4a6c9521a6a2fd",
+          "format": "Squirrel release package",
+          "files": 3
+        },
+        {
+          "name": "Library.1.0.nupkg",
+          "exitCode": 0,
+          "sha256": "52240f3a7ccb6ee627be46ad61ced24d952f331026cf6698a8de296411b452cf",
+          "format": "ZIP",
+          "files": 10
+        },
+        {
+          "name": "ordinary.zip",
+          "exitCode": 0,
+          "sha256": "804ed70df43a0531ece3094b17f3da4d8a624c5977c5d60d1db323624bbde5c3",
+          "format": "ZIP",
+          "files": 2
+        },
+        {
+          "name": "wrapper.zip",
+          "exitCode": 0,
+          "sha256": "ab45b3bb2b84ee8b76260b71dc73096e0a9c59bac80b15f9067b9c62fd781638",
+          "format": "ZIP",
+          "files": 1
+        },
+        {
+          "name": "renamed-delta-diff.exe",
+          "exitCode": 50,
+          "sha256": "98488bbc7818e70b72240d38b6ffb9d7d2c1a7b071fa9585344f54e8284d2cb4"
+        },
+        {
+          "name": "renamed-delta-bsdiff.exe",
+          "exitCode": 50,
+          "sha256": "e2c58a365609a3d935c1b49732ece2a28bd738756c39d67f97e2f4eb277fcdb7"
+        },
+        {
+          "name": "renamed-delta-zsdiff.exe",
+          "exitCode": 50,
+          "sha256": "a3f334c2cd66981e268645d08ec66815f3a4281e7260e68dc61010d051b2e80e"
+        },
+        {
+          "name": "StaticFixture-1.2.3-delta.nupkg",
+          "exitCode": 50,
+          "sha256": "c3747557d892fb77d3b7ef1bf6d4010265888ff6274e441ef532de923108a05c"
+        },
+        {
+          "name": "delta-only.exe",
+          "exitCode": 50,
+          "sha256": "7c8fa4d60c880f8faa1c95953bb29b3ade7aa0a2e34f6268651174f12739a4db"
+        },
+        {
+          "name": "online.exe",
+          "exitCode": 50,
+          "sha256": "a05da51eaae366b9e4a3f2c39299cc7468ba4e277612eb7c8a3af988fa3ef82f"
+        },
+        {
+          "name": "empty-velopack.exe",
+          "exitCode": 50,
+          "sha256": "2809ba2a9baf3711683e72f8172a8b4ce90afaf94b6bc596278d5fe96ef7bd87"
+        },
+        {
+          "name": "two-full.exe",
+          "exitCode": 50,
+          "sha256": "d74d97e0c4952b0787ae00cc24f16de8b6f0c0451e7b6e907f4184edb9000eae"
+        },
+        {
+          "name": "missing-releases.exe",
+          "exitCode": 13,
+          "sha256": "756103ccaf28c1c119ce24db3d3699e84cfe73c855e4462b2ecc1e3770246ba7"
+        },
+        {
+          "name": "bad-release-hash.exe",
+          "exitCode": 13,
+          "sha256": "3a127871374ab362361441f11b7ea34cfdf33ff0e072cb931d8c9951cdcba8ca"
+        },
+        {
+          "name": "bad-release-size.exe",
+          "exitCode": 13,
+          "sha256": "8cb4c9279af037bfaea4f17187c926a08a0fb146cdc577c6a84bdd956119cbd8"
+        },
+        {
+          "name": "path-f5595d274edf42acbfd6e8aba8dcc7b5.exe",
+          "exitCode": 5,
+          "sha256": "451523fc2d0d0838f3bc575a6e3081452d63cb831e34b4357eb059c787bbd180"
+        },
+        {
+          "name": "path-80e9ff9ed6984b08b0b06ebddade013e.exe",
+          "exitCode": 5,
+          "sha256": "668b6596c9551df902e757bf4442bb640ed063551b7a32cb70641c1040dc270e"
+        },
+        {
+          "name": "path-987e4e69eb194c57bf31d8fd25b99662.exe",
+          "exitCode": 5,
+          "sha256": "79909b13a626da7150f35349d9d040decd5995de2643cf7b0867ca97ac7f0f7d"
+        },
+        {
+          "name": "symlink.exe",
+          "exitCode": 50,
+          "sha256": "7d2f84d0c54ff191e304e75a9c01e400f773d5d9b83228f4555fa56446fb9379"
+        },
+        {
+          "name": "dtd.exe",
+          "exitCode": 13,
+          "sha256": "d34b60a49542a7de95499e824b25077916b6a59bb3e43ea083a4b44baaa884a1"
+        },
+        {
+          "name": "duplicate.exe",
+          "exitCode": 13,
+          "sha256": "e999d20720294865e36f79045cc06cf398708a813d91b2ff546f0e4fb09118b6"
+        },
+        {
+          "name": "nested-field.exe",
+          "exitCode": 13,
+          "sha256": "bcc774c2bd9729a45837c99d637694d97ecdb6aa6f81440c73064b6e5cf7cd64"
+        },
+        {
+          "name": "missing-main.exe",
+          "exitCode": 13,
+          "sha256": "f84ccc2518d62192d060ec3774d4e24824e0a99a9cefd64383931db856e79966"
+        },
+        {
+          "name": "linux.exe",
+          "exitCode": 50,
+          "sha256": "0b00adc00a444537dfd6ba16c5717c7262b4bd97088e64f088d77e1c088ca2a7"
+        },
+        {
+          "name": "large-metadata.exe",
+          "exitCode": 223,
+          "sha256": "95b531ed3bc39439c6ccad7894902f3210148f691d1affee42754f2e7144fb6d"
+        },
+        {
+          "name": "offset-overflow.exe",
+          "exitCode": 13,
+          "sha256": "088dbb22677d939b81556fd9eee3bbfbdd5f18bbeddc67917557ce7a3454449a"
+        },
+        {
+          "name": "length-overflow.exe",
+          "exitCode": 13,
+          "sha256": "816c67595c757ab19fe839e50b4b9cabfde20172ee58245de1de53ec83292c33"
+        },
+        {
+          "name": "certificate-overlap.exe",
+          "exitCode": 13,
+          "sha256": "0ee9413113dc80a5d4b259920114d51fe6f2fbca80e4c53270dcd0b9fac4308a"
+        },
+        {
+          "name": "crc-or-header.exe",
+          "exitCode": 13,
+          "sha256": "d723a2120b704fe12b31a609982643725d35181ba651e398f5c7a2482853d5a4"
+        },
+        {
+          "name": "duplicate-marker.exe",
+          "exitCode": 13,
+          "sha256": "2988bd46d47b56c0349a8b60d42a38df7a7f75e55cc88d75d9cc4e1c755dbe0c"
+        },
+        {
+          "name": "case-collision.exe",
+          "exitCode": 0,
+          "sha256": "f9dde24bb4c6e035a2b37b0749dd5f89ab8b98cd545f77b9e487071a96a427a5",
+          "format": "Velopack",
+          "files": 12
+        },
+        {
+          "name": "resource-name-overflow.exe",
+          "exitCode": 13,
+          "sha256": "3d2b157d10d41d9a919239bd7cd1d5b14187e19dd6b70e6882820b6ae4e76c88"
+        },
+        {
+          "name": "resource-data-overflow.exe",
+          "exitCode": 13,
+          "sha256": "0329e3df9d43af72a4d48f71a08b061a4a222fdf293c7d61c226d5d7dfc8683e"
+        },
+        {
+          "name": "official-velopack-1.2.0-inert.exe",
+          "exitCode": 0,
+          "sha256": "74fc551fbb024b8af0c0c63d2853e6a98e216d884b4b931dc8811d2afed84fa6",
+          "format": "Velopack",
+          "files": 10
+        },
+        {
+          "name": "LegacyTestApp-Velopack1298-Setup.exe",
+          "exitCode": 0,
+          "sha256": "fca012feb5482751b24758db9a79c00fc48b4b3d989fec4cd6a4bc80545be626",
+          "format": "Velopack",
+          "files": 12
+        },
+        {
+          "name": "LegacyTestApp-SquirrelWinV2-Setup.exe",
+          "exitCode": 0,
+          "sha256": "349509cc90e0797f2665eaed4571593767359a3fa19767d1b755565d17d7e626",
+          "format": "Squirrel.Windows",
+          "files": 17
+        },
+        {
+          "name": "AvaloniaCrossPlat-1.0.15-win-full.nupkg",
+          "exitCode": 0,
+          "sha256": "55572e5b8c3c6d22a621e8b643d5669e10364d0fa266c4f7b7bd9cf520192d0b",
+          "format": "Velopack",
+          "files": 43
+        },
+        {
+          "name": "Clowd-3.4.288-delta.nupkg",
+          "exitCode": 50,
+          "sha256": "6a5bd0f6a92d8a79a7fc5c6d2eb10709bd3803e5c237a2064be1908ad597688b"
+        }
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "architecture": "x64",
+      "path": "E:\\Hunlongyu\\extract\\out\\dist\\win-x64-release\\Extract.exe",
+      "size": 1031680,
+      "sha256": "cfa1d99068755a2d18f284639f9b105c0ae2bd85711bd3fc315a563095a634e0",
+      "version": "0.7.0",
+      "staticCRT": "/MT verified by scripts/package-release.ps1",
+      "dllCharacteristics": "0xc160",
+      "imports": [
+        "advapi32.dll",
+        "api-ms-win-core-winrt-l1-1-0.dll",
+        "api-ms-win-core-winrt-string-l1-1-0.dll",
+        "bcrypt.dll",
+        "cabinet.dll",
+        "kernel32.dll",
+        "msi.dll",
+        "ntdll.dll",
+        "ole32.dll",
+        "propsys.dll",
+        "shell32.dll",
+        "shlwapi.dll",
+        "xmllite.dll"
+      ]
+    },
+    {
+      "architecture": "x86",
+      "path": "E:\\Hunlongyu\\extract\\out\\dist\\win-x86-release\\Extract.exe",
+      "size": 921600,
+      "sha256": "8ffdafceab0a2b07b06d38427ba84be8770e65dfa096eb1c1e312a8f79a404d3",
+      "version": "0.7.0",
+      "staticCRT": "/MT verified by scripts/package-release.ps1",
+      "dllCharacteristics": "0xc140",
+      "imports": [
+        "advapi32.dll",
+        "api-ms-win-core-winrt-l1-1-0.dll",
+        "api-ms-win-core-winrt-string-l1-1-0.dll",
+        "bcrypt.dll",
+        "cabinet.dll",
+        "kernel32.dll",
+        "msi.dll",
+        "ntdll.dll",
+        "ole32.dll",
+        "propsys.dll",
+        "shell32.dll",
+        "shlwapi.dll",
+        "xmllite.dll"
+      ]
+    }
+  ],
+  "limitations": [
+    "ARM64 toolchain absent according to vswhere component discovery; no ARM64 build or runtime test in this turn",
+    "No clean Windows 10/11 desktop or application launch validation",
+    "Static app layout, not official portable updater layout",
+    "No delta composition, arbitrary online wrappers, symlink restoration, or multiple full-package version selection"
+  ],
+  "sources": {
+    "velopackCommit": "f2edcbcafb81da5b3c884aaea330e225ad91d8b6",
+    "squirrelWindowsCommit": "eef37460aef77b2f9de8cd2237c1e55b344a6554",
+    "vpkAsset": {
+      "url": "https://github.com/velopack/velopack/releases/download/1.2.0/vpk.1.2.0.nupkg",
+      "size": 130511383,
+      "sha256": "3e458a676be46d1122e522312db18411f36ea8c70e586f81a676695d43f89dbc",
+      "githubDigestMatched": true
+    },
+    "setupTemplateSha256": "715d20a329bf1315904219d5a20fc92f8a555a60308d2d478b258c4acc683b80"
+  }
+}
