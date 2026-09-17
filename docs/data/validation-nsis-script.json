@@ -1,0 +1,61 @@
+{
+  "input": "ReNamerPro_7.10.0.0.exe",
+  "inputSha256": "a49b423a0060de8c2418f36742ccd6e2ce7a1819dc58b8a0fe7bda4c82e7d1bf",
+  "executableSha256": "79be6f39ee7c520ea76a40b7b69aa2c5ce4a5cf878d1a5fc6ae3da44d0852d38",
+  "compiledScript": {
+    "kind": "NSIS static instruction listing",
+    "isOriginalSource": false,
+    "instructionCount": 131,
+    "textPath": "_extract-script/nsis-script.txt",
+    "textBytes": 20445,
+    "textSha256": "39a963ab87edc365095345e9e9faccb426cb338e56053d52413eeaaf2c09ff72",
+    "metadataPath": "_extract-script/nsis-header.bin",
+    "metadataBytes": 9734,
+    "metadataSha256": "aca7a599b52c53488afe6a6c32e58530be8bdad6f70f0af94e23b70f30dc0cf6"
+  },
+  "originalMetadataBytesMatched": 9734,
+  "originalInstructionsMatched": 131,
+  "originalPayloadsMatched": 49,
+  "actualSystemLocationsUnchanged": true,
+  "installerOrPayloadExecuted": false,
+  "finalBuilds": [
+    {
+      "architecture": "x64",
+      "executableSha256": "07d38a52c2aaa197ae5a4a9fe0583c95945fc6137fa17c8b1f3ca2f25da67046",
+      "originalMetadataBytesMatched": 9734,
+      "originalInstructionsMatched": 131,
+      "originalPayloadsMatched": 49,
+      "nsisFixtureInvocations": 161
+    },
+    {
+      "architecture": "x86",
+      "executableSha256": "0c8cb5addc8fbb9d04a2589840d2149c0aab7f7e3bb53fbc4df9b8ed9b47e407",
+      "originalMetadataBytesMatched": 9734,
+      "originalInstructionsMatched": 131,
+      "originalPayloadsMatched": 49,
+      "nsisFixtureInvocations": 161
+    }
+  ],
+  "regression": {
+    "x64OtherChecksPassed": [
+      "path_policy",
+      "msi_integration",
+      "msix_integration",
+      "update_package_integration",
+      "worker_integration",
+      "progress_integration",
+      "large_integration",
+      "log_integration",
+      "cab_burn_integration",
+      "volume_integration",
+      "inno_integration",
+      "nested_integration",
+      "archive_integration"
+    ],
+    "x64FinalNsisPassed": true,
+    "x86PathPolicyPassed": true,
+    "x86FinalNsisPassed": true,
+    "note": "The full run used the preceding build; its FileOpen preview test failed. Corrected operand annotations were rebuilt and the complete NSIS suite passed on both final builds."
+  },
+  "verification": "Independent raw Deflate decoding; all compiled header bytes, 131 raw instructions, and 49 payloads matched. No installer, embedded instruction, or extracted application was executed."
+}

@@ -111,7 +111,7 @@ def main():
         output = directory / 'output'
         output.mkdir()
         listed = subprocess.run([str(exe), '--quiet', '--list', str(source)], capture_output=True, timeout=120)
-        process = subprocess.run([str(exe), '--quiet', '--output', str(output), str(source)], capture_output=True, timeout=120)
+        process = subprocess.run([str(exe), '--quiet', '--layout', 'original', '--output', str(output), str(source)], capture_output=True, timeout=120)
         assert process.returncode == code, (name, code, process.returncode, process.stderr.decode('utf-8','replace'))
         assert source.read_bytes() == data, 'input changed'
         results.append({'name': name, 'exitCode': code, 'listExitCode': listed.returncode})

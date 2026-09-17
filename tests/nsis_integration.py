@@ -1,10 +1,12 @@
 """Official makensis fixtures; execute the compiler and Extract only, never installers."""
 import argparse
+import ast
 import hashlib
 import json
 import os
 from pathlib import Path
 import random
+import re
 import struct
 import subprocess
 import sys
@@ -80,7 +82,7 @@ def main():
 
     def run(arguments, code=0):
         nonlocal run_count
-        result = subprocess.run([str(executable), '--quiet', *map(str, arguments)], capture_output=True, timeout=90, env=environment)
+        result = subprocess.run([str(executable), '--quiet', '--layout', 'original', *map(str, arguments)], capture_output=True, timeout=90, env=environment)
         run_count += 1
         check(not list(cache.iterdir()), 'NSIS cache not cleaned after process exit')
         check(result.returncode == code, f'{arguments}: expected {code}, got {result.returncode}: {result.stderr.decode("utf-8", errors="replace")}')
@@ -106,18 +108,55 @@ File /oname=alias.bin "payload.bin"
         check(result.returncode == 0, f'compile {name}: {result.stdout!r} {result.stderr!r}')
         return root / (name + '.exe')
 
-    def extract(path, expected_files, code=0, crc=True):
+    def extract(path, expected_files, code=0, crc=True, primary=None, script_fragments=()):
         listing = json.loads(run(['--list', path]))
         check(listing['format'] == 'NSIS', 'format')
         check(listing['packageCrcVerified'] == crc, 'CRC report')
         check(all(not f['sha256'] and not f['sourceHashVerified'] for f in listing['files']), 'list must not claim per-file verification')
         target = root / ('results-' + uuid.uuid4().hex)
         target.mkdir()
-        run(['--output', target, path], code)
+        output_text = run(['--output', target, path], code)
         results = list(target.iterdir())
         check(len(results) == 1 and '.tmp' not in results[0].name, 'output commit')
         out = results[0]
         report = json.loads((out / '_extract-report.json').read_text(encoding='utf-8'))
+        script = report['compiledScript']
+        check(script['isOriginalSource'] is False, 'disassembly must not claim to be original source')
+        for key in ('kind', 'isOriginalSource', 'instructionCount', 'textPath', 'metadataPath', 'metadataBytes', 'metadataSha256'):
+            check(script[key] == listing['compiledScript'][key], 'listing script descriptor differs')
+        check(listing['compiledScript']['textSha256'] == '', 'listing must not claim exported text verification')
+        metadata = (out / script['metadataPath']).read_bytes()
+        text_bytes = (out / script['textPath']).read_bytes()
+        text = text_bytes.decode('utf-8')
+        for name, fragment in script_fragments:
+            check(any(f': {name} |' in line and fragment in line for line in text.splitlines()), f'missing script operand preview: {name} {fragment}')
+        check(len(metadata) == script['metadataBytes'] and sha(metadata) == script['metadataSha256'], 'compiled metadata hash/size')
+        check(len(text_bytes) == script['textBytes'] and sha(text_bytes) == script['textSha256'], 'script text hash/size')
+        entries, count = struct.unpack_from('<II', metadata, 20)
+        string_start, _, string_end = struct.unpack_from('<III', metadata, 28)
+        check(count == script['instructionCount'], 'instruction count')
+        records = re.findall(r'^instruction (\d+): .*? \| opcode=(\d+) operands=\[([^\]]+)\]', text, re.M)
+        check(len(records) == count, 'every instruction must be retained')
+        for i, (index, opcode, operands) in enumerate(records):
+            check(int(index) == i, 'instruction order')
+            check((int(opcode), *map(int, operands.split(', '))) == struct.unpack_from('<I6i', metadata, entries + i * 28), 'raw instruction differs')
+        raw_strings = text.split('[raw string table: offset in code units/bytes]\n', 1)[1].split('\n[language string references:', 1)[0]
+        reconstructed = ''
+        for offset, escaped in re.findall(r'^(\d+): (".*")$', raw_strings, re.M):
+            check(int(offset) == len(reconstructed), 'string table offset')
+            reconstructed += ast.literal_eval(escaped)
+        encoding = 'latin1' if 'Encoding: ANSI bytes' in text else 'utf-16le'
+        check(reconstructed.encode(encoding, errors='surrogatepass') == metadata[string_start:string_end], 'raw string table must be lossless')
+        package_bytes = path.read_bytes()
+        first_header = package_bytes.index(b'\xef\xbe\xad\xdeNullsoftInst') - 4
+        original_header_size = struct.unpack_from('<I', package_bytes, first_header + 20)[0]
+        if struct.unpack_from('<I', package_bytes, first_header + 28)[0] == original_header_size:
+            check(metadata == package_bytes[first_header + 32:first_header + 32 + original_header_size], 'stored metadata must match original bytes')
+        if primary is not None:
+            check(output_text.splitlines()[0] == '文件提取完成：' + str(out / primary), 'primary output must expose all target locations')
+        check(report['runtimeActions'] == listing['runtimeActions'], 'listing and extraction must observe the same script actions')
+        if report['runtimeNotice']:
+            check(report['runtimeNotice'] in output_text, 'runtime notice missing from job diagnostics')
         check(report['status'] == ('complete' if code == 0 else 'partial'), 'completion report')
         observed = {f['path']: (out / f['path']).read_bytes() for f in report['files']}
         if expected_files is not None:
@@ -137,6 +176,42 @@ File /oname=alias.bin "payload.bin"
             built.append(path)
     base = build('stored', stored=True)
     extract(base, expected)
+    # Preserve collisions with generated auxiliary files, regardless of case.
+    reserved = build('script-directory-collision', stored=True, body='''SetOutPath "_ExTrAcT-ScRiPt"
+File /oname=nsis-header.bin "hello.txt"
+''')
+    report, files = extract(reserved, None)
+    check(len(files) == 1 and next(iter(files)).startswith('_variants/'), 'reserved script directory collision')
+    check(next(iter(files.values())) == sources['hello.txt'], 'reserved payload bytes lost')
+    # Unknown semantics and unused invalid Unicode still retain exact metadata.
+    unusual = build('script-unused-text', stored=True, body='''SetOutPath "$INSTDIR"
+File "hello.txt"
+DetailPrint "UNUSED-SCRIPT-TEXT"
+Quit
+''')
+    mutated = Package(unusual)
+    for i in range(mutated.count):
+        offset = mutated.entries + i * 28
+        if struct.unpack_from('<I', mutated.header, offset)[0] == 4:
+            struct.pack_into('<I', mutated.header, offset, 73)
+    text_offset = mutated.header.index('UNUSED-SCRIPT-TEXT'.encode('utf-16le'), mutated.strings)
+    struct.pack_into('<H', mutated.header, text_offset, 0xd800)
+    unusual.write_bytes(mutated.rebuild())
+    extract(unusual, {'app/hello.txt': sources['hello.txt']})
+    # Compiler-produced operands, not source comments, define the string positions.
+    operand_fixture = build('script-operand-positions', stored=True, body=r'''SetOutPath "$INSTDIR"
+File "hello.txt"
+GetFileTime "$INSTDIR\time-probe" $0 $1
+GetDLLVersion "$INSTDIR\version-probe" $0 $1
+FileOpen $0 "$INSTDIR\open-probe" w
+FileClose $0
+FindFirst $0 $1 "$INSTDIR\find-probe*"
+FindClose $0
+DeleteRegValue HKCU "Software\ExtractStaticProbe" "value-probe"
+''')
+    extract(operand_fixture, {'app/hello.txt': sources['hello.txt']}, script_fragments=(
+        ('GetFileTime', 'time-probe'), ('GetDLLVersion', 'version-probe'),
+        ('FileOpen', 'open-probe'), ('FindFirst', 'find-probe'), ('DeleteRegistry', 'value-probe')))
     odd_dictionary = build('lzma-dictionary-3mb', method='lzma', extra='SetCompressorDictSize 3')
     extract(odd_dictionary, expected)
     no_crc = build('no-crc', extra='CRCCheck off')
@@ -280,6 +355,132 @@ File "hello.txt"
     extract(call_changes, None, 299)
     out_assignment = build('outdir-dynamic-write', body='SetOutPath "$INSTDIR"\nReadRegStr $OUTDIR HKCU "Software\\Fixture" "Path"\nFile "hello.txt"')
     extract(out_assignment, None, 299)
+    # Shell directory pairs are scoped at the assignment, not at extraction time.
+    shell_body = r'''SetShellVarContext current
+SetOutPath "$DOCUMENTS\Fixture"
+File /oname=user.txt "hello.txt"
+SetShellVarContext all
+File /oname=still-user.txt "hello.txt"
+SetOutPath "$DOCUMENTS\Fixture"
+File /oname=common.txt "other.dat"
+SetOutPath "$APPDATA\Fixture"
+File /oname=common-data.txt "other.dat"
+SetShellVarContext current
+SetOutPath "$APPDATA\Fixture"
+File /oname=user-data.txt "hello.txt"
+SetOutPath "$LOCALAPPDATA\Fixture"
+File /oname=local.txt "hello.txt"
+SetOutPath "$INSTDIR"
+File /oname=app.txt "hello.txt"
+'''
+    report, _ = extract(build('shell-context-switches', body=shell_body), {
+        'User/Documents/Fixture/user.txt': sources['hello.txt'],
+        'User/Documents/Fixture/still-user.txt': sources['hello.txt'],
+        'Public/Documents/Fixture/common.txt': sources['other.dat'],
+        'ProgramData/Fixture/common-data.txt': sources['other.dat'],
+        'AppData/Roaming/Fixture/user-data.txt': sources['hello.txt'],
+        'AppData/Local/Fixture/local.txt': sources['hello.txt'],
+        'app/app.txt': sources['hello.txt'],
+    }, primary='')
+    check('$DOCUMENTS[current]' in report['files'][1]['sourceExpression'], 'OUTDIR must retain its original context')
+    check('$DOCUMENTS[all]' in report['files'][2]['sourceExpression'], 'all-users expression')
+    extract(build('shell-default-current', body=r'SetOutPath "$APPDATA\Fixture"' + '\nFile "hello.txt"'),
+            {'AppData/Roaming/Fixture/hello.txt': sources['hello.txt']})
+    extract(build('shell-copy', body=r'''SetShellVarContext all
+StrCpy $0 "$DOCUMENTS\Fixture"
+SetOutPath "$0"
+File "hello.txt"
+'''), {'Public/Documents/Fixture/hello.txt': sources['hello.txt']})
+    for mode in ('same', 'different'):
+        branch = r'''IfFileExists "$TEMP\flag" first second
+first:
+SetShellVarContext all
+Goto joined
+second:
+SetShellVarContext CONTEXT
+joined:
+SetOutPath "$DOCUMENTS\Fixture"
+File "hello.txt"
+'''.replace('CONTEXT', 'all' if mode == 'same' else 'current')
+        report, files = extract(build('shell-join-' + mode, body=branch),
+            {'Public/Documents/Fixture/hello.txt': sources['hello.txt']} if mode == 'same' else None,
+            0 if mode == 'same' else 299)
+        if mode == 'different':
+            check(not report['pathsResolved'] and all(p.startswith('_unresolved/') for p in files), 'ambiguous shell context must not pick a branch')
+            check('$DOCUMENTS[unknown]' in report['files'][0]['sourceExpression'], 'ambiguous expression must remain visible')
+    # A function inherits the caller context; changing it invalidates the return state.
+    extract(build('shell-call-inherits', body='SetShellVarContext all\nCall Emit',
+        extra=r'''Function Emit
+SetOutPath "$DOCUMENTS\Fixture"
+File "hello.txt"
+FunctionEnd'''), {'Public/Documents/Fixture/hello.txt': sources['hello.txt']})
+    extract(build('shell-call-preserves', body='SetShellVarContext all\nCall Keep\n'
+        + r'SetOutPath "$DOCUMENTS\Fixture"' + '\nFile "hello.txt"',
+        extra='Function Keep\nDetailPrint "no changes"\nFunctionEnd'),
+        {'Public/Documents/Fixture/hello.txt': sources['hello.txt']})
+    extract(build('shell-call-changes', body='SetShellVarContext all\nCall Change\n'
+        + r'SetOutPath "$DOCUMENTS\Fixture"' + '\nFile "hello.txt"',
+        extra='Function Change\nSetShellVarContext current\nFunctionEnd'), None, 299)
+    extract(build('shell-shared-function', body='SetShellVarContext all\nCall Emit\nSetShellVarContext current\nCall Emit',
+        extra=r'''Function Emit
+SetOutPath "$DOCUMENTS\Fixture"
+File "hello.txt"
+FunctionEnd'''), None, 299)
+    extract(build('shell-callback', body=r'SetOutPath "$DOCUMENTS\Fixture"' + '\nFile "hello.txt"',
+        extra='Function .onInit\nSetShellVarContext all\nFunctionEnd'), None, 299)
+    extract(build('shell-fixed-roots', body=r'''SetShellVarContext all
+SetOutPath "$USERAPPDATA\Fixture"
+File "hello.txt"
+SetShellVarContext current
+SetOutPath "$COMMONPROGRAMDATA\Fixture"
+File "other.dat"
+'''), {'AppData/Roaming/Fixture/hello.txt': sources['hello.txt'], 'ProgramData/Fixture/other.dat': sources['other.dat']})
+    # Model a self-extracting launcher with inert bytes only. Never execute it.
+    wrapper = build('shell-launcher', stored=True, body=r'''SetShellVarContext all
+SetOutPath "$DOCUMENTS\Fixture"
+File /oname=License.key "other.dat"
+SetShellVarContext current
+SetOutPath "$APPDATA\Fixture"
+File /oname=program.exe "hello.txt"
+ExecWait "$APPDATA\Fixture\program.exe"
+Call Cleanup
+''', extra=r'''Function Cleanup
+SetShellVarContext all
+Delete "$DOCUMENTS\Fixture\License.key"
+SetShellVarContext current
+Delete "$APPDATA\Fixture\program.exe"
+RMDir /r "$APPDATA\Fixture\resources"
+FunctionEnd''')
+    report, _ = extract(wrapper, {'Public/Documents/Fixture/License.key': sources['other.dat'],
+                                 'AppData/Roaming/Fixture/program.exe': sources['hello.txt']}, primary='')
+    actions = report['runtimeActions']
+    launch = next(a for a in actions if a['kind'] == 'launch')
+    check(launch['target'].replace('\\', '/') == 'AppData/Roaming/Fixture/program.exe' and launch['waitsForExit'], 'ExecWait observation')
+    check(all(a['targetResolved'] for a in actions), 'literal action targets')
+    check(any(a['kind'] == 'delete-file' and a['target'].replace('\\', '/') == 'Public/Documents/Fixture/License.key' for a in actions), 'common target in cleanup function')
+    check(any(a['kind'] == 'remove-directory' and a['recursive'] for a in actions), 'recursive cleanup observation')
+    check('授权' not in report['runtimeNotice'], 'a filename must not be interpreted as valid licensing')
+    report, _ = extract(build('shell-dynamic-launch', body='SetOutPath "$INSTDIR"\nFile "hello.txt"\n'
+        'ReadRegStr $0 HKCU "Software\\Fixture" "Command"\nExec $0\n'), {'app/hello.txt': sources['hello.txt']})
+    check(not report['runtimeActions'][0]['targetResolved'] and not report['runtimeActions'][0]['waitsForExit'], 'dynamic launch must remain an unresolved observation')
+    unknown_shell = Package(wrapper)
+    at = unknown_shell.header.index(b'\x02\x00\x05\x2e', unknown_shell.strings)
+    unknown_shell.header[at + 2:at + 4] = b'\x7f\x7f'
+    unknown_path = root / 'shell-unknown-code.exe'
+    unknown_path.write_bytes(unknown_shell.rebuild())
+    report, _ = extract(unknown_path, None)
+    check(any('$SHELL_32639' in a['target'] and not a['targetResolved'] for a in report['runtimeActions']), 'unknown action must remain visible without downgrading complete payloads')
+    shell_end = struct.unpack_from('<I', unknown_shell.header, 36)[0]
+    unknown_shell.header[unknown_shell.strings:shell_end] = unknown_shell.header[unknown_shell.strings:shell_end].replace(
+        b'\x02\x00\x05\x2e', b'\x02\x00\x7f\x7f')
+    unknown_path = root / 'shell-unknown-payload-code.exe'
+    unknown_path.write_bytes(unknown_shell.rebuild())
+    report, files = extract(unknown_path, None, 299)
+    check(any('$SHELL_32639' in f['sourceExpression'] and not f['pathResolved'] for f in report['files']), 'unknown shell encoding must remain unresolved')
+    check(len(files) == 2, 'unknown shell encoding must retain the payload')
+    report, _ = extract(build('shell-exec-shell', body='SetOutPath "$INSTDIR"\nFile "hello.txt"\n'
+        'ExecShellWait "open" "$INSTDIR\\hello.txt"\n'), {'app/hello.txt': sources['hello.txt']})
+    check(report['runtimeActions'][0]['kind'] == 'launch-shell' and report['runtimeActions'][0]['waitsForExit'], 'ShellExecute wait flag')
     # Skip uninstaller construction, retain only actual File payloads.
     uninstall = build('uninstaller', body='SetOutPath "$INSTDIR"\nFile "hello.txt"\nWriteUninstaller "$INSTDIR\\uninstall.exe"',
                       extra='Section "Uninstall"\nDelete "$INSTDIR\\hello.txt"\nSectionEnd')
@@ -342,8 +543,8 @@ File "hello.txt"
         body='SetOutPath "$(FixtureDir)"\nFile /oname=abc.dat "hello.txt"',
         extra='LoadLanguageFile "${NSISDIR}\\Contrib\\Language files\\English.nlf"\n'
               'LangString FixtureDir ${LANG_ENGLISH} "$INSTDIR\\sub"')
-    def legacy_ansi():
-        p = Package(ansi_stored)
+    def legacy_ansi(path=ansi_stored):
+        p = Package(path)
         end = struct.unpack_from('<I', p.header, 36)[0]
         i = p.strings
         while i < end:
@@ -355,6 +556,17 @@ File "hello.txt"
                 check(code < 252, 'fixture requires ANSI byte escaping')
                 i += 1
         return p
+    ansi_shell = build('ansi-shell-stored', unicode=False, stored=True, body=r'''SetShellVarContext all
+SetOutPath "$DOCUMENTS\Fixture"
+File "hello.txt"
+SetShellVarContext current
+SetOutPath "$APPDATA\Fixture"
+File "other.dat"
+''')
+    ansi_shell_legacy = root / 'ansi2-shell.exe'
+    ansi_shell_legacy.write_bytes(legacy_ansi(ansi_shell).rebuild())
+    extract(ansi_shell_legacy, {'Public/Documents/Fixture/hello.txt': sources['hello.txt'],
+                              'AppData/Roaming/Fixture/other.dat': sources['other.dat']})
     def ansi_case(name, change, expected_files=None, error=None):
         p = legacy_ansi()
         change(p)

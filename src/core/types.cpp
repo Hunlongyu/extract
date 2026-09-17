@@ -1,4 +1,5 @@
 #include "core/types.h"
+#include <set>
 
 namespace extract {
 namespace {
@@ -14,6 +15,19 @@ std::wstring json_string(std::wstring_view text) {
     }
     return result + L'"';
 }
+}
+
+bool Catalog::has_multiple_destinations() const {
+    std::set<std::wstring> destinations;
+    for (const auto& file : files) {
+        if (file.is_uninstaller) continue;
+        const auto path = file.original_path.generic_wstring();
+        // These roots use a second component to identify the logical location.
+        const bool two_components = path.starts_with(L"AppData/") || path.starts_with(L"Public/") || path.starts_with(L"User/");
+        const auto end = path.find('/', two_components ? path.find('/') + 1 : 0);
+        destinations.insert(path.substr(0, end));
+    }
+    return destinations.size() > 1;
 }
 
 bool Catalog::required_paths_resolved() const {
@@ -32,7 +46,9 @@ std::wstring catalog_json(const Catalog& catalog, bool extracted) {
         + L",\n  \"formatVersion\": " + json_string(catalog.format_version) + L",\n  \"status\": "
         + json_string(extracted ? (catalog.required_paths_resolved() && catalog.content_complete && catalog.nested_complete ? L"complete" : L"partial") : L"listed")
         + L",\n  \"input\": " + json_string(catalog.input.wstring())
-        + L",\n  \"layout\": \"static logical directories\",\n  \"cabinet\": "
+        + L",\n  \"layout\": " + json_string(catalog.layout)
+        + L",\n  \"requestedLayout\": " + json_string(catalog.requested_layout)
+        + L",\n  \"pathBase\": " + json_string(catalog.path_base) + L",\n  \"cabinet\": "
         + json_string(catalog.cabinet) + L",\n  \"totalBytes\": " + std::to_wstring(catalog.total_size)
         + L",\n  \"pathsResolved\": " + (catalog.paths_resolved ? L"true" : L"false")
         + L",\n  \"requiredPathsResolved\": " + (catalog.required_paths_resolved() ? L"true" : L"false")
@@ -48,12 +64,37 @@ std::wstring catalog_json(const Catalog& catalog, bool extracted) {
         if (i) text += L", ";
         text += json_string(catalog.notes[i]);
     }
-    text += L"],\n  \"nestedPackages\": [";
+    text += L"],\n  \"runtimeNotice\": " + json_string(catalog.runtime_notice)
+        + L",\n  \"runtimeActions\": [";
+    for (std::size_t i = 0; i < catalog.runtime_actions.size(); ++i) {
+        const auto& action = catalog.runtime_actions[i];
+        if (i) text += L", ";
+        text += L"{\"instruction\": " + std::to_wstring(action.instruction)
+            + L", \"kind\": " + json_string(action.kind)
+            + L", \"target\": " + json_string(action.target)
+            + L", \"targetResolved\": " + (action.target_resolved ? L"true" : L"false")
+            + L", \"waitsForExit\": " + (action.waits ? L"true" : L"false")
+            + L", \"recursive\": " + (action.recursive ? L"true" : L"false") + L"}";
+    }
+    text += L"],\n  \"compiledScript\": ";
+    if (catalog.compiled_script) {
+        const auto& script = *catalog.compiled_script;
+        text += L"{\"kind\": \"NSIS static instruction listing\", \"isOriginalSource\": false, \"instructionCount\": "
+            + std::to_wstring(script.instruction_count)
+            + L", \"textPath\": " + json_string(script.text_path.generic_wstring())
+            + L", \"textBytes\": " + std::to_wstring(script.text_size)
+            + L", \"textSha256\": " + json_string(script.text_sha256)
+            + L", \"metadataPath\": " + json_string(script.metadata_path.generic_wstring())
+            + L", \"metadataBytes\": " + std::to_wstring(script.metadata_size)
+            + L", \"metadataSha256\": " + json_string(script.metadata_sha256) + L"}";
+    } else text += L"null";
+    text += L",\n  \"nestedPackages\": [";
     for (std::size_t i = 0; i < catalog.nested_packages.size(); ++i) {
         const auto& nested = catalog.nested_packages[i];
         if (i) text += L", ";
         text += L"{\"input\": " + json_string(nested.input.generic_wstring())
             + L", \"output\": " + json_string(nested.output.generic_wstring())
+            + L", \"report\": " + json_string(nested.report.generic_wstring())
             + L", \"format\": " + json_string(nested.format)
             + L", \"status\": " + json_string(nested.status)
             + L", \"message\": " + json_string(nested.message) + L"}";
@@ -64,6 +105,7 @@ std::wstring catalog_json(const Catalog& catalog, bool extracted) {
         if (!first) text += L",\n";
         first = false;
         text += L"    {\"id\": " + json_string(file.id)
+            + L", \"package\": " + json_string(file.package_id)
             + L", \"originalPath\": " + json_string(file.original_path.generic_wstring())
             + L", \"path\": " + json_string(file.path.generic_wstring())
             + L", \"pathResolved\": " + (file.path_resolved ? L"true" : L"false")

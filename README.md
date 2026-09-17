@@ -37,11 +37,15 @@ Extract is a lightweight Windows installer extractor. Drop one or more packages 
 2. Select one or more installers and **drop them onto the `Extract.exe` icon**.
 3. Use **Open folder** in the result notification for a single successful extraction, or **View results** for batches, partial results, and failures. Clicking the notification itself opens the same destination. Button labels currently appear in Chinese.
 
-Files are saved **next to the input package** in `<package-name>_extracted`. Existing folders are preserved by adding ` (2)`, ` (3)`, and so on. Nested packages are retained alongside their extracted subfolders.
+Files are saved **next to the input package** in `<package-name>_extracted`. Existing folders are preserved by adding ` (2)`, ` (3)`, and so on. The default **compact layout** brings a clearly identified application to the output root while preserving its internal folders. Additional files go under `_extra`; multiple applications or architectures stay in separate folders. Nested packages and their files are retained. Ambiguous layouts keep their relative structure, and standalone ZIP / 7z and MSIX / APPX keep their package hierarchy. See [layout rules](docs/28-compact-layout.md).
 
 Longer tasks show the current package and stage. The progress bar tracks file bytes written for the current package; preparation and other stages show activity and processed bytes instead of an estimated percentage. Nested packages have their own progress. The same notification then shows the result and package name without another popup; short tasks show only the result. Check Notification Center if the banner closes. Use **Cancel task** in the progress notification to stop the current package and the remaining batch; already completed output is kept.
 
 A **partial result** means extracted files were retained, but some content is missing, paths could not be restored, or a nested package failed. The job record explains the issue. If no notification appears, run `Extract.exe --open-last-result` to open the latest result.
+
+**File extraction complete** does not mean the original runtime environment has been recreated. NSIS system locations are recorded as logical paths such as `AppData/Roaming` and `Public/Documents`; Extract does not write to their real system locations. Compact layout records the mapping to the saved files, while original layout keeps those logical folders. Ambiguous user contexts are retained under `_unresolved` with a partial result. Launch, wait, and cleanup operations are recorded in the extraction report but never executed. See [directory and wrapper behavior](docs/27-nsis-shell-directories.md).
+
+NSIS extraction also saves `_extract-script/nsis-script.txt` (all compiled instructions, operands, and the raw string table) and `nsis-header.bin` (the unchanged decompressed metadata). In compact layout, inner packages' scripts and reports are grouped under `_extract-packages`. These are static records, not recovered original `.nsi` source, and are never executed. Their paths and hashes are recorded under `compiledScript` in each extraction report.
 
 > Extracted applications may still require installation if they depend on drivers, services, registry settings, or additional runtimes.
 
@@ -53,7 +57,7 @@ A **partial result** means extracted files were retained, but some content is mi
 | **NSIS** | `.exe` | Tested Unicode 3.x and selected [ANSI 2.x layouts](docs/21-nsis-ansi-compatibility.md), ordinary and solid compression, selected Electron / Tauri wrappers, and separate folders for recognized architecture branches |
 | **Windows Installer** | `.msi` | Embedded, external, or mixed CAB sets including spanning files; loose files and mixed source layouts |
 | **WiX Burn** | `.exe` | Layout 2 CAB containers with v3 / v4 manifests; embedded or local external payloads |
-| **Velopack / Squirrel.Windows** | `.exe`, `*-full.nupkg` | [Tested offline layouts](docs/24-update-packages.md); application files collected in `app`, with separate target folders when needed |
+| **Velopack / Squirrel.Windows** | `.exe`, `*-full.nupkg` | [Tested offline layouts](docs/24-update-packages.md); recognized application files grouped together, with separate target folders when needed |
 | **MSIX / APPX / Bundle** | `.msix`, `.appx`, `.msixbundle`, `.appxbundle` | [Unencrypted offline packages](docs/25-msix-appx.md), block hash verification, and separate folders for embedded architectures and resource packages |
 | **CAB** | `.cab` | Standard Microsoft CAB 1.3: stored, MSZIP, and LZX, including spanning sets |
 | **ZIP / ZIP64** | `.zip` | Stored, Deflate, and bzip2 |
@@ -78,7 +82,9 @@ To choose an existing output parent folder in PowerShell:
 Start-Process .\Extract.exe -ArgumentList '--output "D:\Unpacked" "D:\Downloads\setup.exe"' -WindowStyle Hidden -Wait
 ```
 
-Use `--quiet` to suppress notifications or `--list <package>` to output a JSON file list without extracting files. See the [full command-line reference](docs/05-build-and-development.md#使用与退出码) for more options and exit codes.
+Use `--layout original` to retain the original logical directory layout, or `--layout compact` to explicitly select the default. Compact installer extraction uses temporary space for both the decoded files and the final copy; original layout avoids that extra copy.
+
+Use `--quiet` to suppress notifications or `--list <package>` to output the original logical file list without extracting files. Final compact paths are planned after nested extraction and recorded in `_extract-report.json`. See the [full command-line reference](docs/05-build-and-development.md#使用与退出码) for more options and exit codes.
 
 ## Development
 

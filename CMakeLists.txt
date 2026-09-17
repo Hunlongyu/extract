@@ -92,6 +92,7 @@ add_library(extract_core STATIC
     src/core/control.cpp
     src/core/package.cpp
     src/core/tree.cpp
+    src/core/layout.cpp
     src/platform/files.cpp
     src/platform/log.cpp
     src/io/output.cpp
@@ -212,6 +213,13 @@ if(BUILD_TESTING)
             --executable "$<TARGET_FILE:Extract>"
             --work-root "${CMAKE_CURRENT_BINARY_DIR}/nsis-fixtures" ${nsis_compiler_args})
         set_tests_properties(nsis_integration PROPERTIES TIMEOUT 600 SKIP_RETURN_CODE 77)
+        if(EXTRACT_NSIS_COMPILER)
+            add_test(NAME layout_integration COMMAND "${Python3_EXECUTABLE}"
+                "${CMAKE_CURRENT_SOURCE_DIR}/tests/layout_integration.py"
+                --executable "$<TARGET_FILE:Extract>"
+                --work-root "${CMAKE_CURRENT_BINARY_DIR}/layout-fixtures" ${nsis_compiler_args})
+            set_tests_properties(layout_integration PROPERTIES TIMEOUT 300 SKIP_RETURN_CODE 77)
+        endif()
         set(nested_compiler_args)
         if(EXTRACT_INNO_COMPILER)
             list(APPEND nested_compiler_args --inno-compiler "${EXTRACT_INNO_COMPILER}")

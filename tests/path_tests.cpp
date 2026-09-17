@@ -38,6 +38,17 @@ int wmain(int count, wchar_t** arguments) {
                 require(entry.id.size() == 255 && entry.original_path == L"same.txt", Status::internal_error, L"长标识原始信息丢失。");
             }
         }
+        {
+            Catalog catalog;
+            Entry entry; entry.id = L"reserved";
+            entry.path = entry.original_path = L"_EXTRACT-script";
+            catalog.files.push_back(entry);
+            plan_paths(catalog);
+            require(catalog.files[0].path == entry.path, Status::internal_error, L"普通格式不应预留 NSIS 元数据目录。");
+            catalog.compiled_script.emplace();
+            plan_paths(catalog);
+            require(catalog.files[0].path.begin()->wstring() == L"_variants", Status::internal_error, L"NSIS 元数据目录的同名文件未避让。");
+        }
         fs::create_directories(root);
         {
             // 稀疏文件仅占少量磁盘块，验证 x86/x64 都能以 64 位偏移读取。
@@ -101,16 +112,51 @@ int wmain(int count, wchar_t** arguments) {
         }
         require(fs::is_empty(root), Status::internal_error, L"可读缓存清理失败。");
         {
+            fs::path staged;
+            fs::path backup;
+            {
+                io::Staging staging;
+                io::Output output(root, L"staged-identity");
+                output.create_file(L"owned.bin").reset();
+                output.create_file(L"replaced.bin").reset();
+                staged = output.commit();
+                backup = staged / L"retained-original.bin";
+                {
+                    platform::Handle file(CreateFileW(platform::extended_path(staged / L"replaced.bin").c_str(), DELETE,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, FILE_FLAG_OPEN_REPARSE_POINT, nullptr));
+                    require(static_cast<bool>(file) && platform::rename_in_place(file.get(), backup.filename().wstring(), false) == ERROR_SUCCESS,
+                        Status::internal_error, L"无法在锁定目录内替换测试文件。");
+                }
+                for (const auto* name : {L"replaced.bin", L"unregistered.bin"}) {
+                    platform::Handle file(CreateFileW(platform::extended_path(staged / name).c_str(), GENERIC_WRITE,
+                        0, nullptr, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, nullptr));
+                    require(static_cast<bool>(file), Status::internal_error, L"无法创建清理身份测试文件。");
+                }
+                staging.finish();
+            }
+            require(!fs::exists(staged / L"owned.bin") && fs::is_regular_file(staged / L"replaced.bin") &&
+                fs::is_regular_file(staged / L"unregistered.bin") && fs::is_regular_file(backup),
+                Status::internal_error, L"暂存清理没有遵守文件身份或删除了未知文件。");
+            fs::remove(staged / L"replaced.bin");
+            fs::remove(staged / L"unregistered.bin");
+            fs::remove(backup);
+            fs::remove(staged);
+        }
+        require(fs::is_empty(root), Status::internal_error, L"暂存身份测试清理失败。");
+        {
             io::Output output(root, L"transient-lock");
             auto file = output.create_file(L"sub/file.txt");
             std::jthread release([file = std::move(file)]() mutable { Sleep(250); file.reset(); });
             const auto committed = output.commit();
             require(fs::is_regular_file(committed / L"sub/file.txt"), Status::internal_error, L"短暂占用后目录提交失败。");
         }
-        std::puts("PASS: unsafe names, traversal, Unicode names, directory locks, cleanup and transient-lock commit.");
+        std::puts("PASS: unsafe names, traversal, Unicode names, directory locks, identity-safe staged cleanup and transient-lock commit.");
         return 0;
     } catch (const Failure& failure) {
         std::fprintf(stderr, "%s\n", platform::utf8(failure.message).c_str());
+        return 1;
+    } catch (const std::exception& error) {
+        std::fprintf(stderr, "%s\n", error.what());
         return 1;
     } catch (...) { return 1; }
 }

@@ -84,6 +84,7 @@ function Check-Content([string]$Name) {
     }
 }
 function Run-App([string[]]$Arguments, [int]$Expected) {
+    if ($Arguments[0] -ne '--open-notification') { $Arguments = @('--layout', 'original') + $Arguments }
     $info = New-Object Diagnostics.ProcessStartInfo
     $info.FileName = $Executable
     $info.Arguments = ($Arguments | ForEach-Object { '"' + ($_ -replace '(\\*)"', '$1$1\"' -replace '(\\+)$', '$1$1') + '"' }) -join ' '

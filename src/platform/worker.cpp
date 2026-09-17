@@ -178,8 +178,8 @@ int worker_entry(std::wstring_view request_value, std::wstring_view response_val
         { View view(MapViewOfFile(request.get(), FILE_MAP_READ, 0, 0, sizeof(header) + header.size));
           std::memcpy(bytes.data(), static_cast<const std::byte*>(view.data) + sizeof(header), bytes.size()); }
         Reader data{bytes};
-        const auto input = data.text(), output = data.text(); const auto list = data.number(); data.end();
-        require(list <= 1, Status::corrupt, L"工作请求类型无效。");
+        const auto input = data.text(), output = data.text(); const auto list = data.number(), layout = data.number(); data.end();
+        require(list <= 1 && layout <= static_cast<unsigned>(Layout::original), Status::corrupt, L"工作请求类型无效。");
         request.reset();
         const fs::path input_path(input);
         log::Scope step(L"input.process", &input_path);
@@ -188,8 +188,12 @@ int worker_entry(std::wstring_view request_value, std::wstring_view response_val
         control::checkpoint();
         auto package = open_package(input_path);
         ExtractionResult result;
-        if (list) send_text(response.get(), Type::text, catalog_json(package->catalog(), false));
-        else result = extract_tree(std::move(package), fs::path(output));
+        if (list) {
+            auto catalog = package->catalog();
+            catalog.requested_layout = layout == static_cast<unsigned>(Layout::compact) ? L"compact" : L"original";
+            if (layout == static_cast<unsigned>(Layout::compact)) catalog.notes.push_back(L"清单保留原始逻辑目录；精简输出映射在静态提取及内层检查后确定。");
+            send_text(response.get(), Type::text, catalog_json(catalog, false));
+        } else result = extract_tree(std::move(package), fs::path(output), static_cast<Layout>(layout));
         send_text(response.get(), Type::details, result.details);
         Writer complete; complete.number(result.complete); complete.text(result.output.native()); complete.text(result.primary_output.native());
         complete.number(result.total_bytes); complete.number(result.file_count); send(response.get(), Type::complete, complete);
@@ -209,9 +213,9 @@ int worker_entry(std::wstring_view request_value, std::wstring_view response_val
 }
 
 ExtractionResult run_worker(const fs::path& input, const fs::path& output, bool list,
-    HANDLE cancel, std::uint64_t timeout_seconds, progress::Observer* observer) {
+    HANDLE cancel, std::uint64_t timeout_seconds, progress::Observer* observer, Layout layout) {
     SECURITY_ATTRIBUTES security{sizeof(security), nullptr, TRUE};
-    Writer request; request.text(input.native()); request.text(output.native()); request.number(list);
+    Writer request; request.text(input.native()); request.text(output.native()); request.number(list); request.number(static_cast<unsigned>(layout));
     require(request.bytes.size() <= frame_limit, Status::limit_exceeded, L"工作请求路径过长。");
     Handle request_read(CreateFileMappingW(INVALID_HANDLE_VALUE, &security, PAGE_READWRITE, 0,
         static_cast<DWORD>(sizeof(Header) + request.bytes.size()), nullptr));

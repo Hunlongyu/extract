@@ -19,10 +19,11 @@ namespace {
 
 constexpr std::wstring_view usage =
     L"Extract：Windows 安装包解包工具\r\n"
-    L"用法：Extract.exe [--list] [--quiet] [--output <父目录>] [--timeout <秒>] [--] <安装包路径...>\r\n"
+    L"用法：Extract.exe [--list] [--quiet] [--layout compact|original] [--output <父目录>] [--timeout <秒>] [--] <安装包路径...>\r\n"
     L"支持 MSI 内嵌/外置多 CAB 与松散文件、标准 CAB、WiX Burn、ZIP/7z 及其 PE 自解压外壳、NSIS Unicode 3.x／部分 ANSI 2.x、受支持版本的 Inno Setup、Velopack/Squirrel 完整离线包，以及未加密 MSIX/APPX/Bundle。\r\n"
     L"提取时自动展开识别到的内嵌安装包；内层未完成则报告部分完成。\r\n"
     L"--list 只列出一个包的清单，已验证的编译器版本见 README。\r\n"
+    L"--layout 默认 compact：精简安装包目录；original 保留原始逻辑布局。普通归档保持包内结构。\r\n"
     L"--timeout 为每个输入包的时限，0 表示关闭（默认）；取消会停止整个批次。\r\n"
     L"其它命令：--cancel <任务 GUID>、--cancel-last、--help、--version、--open-last-result、--repair-notifications、--unregister-notifications。\r\n";
 
@@ -70,6 +71,8 @@ int run() {
     bool quiet = false;
     bool output_specified = false;
     bool timeout_specified = false;
+    bool layout_specified = false;
+    extract::Layout layout = extract::Layout::compact;
     std::uint64_t timeout_seconds = 0;
     extract::fs::path output_parent;
     std::vector<extract::fs::path> inputs;
@@ -81,6 +84,14 @@ int run() {
         }
         if (accept_options && argument == L"--list") { list_only = true; continue; }
         if (accept_options && argument == L"--quiet") { quiet = true; continue; }
+        if (accept_options && argument == L"--layout") {
+            if (++index >= count || layout_specified) { extract::platform::write_diagnostic(L"--layout 需要 compact 或 original，且只能指定一次。\r\n", true); return ERROR_BAD_ARGUMENTS; }
+            const std::wstring_view value(arguments.get()[index]);
+            if (value == L"compact") layout = extract::Layout::compact;
+            else if (value == L"original") layout = extract::Layout::original;
+            else { extract::platform::write_diagnostic(L"--layout 只支持 compact 或 original。\r\n", true); return ERROR_BAD_ARGUMENTS; }
+            layout_specified = true; continue;
+        }
         if (accept_options && argument == L"--timeout") {
             if (++index >= count || timeout_specified) { extract::platform::write_diagnostic(L"--timeout 需要非负整数秒，且只能指定一次。\r\n", true); return ERROR_BAD_ARGUMENTS; }
             const std::wstring_view value(arguments.get()[index]);
@@ -139,7 +150,7 @@ int run() {
             if (record) try { record->update(summary + L"正在处理：" + input.wstring() + L"\r\n"); }
                 catch (const extract::Failure& failure) { extract::log::failure(L"job.save_failed", failure); }
             const auto result = extract::platform::run_worker(input, output_parent, list_only,
-                record ? record->cancel_event() : nullptr, timeout_seconds, report_progress ? &progress_notification : nullptr);
+                record ? record->cancel_event() : nullptr, timeout_seconds, report_progress ? &progress_notification : nullptr, layout);
             bool complete = true;
             if (!list_only) {
                 complete = result.complete;
@@ -192,13 +203,13 @@ int run() {
         if (!quiet) {
             std::wstring title, body;
             if (inputs.size() == 1) {
-                title = std::wstring(cancelled ? L"已取消 · " : succeeded == 1 ? L"已完成 · " : partial == 1 ? L"部分完成 · " : L"失败 · ")
+                title = std::wstring(cancelled ? L"已取消 · " : succeeded == 1 ? L"文件提取完成 · " : partial == 1 ? L"部分完成 · " : L"失败 · ")
                     + inputs.front().filename().wstring();
                 if (succeeded == 1) body = L"输出：" + single_output.wstring();
                 else if (partial == 1) body = L"已保留部分文件。输出：" + single_output.wstring();
                 else body = L"原因：" + failure_reason;
             } else {
-                title = cancelled ? L"批量任务已取消" : first_error == ERROR_SUCCESS ? L"批量处理已完成" : L"批量处理存在未完成项";
+                title = cancelled ? L"批量任务已取消" : first_error == ERROR_SUCCESS ? L"批量文件提取完成" : L"批量处理存在未完成项";
                 body = L"完成 " + std::to_wstring(succeeded) + L" 个，部分完成 " + std::to_wstring(partial)
                     + L" 个，失败 " + std::to_wstring(input_index - succeeded - partial - cancelled_inputs) + L" 个。\n"
                     + inputs[0].filename().wstring() + L"、" + inputs[1].filename().wstring()

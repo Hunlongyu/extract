@@ -81,7 +81,7 @@ SectionEnd
         target = root / ('result-' + uuid.uuid4().hex)
         target.mkdir()
         digest = hashlib.sha256(path.read_bytes()).digest()
-        result = subprocess.run([str(executable), '--quiet', '--output', str(target), str(path)],
+        result = subprocess.run([str(executable), '--quiet', '--layout', 'original', '--output', str(target), str(path)],
                                 capture_output=True, timeout=timeout, env=environment)
         check(result.returncode == code, f'{path.name}: expected {code}, got {result.returncode}: {result.stderr!r}')
         check(not list(cache.iterdir()), 'temporary cache residue')
@@ -124,12 +124,13 @@ SectionEnd
 ''', makensis, '.nsi')
     check(uninstaller.is_file(), 'compiler did not provide an uninstaller')
 
-    def auxiliary_wrapper(name, child=inner, unknown_payload=False, fake=False, app_aux=False):
+    def auxiliary_wrapper(name, child=inner, unknown_payload=False, fake=False, app_aux=False, shell_aux=False):
         auxiliary = root / 'ordinary.exe' if fake else uninstaller
         body = f'''SetOutPath "$PLUGINSDIR"
 File /oname=inner.exe "{child}"
 '''
-        body += 'SetOutPath "$INSTDIR"\n' if app_aux else 'ReadRegStr $OUTDIR HKCU "Software\\ExtractFixture" "UnknownDir"\n'
+        body += ('SetOutPath "$APPDATA\\ExtractFixture"\n' if shell_aux else
+                 'SetOutPath "$INSTDIR"\n' if app_aux else 'ReadRegStr $OUTDIR HKCU "Software\\ExtractFixture" "UnknownDir"\n')
         body += f'File /oname={"Uninstall.exe" if fake else "auxiliary.exe"} "{auxiliary}"\n'
         if unknown_payload:
             body += f'File /oname=application.exe "{root / "ordinary.exe"}"\n'
@@ -158,6 +159,9 @@ Section
     output, data, text = run(auxiliary_wrapper('known-uninstaller-directory', app_aux=True))
     child = next(p for p in data['nestedPackages'] if p['format'] == 'Inno Setup')
     check(str(output / child['output'] / 'app') in text.splitlines()[0], 'auxiliary-only app directory must not override application output')
+    output, data, text = run(auxiliary_wrapper('shell-uninstaller-directory', shell_aux=True))
+    child = next(p for p in data['nestedPackages'] if p['format'] == 'Inno Setup')
+    check(str(output / child['output'] / 'app') in text.splitlines()[0], 'auxiliary-only shell directory must not hide the actual application')
     _, data, _ = run(nsis('nested-optional-uninstaller', [('child.exe', optional_outer)]))
     check(data['nestedPackages'][0]['status'] == 'complete', 'auxiliary-only path status must propagate success')
 

@@ -130,7 +130,7 @@ def main():
     def run(arguments, expected=0):
         nonlocal run_count
         run_count += 1
-        result = subprocess.run([str(executable), '--quiet', *map(str, arguments)], capture_output=True, timeout=30)
+        result = subprocess.run([str(executable), '--quiet', '--layout', 'original', *map(str, arguments)], capture_output=True, timeout=30)
         stdout = result.stdout.decode('utf-8', errors='strict')
         stderr = result.stderr.decode('utf-8', errors='strict')
         check(result.returncode == expected, f'{arguments}: expected {expected}, got {result.returncode}\n{stdout}\n{stderr}')

@@ -14,6 +14,7 @@
 
 namespace extract {
 namespace fs = std::filesystem;
+enum class Layout { compact, original };
 
 enum class Status { unsupported, corrupt, io_error, unsafe_path, limit_exceeded, internal_error, cancelled, timeout, worker_crashed };
 
@@ -48,12 +49,16 @@ struct Entry {
     bool block_hash_verified = false;
     bool path_resolved = true;
     bool is_uninstaller = false;
+    std::wstring package_id;
 };
 
 struct Catalog {
     std::wstring format = L"MSI";
     std::wstring format_version;
     fs::path input;
+    std::wstring layout = L"static logical directories";
+    std::wstring requested_layout = L"original";
+    std::wstring path_base = L"report-directory";
     std::wstring cabinet;
     std::vector<Entry> files;
     std::uint64_t total_size = 0;
@@ -67,6 +72,7 @@ struct Catalog {
         std::wstring format;
         std::wstring status;
         std::wstring message;
+        fs::path report;
     };
     std::vector<Nested> nested_packages;
     bool nested_scanned = false;
@@ -74,6 +80,29 @@ struct Catalog {
     std::uint64_t tree_total_bytes = 0;
     std::size_t tree_file_count = 0;
     std::vector<std::wstring> notes;
+    // Static observations only: instruction order is not a simulated execution trace.
+    struct RuntimeAction {
+        std::size_t instruction = 0;
+        std::wstring kind;
+        std::wstring target;
+        bool target_resolved = false;
+        bool waits = false;
+        bool recursive = false;
+    };
+    std::vector<RuntimeAction> runtime_actions;
+    std::wstring runtime_notice;
+    struct CompiledScript {
+        fs::path text_path = L"_extract-script/nsis-script.txt";
+        fs::path metadata_path = L"_extract-script/nsis-header.bin";
+        std::size_t instruction_count = 0;
+        std::uint64_t metadata_size = 0;
+        std::wstring metadata_sha256;
+        std::uint64_t text_size = 0;
+        std::wstring text_sha256;
+    };
+    std::optional<CompiledScript> compiled_script;
+    bool keep_output_root = false;
+    bool has_multiple_destinations() const;
     bool required_paths_resolved() const;
 };
 

@@ -99,7 +99,7 @@ def main():
         path = root / name
         path.write_bytes(data)
         output = root / ('output-' + uuid.uuid4().hex); output.mkdir()
-        process = subprocess.run([exe, '--quiet', '--output', output, path],
+        process = subprocess.run([exe, '--quiet', '--layout', 'original', '--output', output, path],
                                  capture_output=True, timeout=120, env=environment)
         check(process.returncode == code, f'{name}: expected {code}, got {process.returncode}: {process.stderr!r}')
         check(path.read_bytes() == data, f'{name}: input changed')

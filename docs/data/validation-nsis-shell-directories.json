@@ -1,0 +1,52 @@
+{
+  "input": "ReNamerPro_7.10.0.0.exe",
+  "inputSha256": "a49b423a0060de8c2418f36742ccd6e2ce7a1819dc58b8a0fe7bda4c82e7d1bf",
+  "format": "NSIS 3.12",
+  "fileCount": 49,
+  "totalBytes": 7344478,
+  "originalPayloadBytesMatched": 49,
+  "runtimeActions": 13,
+  "actualSystemLocationsUnchanged": true,
+  "installerOrPayloadExecuted": false,
+  "outputRoots": [
+    "AppData/Roaming",
+    "Public/Documents"
+  ],
+  "executableSha256": "1588059e02bc7a20dbe6ddaca16abb52e3d8d72589bbe0f692dbc80bdccab66e",
+  "verification": "Static extraction and byte-for-byte comparison against all original NSIS file payloads; no installer or extracted application executed.",
+  "criticalFiles": [
+    {
+      "path": "AppData/Roaming/ReNamerPro_mefcl/ReNamer.exe",
+      "size": 6779392,
+      "sha256": "0c981eee85dad90525a0b2ec79c45d1abada258feb7a8d0df43507098f2f6651"
+    },
+    {
+      "path": "Public/Documents/den4b/ReNamer/License.key",
+      "size": 54,
+      "sha256": "d5739863c9dd250811b2b2c25fa394e50406665ca148740bdf67083502528e67"
+    }
+  ],
+  "finalBuilds": [
+    {
+      "architecture": "x64",
+      "exeSha256": "b34e1aab666e7226a7a718797e33d615b2fb77323684ccda2f3d647506f0a6f5",
+      "originalPayloadBytesMatched": 49,
+      "nsisFixtureInvocations": 155
+    },
+    {
+      "architecture": "x86",
+      "exeSha256": "6e5af9247c903b9e0d80336fba9dbdea07b4c6eee058a8df095c76c3f490c2db",
+      "originalPayloadBytesMatched": 49,
+      "nsisFixtureInvocations": 155
+    }
+  ],
+  "regression": {
+    "x64FullSuitePassed": 14,
+    "x64FullSuiteTotal": 14,
+    "x64FinalNsisRetestPassed": true,
+    "x86FocusedPassed": [
+      "path_policy",
+      "nsis_integration"
+    ]
+  }
+}

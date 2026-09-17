@@ -1,6 +1,6 @@
 # 构建与开发
 
-更新日期：2026-09-07。适用于 v0.7.0 及发布后的本地开发版。
+更新日期：2026-09-16。适用于 v0.8.1 及发布后的本地开发版。
 
 ## 工具链与构建
 
@@ -27,7 +27,7 @@ NSIS 测试使用官方 `makensis.exe` 生成惰性包，参数示例：
 
 此参数存入 `EXTRACT_NSIS_COMPILER` CMake 缓存；未指定时测试查找 `Program Files (x86)/NSIS/Bin/makensis.exe`。缺少编译器时对应 CTest 标记 skipped，不代表格式回归通过。编译器与测试样本不随产品分发。
 
-归档测试另外使用已核对来源的官方 LZMA SDK `7zr.exe`，生成已知内容的 7z 和 SFX 数据。通过 `-SevenZipTestTool` 设置 `EXTRACT_7Z_TEST_TOOL` 后添加 `archive_integration`；未提供时该项不注册，不能算完整归档回归。当前工具齐备时共 14 项 CTest，包含 CAB/Burn、日志、大包、进度、工作进程、更新包、MSIX 及分卷回归：
+归档测试另外使用已核对来源的官方 LZMA SDK `7zr.exe`，生成已知内容的 7z 和 SFX 数据。通过 `-SevenZipTestTool` 设置 `EXTRACT_7Z_TEST_TOOL` 后添加 `archive_integration`；未提供时该项不注册，不能算完整归档回归。当前工具齐备时共 15 项 CTest，包含 CAB/Burn、日志、大包、进度、工作进程、更新包、MSIX、分卷及精简布局回归：
 
 ```powershell
 .\scripts\build.ps1 -Configuration Release -Test -Install `
@@ -66,9 +66,9 @@ python tests/inno_integration.py --executable out/build/win-x64-release/bin/Extr
 
 ## 使用与退出码
 
-v0.8.1 增加 [工作进程、取消和超时](22-worker-cancellation.md)、[Velopack/Squirrel 完整包](24-update-packages.md)和 [MSIX/APPX/Bundle](25-msix-appx.md)，工具齐备时 CTest 共 14 项。`update_package_integration` 使用 Python 生成无入口点的惰性 PE/ZIP，不联网、不执行样本；官方固定摘要样本另做可选本地验证。
+v0.8.1 增加 [工作进程、取消和超时](22-worker-cancellation.md)、[Velopack/Squirrel 完整包](24-update-packages.md)和 [MSIX/APPX/Bundle](25-msix-appx.md)，当时 CTest 共 14 项；本地开发版增加[精简布局](28-compact-layout.md)回归后共 15 项。`update_package_integration` 使用 Python 生成无入口点的惰性 PE/ZIP，不联网、不执行样本；官方固定摘要样本另做可选本地验证。
 
-`msix_integration` 查找 Windows SDK 最新版本目录中的 `x64/MakeAppx.exe`，生成已知内容的单包、资源包和 Bundle；用 Python 独立 ZIP 读取及打包前内容核对提取结果，并运行损坏、缺失、路径与哈希反例。缺少 SDK 打包器返回 77，发布工作流要求 14 项均通过且无跳过。MakeAppx 仅为测试工具，不链接或附带到产品，不运行包内程序。
+`msix_integration` 查找 Windows SDK 最新版本目录中的 `x64/MakeAppx.exe`，生成已知内容的单包、资源包和 Bundle；用 Python 独立 ZIP 读取及打包前内容核对提取结果，并运行损坏、缺失、路径与哈希反例。缺少 SDK 打包器返回 77，发布工作流要求 15 项均通过且无跳过。MakeAppx 仅为测试工具，不链接或附带到产品，不运行包内程序。
 
 GUI 子系统程序不创建控制台。Explorer 拖拽会把路径作为启动参数传入；终端场景复用父控制台或重定向输出。命令行自动化必须等待程序退出。
 
@@ -83,6 +83,7 @@ $process.ExitCode
 | --- | --- |
 | `<安装包路径...>` | 顺序处理，输出在源文件旁，结束后提交通知 |
 | `--output <父目录> <安装包路径...>` | 使用已存在的本地父目录 |
+| `--layout compact\|original <安装包路径...>` | 默认 compact 精简布局；original 保留原有逻辑目录与嵌套输出。无值、重复或未知值返回 160 |
 | `--list <一个安装包>` | 输出 JSON 清单和详细过程日志，不生成提取结果或 jobs 任务摘要；Inno 检查元数据，NSIS 检查包 CRC 并解码载荷计算大小，Solid 使用自动清理的磁盘缓存；不声称完成逐文件哈希核对 |
 | `--quiet <安装包路径...>` | 提取及记录日志，但不注册/发送通知 |
 | `--timeout <秒> <安装包路径...>` | 每个输入包的总处理时限；默认 0，不限时；到期停止当前输入并继续批次 |
@@ -92,7 +93,7 @@ $process.ExitCode
 | `--unregister-notifications` | 清理本程序快捷方式、协议与 AUMID 注册和通知历史，保留任务记录 |
 | `--help` / `--version` | 输出使用说明 / 版本 |
 
-`--` 之后的参数只按文件路径处理。`--list` 不接受多文件或 `--output`。
+`--` 之后的参数只按文件路径处理。`--list` 不接受多文件或 `--output`；它始终列出原始逻辑路径，`requestedLayout` 记录所选布局，精简后的路径须以提取报告为准。独立 ZIP/7z 和 MSIX/APPX 不整理目录。`layout_integration` 使用官方 NSIS 编译器生成惰性样本，验证精简/原始布局、嵌套与架构、歧义回退、脚本报告、取消和强制终止清理。
 
 | 退出码 | 含义 |
 | --- | --- |
@@ -118,6 +119,7 @@ $process.ExitCode
 | `src/app/main.cpp` | 宽字符参数、逐文件任务、批次状态 |
 | `src/core/types.*` | 文件清单、预算、错误与 JSON 报告 |
 | `src/core/package.*` | 格式入口、共享同名与前缀冲突规划 |
+| `src/core/layout.*` | 根据全部提取层规划精简目录、复制复核、映射报告和脚本记录 |
 | `src/formats/msi.*` | 只读数据库、表关联、目录与媒体规划 |
 | `src/formats/cab.*` | 独立标准 CAB、PE 附加区 CAB、共享路径规划 |
 | `src/formats/burn.*` | Burn 版本 2、XML 清单、容器和载荷映射、外置来源与哈希 |

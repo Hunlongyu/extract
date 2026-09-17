@@ -37,7 +37,7 @@ def main():
     def run(package, expected=0, message=None):
         inputs = {f.name: hashlib.sha256(f.read_bytes()).hexdigest() for f in package.parent.iterdir() if f.is_file()}
         output = root / ('output-' + uuid.uuid4().hex); output.mkdir()
-        r = subprocess.run([exe, '--quiet', '--output', output, package], capture_output=True, env=env, timeout=120)
+        r = subprocess.run([exe, '--quiet', '--layout', 'original', '--output', output, package], capture_output=True, env=env, timeout=120)
         check(r.returncode == expected, f'{package}: expected {expected}, got {r.returncode}: {r.stdout!r} {r.stderr!r}')
         if message: check(message in (r.stdout + r.stderr).decode('utf-8'), f'{package}: missing {message}')
         check(not list(cache.iterdir()), 'cache leaked')

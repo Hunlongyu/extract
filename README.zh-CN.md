@@ -37,11 +37,15 @@ Extract 是一款轻量的 Windows 安装包解包工具。将一个或多个安
 2. 选中一个或多个安装包，拖到 **`Extract.exe` 的图标上**。
 3. 在结果通知中，单个安装包成功时点击 **打开文件夹**；批量处理、部分完成或失败时点击 **查看结果**。点击通知正文也可打开同一位置。
 
-文件默认保存在**安装包旁边**，目录名为 `<安装包名称>_extracted`。已有同名目录时，自动添加 ` (2)`、` (3)` 等后缀，保留已有结果。内层包与其提取出的子目录也会一并保留。
+文件默认保存在**安装包旁边**，目录名为 `<安装包名称>_extracted`。已有同名目录时，自动添加 ` (2)`、` (3)` 等后缀，保留已有结果。默认使用**精简布局**：明确识别的应用提升到结果根目录，保留程序内部目录；附加文件归入 `_extra`，多个应用或架构分别保存。内层包及其文件都会保留。存在歧义时保留相对结构，独立 ZIP / 7z 和 MSIX / APPX 保持包内层级。详见[目录布局规则](docs/28-compact-layout.md)。
 
 耗时任务会显示当前包与处理阶段。进度条按当前包已写入的文件字节计数；准备等阶段显示活动状态和已处理字节，不估算百分比。内层包单独计数。结束后，同一条通知显示包名与结果，不再另弹完成提醒；短任务只显示结果。横幅收起后，可在通知中心继续查看。点击进度通知中的 **取消任务**，可停止当前包及批次中剩余的包，已完成的输出会保留。
 
 **部分完成**表示已保留提取出的文件，但仍有内容缺失、目录未能还原，或内层包处理失败，具体原因可查看任务记录。没有收到通知时，可运行 `Extract.exe --open-last-result` 打开最近结果。
+
+**文件提取完成**不代表已经还原原包的运行环境。NSIS 系统目录记录为 `AppData/Roaming`、`Public/Documents` 等逻辑位置，不写入本机实际位置；精简布局在报告中保存实际文件与原路径的对应关系，原始布局直接保留逻辑目录。无法确定用户上下文时保留到 `_unresolved` 并提示部分完成。原包的启动、等待和清理操作记录在提取报告中，不会执行。详见[目录与外壳行为说明](docs/27-nsis-shell-directories.md)。
+
+NSIS 解包还会保存 `_extract-script/nsis-script.txt`（全部编译指令、参数及原始字符串表）和同目录的 `nsis-header.bin`（原样保留的解压后元数据）。精简布局将内层包的脚本与报告集中到 `_extract-packages`。它们是静态记录，不是恢复出的原始 `.nsi` 源码，不会执行；路径和哈希记录在各层提取报告的 `compiledScript` 中。
 
 > 依赖驱动、服务、注册表或额外运行库的应用，解包后仍可能需要安装才能运行。
 
@@ -53,7 +57,7 @@ Extract 是一款轻量的 Windows 安装包解包工具。将一个或多个安
 | **NSIS** | `.exe` | 已验证的 Unicode 3.x 与部分 [ANSI 2.x 布局](docs/21-nsis-ansi-compatibility.md)、普通与固实压缩、部分 Electron / Tauri 封装；已识别的架构分支按目录分别保留 |
 | **Windows Installer** | `.msi` | 内嵌、外置或混合 CAB 卷链及跨卷文件、松散文件及混合源布局 |
 | **WiX Burn** | `.exe` | 布局 2 的 CAB 容器，支持 v3 / v4 清单及内嵌或本地外置载荷 |
-| **Velopack / Squirrel.Windows** | `.exe`、`*-full.nupkg` | [已验证的离线布局](docs/24-update-packages.md)，应用文件集中到 `app`；多个目标分别保留目录 |
+| **Velopack / Squirrel.Windows** | `.exe`、`*-full.nupkg` | [已验证的离线布局](docs/24-update-packages.md)，已识别应用文件集中保存；多个目标分别保留目录 |
 | **MSIX / APPX / Bundle** | `.msix`、`.appx`、`.msixbundle`、`.appxbundle` | [未加密离线包](docs/25-msix-appx.md)，校验块哈希，内嵌架构与资源包分目录展开 |
 | **CAB** | `.cab` | 标准 Microsoft CAB 1.3：无压缩、MSZIP、LZX，支持跨卷续接 |
 | **ZIP / ZIP64** | `.zip` | 无压缩、Deflate、bzip2 |
@@ -78,7 +82,9 @@ MSIX / APPX 解包保留清单、资源和原始 `VFS` 目录，不执行部署�
 Start-Process .\Extract.exe -ArgumentList '--output "D:\Unpacked" "D:\Downloads\setup.exe"' -WindowStyle Hidden -Wait
 ```
 
-使用 `--quiet` 关闭通知，或用 `--list <安装包>` 输出 JSON 文件清单而不提取文件。更多参数和退出码见[完整命令行说明](docs/05-build-and-development.md#使用与退出码)。
+使用 `--layout original` 保留原始逻辑目录，或用 `--layout compact` 显式选择默认的精简布局。精简安装包目录时，暂存文件与最终副本会同时占用磁盘；原始布局可省去这一次复制。
+
+使用 `--quiet` 关闭通知，或用 `--list <安装包>` 输出原始逻辑文件清单而不提取文件。最终精简路径在嵌套提取后确定，记录在 `_extract-report.json` 中。更多参数和退出码见[完整命令行说明](docs/05-build-and-development.md#使用与退出码)。
 
 ## 开发
 

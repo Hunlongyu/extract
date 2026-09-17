@@ -1,0 +1,347 @@
+{
+  "date": "2026-09-16",
+  "releasePublished": false,
+  "installerOrPayloadExecuted": false,
+  "x64": {
+    "latestResults": {
+      "path_policy": "passed",
+      "msi_integration": "passed",
+      "msix_integration": "passed",
+      "update_package_integration": "passed",
+      "worker_integration": "passed",
+      "progress_integration": "passed",
+      "large_integration": "passed",
+      "log_integration": "passed",
+      "cab_burn_integration": "passed",
+      "volume_integration": "passed",
+      "inno_integration": "passed",
+      "nsis_integration": "passed",
+      "layout_integration": "passed",
+      "nested_integration": "passed",
+      "archive_integration": "passed"
+    },
+    "uniqueTestsPassed": 15,
+    "runs": [
+      {
+        "report": "out/build/win-x64-release/compact-full-tests.xml",
+        "tests": 15,
+        "failures": 3,
+        "skipped": 0
+      },
+      {
+        "report": "out/build/win-x64-release/compact-retested-tests.xml",
+        "tests": 3,
+        "failures": 0,
+        "skipped": 0
+      },
+      {
+        "report": "out/build/win-x64-release/compact-final-tests.xml",
+        "tests": 3,
+        "failures": 0,
+        "skipped": 0
+      }
+    ],
+    "layoutCaseCount": 18,
+    "layoutCases": [
+      {
+        "input": "single-app.exe",
+        "layout": "default",
+        "files": 3,
+        "status": "complete"
+      },
+      {
+        "input": "single-app.exe",
+        "layout": "original",
+        "files": 3,
+        "status": "complete"
+      },
+      {
+        "input": "single-app.exe",
+        "layout": "compact",
+        "files": 3,
+        "status": "complete"
+      },
+      {
+        "input": "shell-wrapper.exe",
+        "layout": "default",
+        "files": 3,
+        "status": "complete"
+      },
+      {
+        "input": "ambiguous.exe",
+        "layout": "default",
+        "files": 2,
+        "status": "complete"
+      },
+      {
+        "input": "unknown.exe",
+        "layout": "default",
+        "files": 4,
+        "status": "partial"
+      },
+      {
+        "input": "reserved.exe",
+        "layout": "default",
+        "files": 4,
+        "status": "complete"
+      },
+      {
+        "input": "outer.exe",
+        "layout": "default",
+        "files": 5,
+        "status": "complete"
+      },
+      {
+        "input": "multiple.exe",
+        "layout": "default",
+        "files": 8,
+        "status": "complete"
+      },
+      {
+        "input": "duplicate.exe",
+        "layout": "default",
+        "files": 5,
+        "status": "complete"
+      },
+      {
+        "input": "inner.zip",
+        "layout": "default",
+        "files": 2,
+        "status": "complete"
+      },
+      {
+        "input": "archive-wrapper.exe",
+        "layout": "default",
+        "files": 3,
+        "status": "complete"
+      },
+      {
+        "input": "resource-wrapper.exe",
+        "layout": "default",
+        "files": 4,
+        "status": "complete"
+      },
+      {
+        "input": "dual-architecture.exe",
+        "layout": "default",
+        "files": 4,
+        "status": "complete"
+      },
+      {
+        "input": "single-app.exe",
+        "layout": "default",
+        "files": 3,
+        "status": "complete"
+      },
+      {
+        "input": "single-app.exe",
+        "layout": "default",
+        "files": 3,
+        "status": "complete"
+      },
+      {
+        "interrupt": "cancel",
+        "stage": "compact finalization",
+        "cleanup": true
+      },
+      {
+        "interrupt": "crash",
+        "stage": "compact finalization",
+        "cleanup": true
+      }
+    ],
+    "executableSha256": "597a04ca778a644cd512b2e68ceaefe7fbfe6161448b633369bcc752c275b6d8",
+    "releaseStaticCrtVerified": true
+  },
+  "x86": {
+    "latestResults": {
+      "path_policy": "passed",
+      "msi_integration": "passed",
+      "worker_integration": "passed",
+      "progress_integration": "passed",
+      "nsis_integration": "passed",
+      "layout_integration": "passed"
+    },
+    "uniqueTestsPassed": 6,
+    "runs": [
+      {
+        "report": "out/build/win-x86-release/compact-focused-tests.xml",
+        "tests": 6,
+        "failures": 0,
+        "skipped": 0
+      },
+      {
+        "report": "out/build/win-x86-release/compact-final-tests.xml",
+        "tests": 1,
+        "failures": 0,
+        "skipped": 0
+      }
+    ],
+    "layoutCaseCount": 18,
+    "layoutCases": [
+      {
+        "input": "single-app.exe",
+        "layout": "default",
+        "files": 3,
+        "status": "complete"
+      },
+      {
+        "input": "single-app.exe",
+        "layout": "original",
+        "files": 3,
+        "status": "complete"
+      },
+      {
+        "input": "single-app.exe",
+        "layout": "compact",
+        "files": 3,
+        "status": "complete"
+      },
+      {
+        "input": "shell-wrapper.exe",
+        "layout": "default",
+        "files": 3,
+        "status": "complete"
+      },
+      {
+        "input": "ambiguous.exe",
+        "layout": "default",
+        "files": 2,
+        "status": "complete"
+      },
+      {
+        "input": "unknown.exe",
+        "layout": "default",
+        "files": 4,
+        "status": "partial"
+      },
+      {
+        "input": "reserved.exe",
+        "layout": "default",
+        "files": 4,
+        "status": "complete"
+      },
+      {
+        "input": "outer.exe",
+        "layout": "default",
+        "files": 5,
+        "status": "complete"
+      },
+      {
+        "input": "multiple.exe",
+        "layout": "default",
+        "files": 8,
+        "status": "complete"
+      },
+      {
+        "input": "duplicate.exe",
+        "layout": "default",
+        "files": 5,
+        "status": "complete"
+      },
+      {
+        "input": "inner.zip",
+        "layout": "default",
+        "files": 2,
+        "status": "complete"
+      },
+      {
+        "input": "archive-wrapper.exe",
+        "layout": "default",
+        "files": 3,
+        "status": "complete"
+      },
+      {
+        "input": "resource-wrapper.exe",
+        "layout": "default",
+        "files": 4,
+        "status": "complete"
+      },
+      {
+        "input": "dual-architecture.exe",
+        "layout": "default",
+        "files": 4,
+        "status": "complete"
+      },
+      {
+        "input": "single-app.exe",
+        "layout": "default",
+        "files": 3,
+        "status": "complete"
+      },
+      {
+        "input": "single-app.exe",
+        "layout": "default",
+        "files": 3,
+        "status": "complete"
+      },
+      {
+        "interrupt": "cancel",
+        "stage": "compact finalization",
+        "cleanup": true
+      },
+      {
+        "interrupt": "crash",
+        "stage": "compact finalization",
+        "cleanup": true
+      }
+    ],
+    "executableSha256": "5be0398b926d66e96b52a2740437929abe2401db2e3251116d182d1348601e08",
+    "releaseStaticCrtVerified": true
+  },
+  "note": "Initial x64 run exposed three outdated test assumptions; all three passed after fixture corrections. Final resource-only wrapper adjustment passed targeted layout regressions on both architectures.",
+  "realSample": {
+    "x64": {
+      "input": "ReNamerPro_7.10.0.0.exe",
+      "inputSha256": "a49b423a0060de8c2418f36742ccd6e2ce7a1819dc58b8a0fe7bda4c82e7d1bf",
+      "executableSha256": "597a04ca778a644cd512b2e68ceaefe7fbfe6161448b633369bcc752c275b6d8",
+      "output": "out/compact-final/x64/ReNamerPro_7.10.0.0_extracted",
+      "layout": "compact",
+      "fileCount": 49,
+      "payloadBytes": 7344478,
+      "compiledScript": {
+        "kind": "NSIS static instruction listing",
+        "isOriginalSource": false,
+        "instructionCount": 131,
+        "textPath": "_extract-script/nsis-script.txt",
+        "textBytes": 20445,
+        "textSha256": "39a963ab87edc365095345e9e9faccb426cb338e56053d52413eeaaf2c09ff72",
+        "metadataPath": "_extract-script/nsis-header.bin",
+        "metadataBytes": 9734,
+        "metadataSha256": "aca7a599b52c53488afe6a6c32e58530be8bdad6f70f0af94e23b70f30dc0cf6"
+      },
+      "originalMetadataBytesMatched": 9734,
+      "originalInstructionsMatched": 131,
+      "originalPayloadsMatched": 49,
+      "actualSystemLocationsUnchanged": true,
+      "installerOrPayloadExecuted": false
+    },
+    "x86": {
+      "input": "ReNamerPro_7.10.0.0.exe",
+      "inputSha256": "a49b423a0060de8c2418f36742ccd6e2ce7a1819dc58b8a0fe7bda4c82e7d1bf",
+      "executableSha256": "5be0398b926d66e96b52a2740437929abe2401db2e3251116d182d1348601e08",
+      "output": "out/compact-final/x86/ReNamerPro_7.10.0.0_extracted",
+      "layout": "compact",
+      "fileCount": 49,
+      "payloadBytes": 7344478,
+      "compiledScript": {
+        "kind": "NSIS static instruction listing",
+        "isOriginalSource": false,
+        "instructionCount": 131,
+        "textPath": "_extract-script/nsis-script.txt",
+        "textBytes": 20445,
+        "textSha256": "39a963ab87edc365095345e9e9faccb426cb338e56053d52413eeaaf2c09ff72",
+        "metadataPath": "_extract-script/nsis-header.bin",
+        "metadataBytes": 9734,
+        "metadataSha256": "aca7a599b52c53488afe6a6c32e58530be8bdad6f70f0af94e23b70f30dc0cf6"
+      },
+      "originalMetadataBytesMatched": 9734,
+      "originalInstructionsMatched": 131,
+      "originalPayloadsMatched": 49,
+      "actualSystemLocationsUnchanged": true,
+      "installerOrPayloadExecuted": false
+    }
+  },
+  "userOutputMatchesFinalBinary": true,
+  "arm64RuntimeTested": false
+}

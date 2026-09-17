@@ -10,6 +10,8 @@
 #include "platform/log.h"
 #include "core/progress.h"
 #include "core/control.h"
+#include "core/layout.h"
+#include "io/output.h"
 #include <algorithm>
 #include <map>
 #include <set>
@@ -82,12 +84,19 @@ void save_report(const fs::path& directory, const Catalog& catalog) {
             if (attempt != 20) Sleep(100); // 大批量写入时，索引器可能短暂占用上一份报告。
         }
         if (result != ERROR_SUCCESS) platform::io_failure(L"无法提交递归解包报告", result);
+        if (io::Staging::active()) {
+            io::Staging::updated(directory / L"_extract-report.json", file.get());
+            control::created(directory / L"_extract-report.json", file.get());
+        }
     } catch (...) {
         file.reset(); DeleteFileW(platform::extended_path(temporary).c_str()); throw;
     }
 }
 
 struct Context {
+    bool collect = false;
+    Layout layout = Layout::original;
+    std::vector<LayoutLayer> layers;
     std::uint64_t reserved_bytes = 0;
     std::size_t reserved_files = 0;
     unsigned package_count = 0;
@@ -98,6 +107,8 @@ struct Context {
                              const std::wstring& hash) {
         const auto& planned = package->catalog();
         const auto package_path = planned.input;
+        const auto layer_index = layers.size();
+        if (collect) layers.emplace_back();
         log::Scope step(L"package.extract", &package_path);
         log::detail(log::Level::info, L"extraction.begin", [&] {
             return L"format=" + planned.format + L"; depth=" + std::to_wstring(depth) + L"; sha256=" + hash +
@@ -121,9 +132,12 @@ struct Context {
             result.output = package->extract(parent);
         }
         Catalog catalog = package->catalog();
+        catalog.requested_layout = layout == Layout::compact ? L"compact" : L"original";
         package.reset(); // 递归前释放上层映射与 Solid 磁盘缓存。
+        if (collect) layers[layer_index] = {catalog, result.output};
         result.primary_output = result.output;
         result.complete = catalog.required_paths_resolved() && catalog.content_complete;
+        if (!catalog.runtime_notice.empty()) result.details += catalog.runtime_notice + L"\r\n";
         if (!catalog.content_complete) for (const auto& note : catalog.notes) result.details += note + L"\r\n";
         result.total_bytes = catalog.total_size; result.file_count = catalog.files.size();
         const auto rooted_at_app = [](const Entry& entry) {
@@ -222,8 +236,10 @@ struct Context {
         const bool app_executable = std::any_of(catalog.files.begin(), catalog.files.end(), [&](const Entry& entry) {
             return !entry.is_uninstaller && rooted_at_app(entry) && platform::equal_name(entry.path.extension().wstring(), L".exe");
         });
-        if (app_files && catalog.format != L"MSIX/APPX") result.primary_output /= L"app";
-        if ((catalog.format == L"NSIS" || catalog.format == L"WiX Burn" || catalog.format == L"CAB") && inner_primary.size() == 1 && result.complete) {
+        // Recheck after identifying uninstallers: auxiliary locations must not hide the application.
+        const bool keep_output_root = catalog.keep_output_root && catalog.has_multiple_destinations();
+        if (app_files && catalog.format != L"MSIX/APPX" && !keep_output_root) result.primary_output /= L"app";
+        if (!keep_output_root && (catalog.format == L"NSIS" || catalog.format == L"WiX Burn" || catalog.format == L"CAB") && inner_primary.size() == 1 && result.complete) {
             // NSIS 外层可能只把卸载图标等资源放入 app，真正的应用在内嵌归档中。
             if (!app_files || (catalog.format == L"NSIS" && !app_executable && archive_primary.contains(inner_primary.front())))
                 result.primary_output = inner_primary.front();
@@ -236,14 +252,25 @@ struct Context {
                 L"; contentComplete=" + (catalog.content_complete ? L"true" : L"false") + L"; nestedComplete=" + (nested_ok ? L"true" : L"false");
         });
         completed[hash] = result;
+        if (collect) layers[layer_index] = {std::move(catalog), result.output};
         return result;
     }
 };
 }
 
-ExtractionResult extract_tree(std::unique_ptr<Package> package, const fs::path& parent) {
+ExtractionResult extract_tree(std::unique_ptr<Package> package, const fs::path& parent, Layout layout) {
     Context context;
-    const auto hash = platform::sha256(package->catalog().input);
-    return context.process(std::move(package), parent, 0, hash);
+    context.layout = layout;
+    const auto input = package->catalog().input;
+    const auto destination = platform::absolute_path(parent.empty() ? input.parent_path() : parent);
+    const auto hash = platform::sha256(input);
+    const auto& format = package->catalog().format;
+    const bool preserve = format == L"ZIP" || format == L"7z" || format.starts_with(L"MSIX") || format.starts_with(L"APPX");
+    if (layout == Layout::original || preserve) return context.process(std::move(package), destination, 0, hash);
+    io::Staging staging;
+    context.collect = true;
+    const auto result = context.process(std::move(package), destination, 0, hash);
+    staging.finish();
+    return compact_output(context.layers, input, destination, result.complete);
 }
 } // namespace extract

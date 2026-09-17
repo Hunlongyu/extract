@@ -6,6 +6,8 @@
 
 后续的 ANSI 字符串支持及 QQ 音乐样本验证见 [ANSI 兼容性](21-nsis-ansi-compatibility.md)。
 
+系统目录映射、外壳行为记录与完整编译脚本保存见[系统目录与外壳行为](27-nsis-shell-directories.md)。
+
 日期：2026-09-05。版本：0.3.1。已交付 NSIS 包内静态文件提取、已识别内嵌安装包的自动展开及 XnView 两层内容验证。Electron 最终应用载荷尚未验收。
 
 ## 1. 已实现范围
@@ -44,11 +46,12 @@ Solid 模式将头与文件块共同压缩。为生成准确清单，`--list` �
 | `$PLUGINSDIR` | `plugins` |
 | `$TEMP` | `temp` |
 | `$EXEDIR` | `exedir` |
-| Shell 目录编码 | `SHELL_<编码值>` |
+| 已识别的 Shell 目录编码 | 按用户上下文映射为 `AppData/Roaming`、`Public/Documents` 等逻辑目录，见[当前实现](27-nsis-shell-directories.md) |
+| 未识别的 Shell 编码或上下文歧义 | 文件保留到 `_unresolved`，原始表达式留在报告中 |
 
 这些目录代表包的逻辑空间，不计算用户机器上真实的安装地址或随机插件目录。字符串中的变量、语言引用和转义按编码读取；语言之间不一致时不任选一种路径。完整 StrCpy 可在同一基本块内传播；截取、注册表读取、跨分支/函数调用或其它动态值保留为未知。路径含穿越、ADS、设备名或绝对盘符时拒绝写入。
 
-`sourceExpression` 记录解码与有限符号传播后的表达式，`conditions` 记录 File 指令编号及未执行运行时条件的事实，不是完整脚本反编译结果。没有重建控制流图上的变量合并，也没有解释 NSIS 脚本。即使某些内容在安装时会被删除、覆盖或按条件跳过，静态提取仍保留其包内文件。
+`sourceExpression` 记录解码与有限符号传播后的表达式，`conditions` 记录 File 指令编号及未执行运行时条件的事实，不是完整脚本反编译结果。当前已补充 OUTDIR 与 Shell 用户上下文的分支合流分析，其它变量仍仅做有限传播，详见[目录与外壳行为](27-nsis-shell-directories.md)。即使某些内容在安装时会被删除、覆盖或按条件跳过，静态提取仍保留其包内文件。
 
 不执行插件、不安装或注册文件、不产生脚本 WriteUninstaller/FileWrite/下载逻辑生成的内容。原始内嵌文件作为数据保留；对于 EXE/MSI 中已识别的安装器继续静态展开。`complete` 表示本层清单及已识别内层均完成，不保证软件可以便携运行。NSIS 非应用目录中的 ZIP/7z 载荷目前记录 unsupported，并使任务 partial；未知封装和在线下载不在覆盖范围内。
 

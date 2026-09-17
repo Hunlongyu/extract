@@ -70,7 +70,12 @@ def main():
         assert max(e['done'] for e in packages[name]) == expected
         counters = [e for e in events if Path(e['package']).name == name and e['extractionDone'] is not None]
         assert all(e['extractionTotal'] == expected for e in counters), 'Nested display counter inherited outer bytes'
-    assert len(list(output.rglob('_extract-report.json'))) == 2
+    reports = list(output.rglob('_extract-report.json'))
+    assert len(reports) == 1
+    report = json.loads(reports[0].read_text(encoding='utf-8'))
+    assert report['layout'] == 'compact' and len(report['nestedPackages']) == 1
+    child = reports[0].parent / report['nestedPackages'][0]['report']
+    assert json.loads(child.read_text(encoding='utf-8'))['format'] == 'ZIP'
 
     output, events = run('observer-failure.zip', payload, throwing=True)
     assert not events and next(output.rglob('中文 & 文件.bin')).read_bytes() == content

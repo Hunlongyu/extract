@@ -93,7 +93,9 @@ void plan_paths(Catalog& catalog) {
     for (std::size_t i = 0; i < catalog.files.size(); ++i) {
         auto& file = catalog.files[i];
         const auto root = file.path.begin()->wstring();
-        if (conflicts[i] || platform::equal_name(root, L"_variants") || platform::equal_name(root, L"_extract-report.json")) {
+        if (conflicts[i] || platform::equal_name(root, L"_variants") || platform::equal_name(root, L"_extract-report.json") ||
+            (catalog.compiled_script && platform::equal_name(root, L"_extract-script")) ||
+            (catalog.layout == L"compact" && platform::equal_name(root, L"_extract-packages"))) {
             constexpr wchar_t hex[] = L"0123456789abcdef";
             std::wstring encoded = L"file-";
             for (wchar_t c : file.id) {

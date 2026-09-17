@@ -1,6 +1,7 @@
 #include "formats/nsis.h"
 #include "platform/log.h"
 #include "core/progress.h"
+#include "core/control.h"
 #include "codecs/stream.h"
 #include "io/output.h"
 #include "io/temporary.h"
@@ -8,6 +9,8 @@
 #include <map>
 #include <set>
 #include <deque>
+#include <shlobj.h>
+#include <shellapi.h>
 
 // 自行实现的磁盘解析器。布局依据 NSIS v312 / v251 的 fileform.h、fileform.cpp、
 // fileform.c、exec.c、util.c；ANSI 转义另核对 build.cpp，不运行 NSIS 字节码。
@@ -90,18 +93,84 @@ struct Value {
     std::wstring text;
     bool known = true;
     bool rooted = false;
+    std::wstring expression;
 };
+std::wstring_view expression(const Value& value) { return value.expression.empty() ? value.text : value.expression; }
 Value unknown(std::wstring name) { return {std::move(name), false, false}; }
 void append(Value& target, const Value& part) {
+    if (!target.expression.empty() || !part.expression.empty()) {
+        if (target.expression.empty()) target.expression = target.text;
+        target.expression.append(expression(part));
+    }
     if (target.text.empty()) target.rooted = part.rooted;
     else if (part.rooted) target.known = false;
     target.text += part.text; target.known = target.known && part.known;
     require(target.text.size() <= 16000, Status::limit_exceeded, L"NSIS 字符串展开过长。");
+    require(target.expression.size() <= 16000, Status::limit_exceeded, L"NSIS 路径表达式展开过长。");
 }
+enum class ShellContext { unknown, current, all };
 struct State {
     Value out = unknown(L"$OUTDIR");
     std::map<unsigned, Value> variables;
+    ShellContext shell = ShellContext::unknown;
 };
+// Keep OS locations inside the extraction tree, never resolve them on this machine.
+Value shell_directory(unsigned code, ShellContext context) {
+    struct Folder { unsigned current, all; const wchar_t* name; const wchar_t* user_path; const wchar_t* common_path; };
+    static const Folder folders[] = {
+        {CSIDL_PERSONAL, CSIDL_COMMON_DOCUMENTS, L"DOCUMENTS", L"User/Documents", L"Public/Documents"},
+        {CSIDL_APPDATA, CSIDL_COMMON_APPDATA, L"APPDATA", L"AppData/Roaming", L"ProgramData"},
+        {CSIDL_LOCAL_APPDATA, CSIDL_COMMON_APPDATA, L"LOCALAPPDATA", L"AppData/Local", L"ProgramData"},
+        {CSIDL_DESKTOPDIRECTORY, CSIDL_COMMON_DESKTOPDIRECTORY, L"DESKTOP", L"User/Desktop", L"Public/Desktop"},
+        {CSIDL_STARTMENU, CSIDL_COMMON_STARTMENU, L"STARTMENU", L"AppData/Roaming/Microsoft/Windows/Start Menu", L"ProgramData/Microsoft/Windows/Start Menu"},
+        {CSIDL_PROGRAMS, CSIDL_COMMON_PROGRAMS, L"SMPROGRAMS", L"AppData/Roaming/Microsoft/Windows/Start Menu/Programs", L"ProgramData/Microsoft/Windows/Start Menu/Programs"},
+        {CSIDL_STARTUP, CSIDL_COMMON_STARTUP, L"SMSTARTUP", L"AppData/Roaming/Microsoft/Windows/Start Menu/Programs/Startup", L"ProgramData/Microsoft/Windows/Start Menu/Programs/Startup"},
+        {CSIDL_TEMPLATES, CSIDL_COMMON_TEMPLATES, L"TEMPLATES", L"AppData/Roaming/Microsoft/Windows/Templates", L"ProgramData/Microsoft/Windows/Templates"},
+        {CSIDL_FAVORITES, CSIDL_COMMON_FAVORITES, L"FAVORITES", L"User/Favorites", L"Public/Favorites"},
+        {CSIDL_MYMUSIC, CSIDL_COMMON_MUSIC, L"MUSIC", L"User/Music", L"Public/Music"},
+        {CSIDL_MYPICTURES, CSIDL_COMMON_PICTURES, L"PICTURES", L"User/Pictures", L"Public/Pictures"},
+        {CSIDL_MYVIDEO, CSIDL_COMMON_VIDEO, L"VIDEOS", L"User/Videos", L"Public/Videos"},
+        {CSIDL_ADMINTOOLS, CSIDL_COMMON_ADMINTOOLS, L"ADMINTOOLS", L"AppData/Roaming/Microsoft/Windows/Start Menu/Programs/Administrative Tools", L"ProgramData/Microsoft/Windows/Start Menu/Programs/Administrative Tools"},
+        {CSIDL_WINDOWS, CSIDL_WINDOWS, L"WINDIR", L"Windows", L"Windows"},
+        {CSIDL_SYSTEM, CSIDL_SYSTEM, L"SYSDIR", L"System", L"System"},
+        {CSIDL_PROFILE, CSIDL_PROFILE, L"PROFILE", L"User", L"User"},
+        {CSIDL_FONTS, CSIDL_FONTS, L"FONTS", L"Windows/Fonts", L"Windows/Fonts"},
+        {CSIDL_SENDTO, CSIDL_SENDTO, L"SENDTO", L"AppData/Roaming/Microsoft/Windows/SendTo", L"AppData/Roaming/Microsoft/Windows/SendTo"},
+        {CSIDL_RECENT, CSIDL_RECENT, L"RECENT", L"AppData/Roaming/Microsoft/Windows/Recent", L"AppData/Roaming/Microsoft/Windows/Recent"},
+        {CSIDL_APPDATA, CSIDL_APPDATA, L"QUICKLAUNCH", L"AppData/Roaming/Microsoft/Internet Explorer/Quick Launch", L"AppData/Roaming/Microsoft/Internet Explorer/Quick Launch"},
+        {CSIDL_APPDATA, CSIDL_APPDATA | 0x40, L"USERAPPDATA", L"AppData/Roaming", L"AppData/Roaming"},
+        {CSIDL_LOCAL_APPDATA, CSIDL_LOCAL_APPDATA, L"USERLOCALAPPDATA", L"AppData/Local", L"AppData/Local"},
+        {CSIDL_TEMPLATES, CSIDL_TEMPLATES, L"USERTEMPLATES", L"AppData/Roaming/Microsoft/Windows/Templates", L"AppData/Roaming/Microsoft/Windows/Templates"},
+        {CSIDL_STARTMENU, CSIDL_STARTMENU, L"USERSTARTMENU", L"AppData/Roaming/Microsoft/Windows/Start Menu", L"AppData/Roaming/Microsoft/Windows/Start Menu"},
+        {CSIDL_PROGRAMS, CSIDL_PROGRAMS, L"USERSMPROGRAMS", L"AppData/Roaming/Microsoft/Windows/Start Menu/Programs", L"AppData/Roaming/Microsoft/Windows/Start Menu/Programs"},
+        {CSIDL_DESKTOPDIRECTORY, CSIDL_DESKTOPDIRECTORY, L"USERDESKTOP", L"User/Desktop", L"User/Desktop"},
+        {CSIDL_COMMON_APPDATA, CSIDL_COMMON_APPDATA, L"COMMONPROGRAMDATA", L"ProgramData", L"ProgramData"},
+        {CSIDL_COMMON_TEMPLATES, CSIDL_COMMON_TEMPLATES, L"COMMONTEMPLATES", L"ProgramData/Microsoft/Windows/Templates", L"ProgramData/Microsoft/Windows/Templates"},
+        {CSIDL_COMMON_STARTMENU, CSIDL_COMMON_STARTMENU, L"COMMONSTARTMENU", L"ProgramData/Microsoft/Windows/Start Menu", L"ProgramData/Microsoft/Windows/Start Menu"},
+        {CSIDL_COMMON_PROGRAMS, CSIDL_COMMON_PROGRAMS, L"COMMONSMPROGRAMS", L"ProgramData/Microsoft/Windows/Start Menu/Programs", L"ProgramData/Microsoft/Windows/Start Menu/Programs"},
+        {CSIDL_COMMON_DESKTOPDIRECTORY, CSIDL_COMMON_DESKTOPDIRECTORY, L"COMMONDESKTOP", L"Public/Desktop", L"Public/Desktop"},
+    };
+    for (const auto& folder : folders) {
+        if (code != folder.current + (folder.all << 8)) continue;
+        const bool fixed = std::wstring_view(folder.user_path) == folder.common_path;
+        auto source = L"$" + std::wstring(folder.name);
+        if (!fixed) source += context == ShellContext::current ? L"[current]" : context == ShellContext::all ? L"[all]" : L"[unknown]";
+        if (!fixed && context == ShellContext::unknown) return {source, false, true, source};
+        return {L"$" + std::wstring(context == ShellContext::all ? folder.common_path : folder.user_path), true, true, source};
+    }
+    const auto source = L"$SHELL_" + std::to_wstring(code);
+    return {source, false, true, source};
+}
+std::wstring logical_path(const Value& value) {
+    auto mapped = value.text;
+    if (value.rooted) {
+        const auto root = mapped.substr(0, mapped.find_first_of(L"\\/"));
+        const auto replacement = root == L"$INSTDIR" ? L"app" : root == L"$PLUGINSDIR" ? L"plugins" :
+            root == L"$TEMP" ? L"temp" : root == L"$EXEDIR" ? L"exedir" : root.substr(1);
+        mapped.replace(0, root.size(), replacement);
+    }
+    return mapped;
+}
 struct Block { std::uint64_t offset; std::uint32_t count; };
 struct Instruction { std::uint32_t op; std::array<std::int32_t, 6> p; };
 struct Payload { io::Bytes bytes; Compression method; std::uint64_t size = 0; };
@@ -213,7 +282,12 @@ struct NsisPackage::Impl {
         }
         require(!catalog.files.empty(), Status::unsupported, L"NSIS 包没有可提取的内嵌文件指令。");
         group_architecture_branches();
+        catalog.compiled_script.emplace();
+        catalog.compiled_script->instruction_count = instructions.size();
+        catalog.compiled_script->metadata_size = header.size();
+        catalog.compiled_script->metadata_sha256 = platform::hash_bytes(header, 32);
         plan_paths(catalog);
+        catalog.notes.push_back(L"_extract-script 保留完整指令记录和原始解压编译头；不是原始 .nsi 源码，不执行其中操作。辅助文件不计入载荷数量和大小。");
         catalog.notes.push_back(L"静态提取所有 File 指令；不执行条件、安装操作或插件，不生成卸载器或脚本写入的文件。");
         catalog.notes.push_back(L"files 记录本层文件；提取时会继续展开已识别的内嵌安装包，结果记录在 nestedPackages。--list 只列本层。");
         catalog.notes.push_back(solid ? L"Solid 压缩；使用临时磁盘缓存，按实际磁盘空间和地址空间检查。" : L"逐块压缩或不压缩。");
@@ -369,7 +443,7 @@ struct NsisPackage::Impl {
             if (c == 4) { require(value != 0, Status::corrupt, L"NSIS 字符转义无效。"); append(result, Value{std::wstring(1, static_cast<wchar_t>(value))}); continue; }
             const auto decoded = ((value >> 8) & 0x7f) * 128 + (value & 0x7f);
             if (c == 1) append(result, string(-static_cast<std::int32_t>(decoded) - 1, state, depth + 1));
-            else if (c == 2) append(result, Value{L"$SHELL_" + std::to_wstring(value), true, true});
+            else if (c == 2) append(result, shell_directory(value, state.shell));
             else if (decoded == 22) append(result, state.out);
             // 这些是逻辑目录根；无需计算安装时的具体盘符或插件临时目录名。
             else if (decoded == 21) append(result, Value{L"$INSTDIR", true, true});
@@ -385,7 +459,7 @@ struct NsisPackage::Impl {
     }
 
     void plan_files() {
-        const auto stable_out = directory_flow();
+        const auto flow = directory_flow();
         std::set<std::size_t> boundaries{0};
         bool indirect = false;
         const auto target = [&](std::int32_t address) {
@@ -408,10 +482,24 @@ struct NsisPackage::Impl {
             boundaries.insert(i + 1);
         }
         State state;
+        bool shell_files = false;
         std::map<std::pair<std::wstring, std::uint64_t>, std::size_t> duplicates;
         for (std::size_t i = 0; i < instructions.size(); ++i) {
             if (boundaries.contains(i) || indirect) state = State{};
+            state.shell = flow.shell[i];
+            if (flow.out[i]) state.out = *flow.out[i];
             const auto& e = instructions[i]; const auto& p = e.p;
+            if (e.op == 21 || e.op == 23 || e.op == 40 || e.op == 41) {
+                const auto action_target = string(p[e.op == 40 ? 1 : 0], state);
+                Catalog::RuntimeAction action;
+                action.instruction = i;
+                action.kind = e.op == 21 ? L"delete-file" : e.op == 23 ? L"remove-directory" : e.op == 40 ? L"launch-shell" : L"launch";
+                action.target_resolved = action_target.known && action_target.rooted;
+                action.target = action.target_resolved ? logical_path(action_target) : std::wstring(expression(action_target));
+                action.waits = e.op == 41 ? p[2] != 0 : e.op == 40 && (p[4] & SEE_MASK_NOCLOSEPROCESS) != 0;
+                action.recursive = e.op == 23 && (p[1] & 2) != 0;
+                catalog.runtime_actions.push_back(std::move(action));
+            }
             if (e.op == 11 && p[1]) { state.out = string(p[0], state); continue; }
             if (e.op == 25) {
                 require(p[0] >= 0 && p[0] < 16384, Status::corrupt, L"NSIS 变量索引无效。");
@@ -423,7 +511,6 @@ struct NsisPackage::Impl {
                 continue;
             }
             if (e.op == 20) {
-                if (stable_out[i]) state.out = *stable_out[i];
                 require(p[2] >= 0 && payloads.contains(static_cast<std::uint64_t>(p[2])), Status::corrupt, L"NSIS 文件指令未指向有效数据块边界。");
                 const auto name = string(p[1], state);
                 require(!name.text.empty(), Status::unsafe_path, L"NSIS 文件名为空。");
@@ -440,21 +527,10 @@ struct NsisPackage::Impl {
                     continue;
                 }
                 Entry file; file.id = L"nsis-" + std::to_wstring(i);
-                file.source_expression = value.text;
+                file.source_expression = expression(value);
+                shell_files = shell_files || !value.expression.empty();
                 file.conditions = L"File instruction " + std::to_wstring(i) + L"; runtime conditions not evaluated";
-                auto mapped = value.text;
-                if (value.rooted) {
-                    const auto end = mapped.find_first_of(L"\\/");
-                    const auto root = mapped.substr(0, end);
-                    std::wstring replacement;
-                    if (root == L"$INSTDIR") replacement = L"app";
-                    else if (root == L"$PLUGINSDIR") replacement = L"plugins";
-                    else if (root == L"$TEMP") replacement = L"temp";
-                    else if (root == L"$EXEDIR") replacement = L"exedir";
-                    else replacement = root.substr(1);
-                    mapped.replace(0, root.size(), replacement);
-                }
-                fs::path destination(mapped);
+                fs::path destination(logical_path(value));
                 platform::validate_relative(destination);
                 if (!value.known) {
                     catalog.paths_resolved = false;
@@ -482,6 +558,12 @@ struct NsisPackage::Impl {
             }
         }
         if (!catalog.paths_resolved) catalog.notes.push_back(L"无法静态确定原始目录的文件保留至 _unresolved；已识别卸载器的路径问题不影响应用载荷完成状态。");
+        catalog.keep_output_root = shell_files && catalog.has_multiple_destinations();
+        if (catalog.keep_output_root || !catalog.runtime_actions.empty()) {
+            catalog.runtime_notice = L"文件按原包目标目录分别保留在解包目录内；未写入系统实际位置。";
+            if (!catalog.runtime_actions.empty()) catalog.runtime_notice += L"原包还包含启动或清理操作，详见提取报告；这些操作仅作静态记录，未执行。";
+            catalog.runtime_notice += L"直接运行提取文件可能与原单文件的行为不同。";
+        }
     }
 
     void group_architecture_branches() {
@@ -631,16 +713,28 @@ struct NsisPackage::Impl {
         }
     }
 
-    std::vector<std::optional<Value>> directory_flow() {
+    struct DirectoryFlow {
+        std::vector<std::optional<Value>> out;
+        std::vector<ShellContext> shell;
+    };
+    DirectoryFlow directory_flow() {
         // 仅传播字节码显式 OUTDIR 赋值；合流必须一致。插件的任意变量副作用不模拟。
         const auto n = instructions.size();
         std::vector<std::vector<std::size_t>> next(n);
-        std::set<std::size_t> roots{0};
+        std::set<std::size_t> roots, function_roots;
         const auto section_stride = blocks[1].count ? (blocks[2].offset - blocks[1].offset) / blocks[1].count : 0;
         for (std::uint32_t i = 0; i < blocks[1].count; ++i) {
             const auto code = u32(header, blocks[1].offset + i * section_stride + 12);
             require(code < n, Status::corrupt, L"NSIS 区段入口越界。"); roots.insert(code);
         }
+        const auto callbacks = 4 + (blocks[0].offset == 332 ? 12 : 8) * 8 + 40;
+        for (unsigned i = 0; i < 10; ++i) {
+            const auto code = static_cast<std::int32_t>(u32(header, callbacks + i * 4));
+            if (code < 0) continue;
+            require(static_cast<std::size_t>(code) < n, Status::corrupt, L"NSIS 回调入口越界。");
+            roots.insert(static_cast<std::size_t>(code));
+        }
+        if (roots.empty()) roots.insert(0);
         bool indirect = false;
         for (std::size_t i = 0; i < n; ++i) {
             const auto& e = instructions[i]; const auto& p = e.p;
@@ -660,13 +754,59 @@ struct NsisPackage::Impl {
             case 28: edge(p[2]); edge(p[3]); edge(p[4]); break;
             case 5:
                 if (p[0] <= 0) indirect = true;
-                else { require(static_cast<std::size_t>(p[0]) <= n, Status::corrupt, L"NSIS 调用目标越界。"); roots.insert(static_cast<std::size_t>(p[0] - 1)); }
+                else { require(static_cast<std::size_t>(p[0]) <= n, Status::corrupt, L"NSIS 调用目标越界。"); function_roots.insert(static_cast<std::size_t>(p[0] - 1)); }
                 edge(0); break;
             default: edge(0); break;
             }
         }
-        std::vector<std::optional<Value>> result(n);
+        DirectoryFlow result{std::vector<std::optional<Value>>(n), std::vector<ShellContext>(n, ShellContext::unknown)};
         if (indirect) return result;
+        // A section/callback can follow other sections/callbacks. Unless the entire
+        // package preserves the default context, require an explicit assignment.
+        const auto changes_context = [](const Instruction& e) { return (e.op == 13 && e.p[0] == 1) || e.op == 44; };
+        const bool ambient_changes = std::any_of(instructions.begin(), instructions.end(), changes_context);
+        std::size_t work = 0;
+        std::map<std::size_t, bool> context_preserves;
+        const auto preserves_context = [&](std::size_t root) {
+            if (const auto found = context_preserves.find(root); found != context_preserves.end()) return found->second;
+            std::set<std::size_t> visited;
+            std::vector<std::size_t> todo{root}; bool safe = true;
+            while (!todo.empty() && safe) {
+                const auto i = todo.back(); todo.pop_back(); if (!visited.insert(i).second) continue;
+                require(++work <= 2000000, Status::limit_exceeded, L"NSIS 目录分析工作量超过上限。");
+                const auto& e = instructions[i];
+                if (changes_context(e)) { safe = false; break; }
+                if (e.op == 5) todo.push_back(static_cast<std::size_t>(e.p[0] - 1));
+                todo.insert(todo.end(), next[i].begin(), next[i].end());
+            }
+            context_preserves[root] = safe; return safe;
+        };
+        std::vector<bool> reached(n, false), context_queued(n, false);
+        std::deque<std::size_t> context_pending;
+        const auto merge_context = [&](std::size_t target, ShellContext value) {
+            const auto merged = !reached[target] || result.shell[target] == value ? value : ShellContext::unknown;
+            if (reached[target] && result.shell[target] == merged) return;
+            result.shell[target] = merged; reached[target] = true;
+            if (!context_queued[target]) { context_pending.push_back(target); context_queued[target] = true; }
+        };
+        for (auto root : roots) merge_context(root, ambient_changes ? ShellContext::unknown : ShellContext::current);
+        while (!context_pending.empty()) {
+            const auto i = context_pending.front(); context_pending.pop_front(); context_queued[i] = false;
+            require(++work <= 2000000, Status::limit_exceeded, L"NSIS 目录分析工作量超过上限。");
+            const auto& e = instructions[i]; auto value = result.shell[i];
+            if (e.op == 13 && e.p[0] == 1) {
+                const auto setting = string(e.p[1], State{});
+                value = e.p[2] > 0 || !setting.known ? ShellContext::unknown :
+                    setting.text == L"0" ? ShellContext::current : setting.text == L"1" ? ShellContext::all : ShellContext::unknown;
+            }
+            if (e.op == 44) value = ShellContext::unknown;
+            if (e.op == 5) {
+                const auto target = static_cast<std::size_t>(e.p[0] - 1);
+                merge_context(target, value);
+                if (!preserves_context(target)) value = ShellContext::unknown;
+            }
+            for (auto target : next[i]) merge_context(target, value);
+        }
         const auto writes_out = [](const Instruction& e) {
             if (e.op == 11) return e.p[1] != 0;
             if (e.op == 31) return e.p[1] && e.p[0] == 22;
@@ -680,7 +820,6 @@ struct NsisPackage::Impl {
         };
         // 对内部辅助函数仅证明“没有显式写 OUTDIR”；复杂调用保守回退。
         std::map<std::size_t, bool> preserves;
-        std::size_t work = 0;
         const auto function_preserves = [&](std::size_t root) {
             if (const auto found = preserves.find(root); found != preserves.end()) return found->second;
             std::set<std::size_t> visited; std::vector<std::size_t> todo{root}; bool safe = true;
@@ -700,13 +839,15 @@ struct NsisPackage::Impl {
         for (std::size_t i = 0; i < n; ++i) {
             const auto& e = instructions[i];
             if (!((e.op == 11 && e.p[1]) || (e.op == 25 && e.p[0] == 22 && !e.p[2] && !e.p[3]))) continue;
-            auto value = string(e.p[e.op == 11 ? 0 : 1], State{});
+            State state; state.shell = result.shell[i];
+            auto value = string(e.p[e.op == 11 ? 0 : 1], state);
             if (!value.known) continue;
             auto [entry, fresh] = interned.emplace(value.text, static_cast<int>(values.size()));
             if (fresh) values.push_back(std::move(value)); assigned[i] = entry->second;
         }
         std::deque<std::size_t> pending;
         std::vector<bool> queued(n, false);
+        roots.insert(function_roots.begin(), function_roots.end());
         for (auto root : roots) { states[root] = -1; pending.push_back(root); queued[root] = true; }
         while (!pending.empty()) {
             const auto i = pending.front(); pending.pop_front(); queued[i] = false;
@@ -721,8 +862,8 @@ struct NsisPackage::Impl {
                 if (!queued[target]) { queued[target] = true; pending.push_back(target); }
             }
         }
-        for (std::size_t i = 0; i < n; ++i) if (states[i] >= 0) result[i] = values[static_cast<std::size_t>(states[i])];
-        catalog.notes.push_back(L"OUTDIR 按显式字节码赋值和分支合流还原；不模拟插件任意修改变量、脚本生成/下载内容或安装覆盖效果。");
+        for (std::size_t i = 0; i < n; ++i) if (states[i] >= 0) result.out[i] = values[static_cast<std::size_t>(states[i])];
+        catalog.notes.push_back(L"OUTDIR 和 Shell 用户上下文按显式赋值及分支合流还原；跨回调/区段或修改上下文的调用保守处理，不猜测运行顺序。系统目录名称仅表示逻辑位置。");
         return result;
     }
 
@@ -751,8 +892,157 @@ struct NsisPackage::Impl {
         throw Failure(Status::corrupt, L"NSIS 文件压缩流无效。");
     }
 
+    // Display arbitrary code units without interpreting control characters or
+    // rejecting unused malformed strings. The binary header remains authoritative.
+    std::wstring script_escape(wchar_t c) const {
+        if (c == L'\\') return L"\\\\";
+        if (c == L'\"') return L"\\\"";
+        if (c >= 32 && c != 127 && !(c >= 0xd800 && c <= 0xdfff) && !(ansi && c >= 128))
+            return std::wstring(1, c);
+        constexpr wchar_t hex[] = L"0123456789abcdef";
+        std::wstring result = ansi ? L"\\x" : L"\\u";
+        for (int shift = ansi ? 4 : 12; shift >= 0; shift -= 4) result += hex[(c >> shift) & 15];
+        return result;
+    }
+
+    static std::wstring script_variable(unsigned index) {
+        if (index < 10) return L"$" + std::to_wstring(index);
+        if (index < 20) return L"$R" + std::to_wstring(index - 10);
+        static constexpr const wchar_t* names[] = {L"$CMDLINE", L"$INSTDIR", L"$OUTDIR", L"$EXEDIR",
+            L"$LANGUAGE", L"$TEMP", L"$PLUGINSDIR", L"$EXEPATH", L"$EXEFILE", L"$HWNDPARENT", L"$_CLICK"};
+        return index - 20 < std::size(names) ? names[index - 20] : L"$VAR" + std::to_wstring(index);
+    }
+
+    std::wstring script_string(std::int32_t index) const {
+        if (index < 0) return L"lang[" + std::to_wstring(-static_cast<std::int64_t>(index) - 1) + L"]";
+        auto result = L"str[" + std::to_wstring(index) + L"]=";
+        if (static_cast<std::size_t>(index) >= strings.size()) return result + L"<invalid offset>";
+        result += L'"';
+        const auto end = (std::min)(strings.size(), static_cast<std::size_t>(index) + 256);
+        for (auto i = static_cast<std::size_t>(index); i < end;) {
+            auto c = strings[i++];
+            if (!c) return result + L'"';
+            if ((ansi && c < 252) || (!ansi && c > 4)) { result += script_escape(c); continue; }
+            if (ansi && c == 252) {
+                if (i < end) { result += script_escape(strings[i++]); continue; }
+                break;
+            }
+            if (ansi) c = static_cast<wchar_t>(256 - c);
+            if (i >= end) break;
+            unsigned value = strings[i++];
+            if (ansi) { if (i >= end) break; value |= static_cast<unsigned>(strings[i++]) << 8; }
+            const auto decoded = ((value >> 8) & 0x7f) * 128 + (value & 0x7f);
+            if (c == 1) result += L"${LANG:" + std::to_wstring(decoded) + L"}";
+            else if (c == 2) {
+                auto folder = shell_directory(value, ShellContext::unknown).text;
+                if (const auto context = folder.find(L"[unknown]"); context != folder.npos) folder.replace(context, 9, L"[context]");
+                result += folder;
+            } else if (c == 3) result += script_variable(decoded);
+            else result += script_escape(static_cast<wchar_t>(value));
+        }
+        return result + L"\" <preview ended; see raw string table>";
+    }
+
+    template<class Emit> void script_listing(Emit emit) const {
+        emit(L"NSIS compiled script - static instruction listing / 编译脚本静态指令记录\n"
+            L"This is NOT original .nsi source or an executable script. No instruction was executed.\n"
+            L"不是原始源码；不包含已丢失的注释、宏和源码标签；未执行任何操作。\n"
+            L"All instructions and all six signed operands are retained, including unknown semantics.\n"
+            L"Indices are zero-based; raw positive jump/call addresses encode instruction index + 1.\n"
+            L"String previews are symbolic, limited to 256 code units; [context] depends on runtime control flow.\n"
+            L"The raw string table below is complete, in escaped UTF-16 code units or ANSI bytes.\n"
+            L"nsis-header.bin is the exact decompressed header, not the launcher EXE or payload data.\n\n");
+        emit(L"Format: " + catalog.format_version + L"\nEncoding: " + (ansi ? L"ANSI bytes" : L"UTF-16LE")
+            + L"\nHeader bytes: " + std::to_wstring(header.size()) + L"\nHeader SHA-256: "
+            + catalog.compiled_script->metadata_sha256 + L"\nInstruction count: " + std::to_wstring(instructions.size()) + L"\n\n[blocks]\n");
+        static constexpr const wchar_t* block_names[] = {L"pages", L"sections", L"instructions", L"strings", L"languages", L"colors", L"font", L"data"};
+        for (std::size_t i = 0; i < blocks.size(); ++i)
+            emit(std::to_wstring(i) + L" " + block_names[i] + L" offset=" + std::to_wstring(blocks[i].offset) + L" count=" + std::to_wstring(blocks[i].count) + L"\n");
+        emit(L"\n[section entries]\n");
+        const auto stride = blocks[1].count ? (blocks[2].offset - blocks[1].offset) / blocks[1].count : 0;
+        for (std::uint32_t i = 0; i < blocks[1].count; ++i)
+            emit(std::to_wstring(i) + L" -> instruction " + std::to_wstring(u32(header, blocks[1].offset + i * stride + 12)) + L"\n");
+        emit(L"\n[callback entries]\n");
+        const auto callbacks = 4 + (blocks[0].offset == 332 ? 12 : 8) * 8 + 40;
+        for (unsigned i = 0; i < 10; ++i)
+            emit(std::to_wstring(i) + L" -> " + std::to_wstring(static_cast<std::int32_t>(u32(header, callbacks + i * 4))) + L"\n");
+        emit(L"\n[instructions]\n");
+        static constexpr const wchar_t* names[] = {L"Invalid", L"Return", L"Nop/Goto", L"Abort", L"Quit", L"Call",
+            L"DetailPrint", L"Sleep", L"BringToFront", L"SetDetailsView", L"SetFileAttributes", L"CreateDirectory",
+            L"IfFileExists", L"SetFlag", L"IfFlag", L"GetFlag", L"Rename", L"GetFullPathName", L"SearchPath", L"GetTempFileName",
+            L"File", L"Delete", L"MessageBox", L"RMDir", L"StrLen", L"StrCpy", L"StrCmp", L"ReadEnvStr/ExpandEnvStrings",
+            L"IntCmp", L"IntOp", L"IntFmt", L"Push/Pop/Exch", L"FindWindow", L"SendMessage", L"IsWindow", L"GetDlgItem",
+            L"SetCtlColors", L"LoadAndSetImage", L"CreateFont", L"ShowWindow", L"ExecShell", L"Exec", L"GetFileTime",
+            L"GetDLLVersion", L"RegisterDLL/CallPlugin", L"CreateShortCut", L"CopyFiles", L"Reboot", L"WriteINI", L"ReadINIStr",
+            L"DeleteRegistry", L"WriteRegistry", L"ReadRegistry", L"EnumRegistry", L"FileClose", L"FileOpen", L"FileWrite",
+            L"FileRead", L"FileSeek", L"FindClose", L"FindNext", L"FindFirst", L"WriteUninstaller", L"Log", L"SectionSet",
+            L"InstTypeSet", L"GetOSInfo", L"Reserved", L"LockWindow", L"FileWriteUTF16LE", L"FileReadUTF16LE"};
+        for (std::size_t i = 0; i < instructions.size(); ++i) {
+            control::checkpoint();
+            const auto& e = instructions[i]; const auto& p = e.p;
+            std::wstring name = e.op < std::size(names) ? names[e.op] : L"Unknown";
+            if (e.op == 11 && p[1]) name = L"SetOutPath";
+            if (e.op == 13 && p[0] == 1) name = L"SetShellVarContext";
+            if (e.op == 41 && p[2]) name = L"ExecWait";
+            if (e.op == 40 && (p[4] & SEE_MASK_NOCLOSEPROCESS)) name = L"ExecShellWait";
+            auto line = L"instruction " + std::to_wstring(i) + L": " + name + L" | opcode=" + std::to_wstring(e.op) + L" operands=[";
+            for (unsigned j = 0; j < p.size(); ++j) { if (j) line += L", "; line += std::to_wstring(p[j]); }
+            line += L"]";
+            const auto str = [&](unsigned j) { line += L" | p" + std::to_wstring(j) + L":" + script_string(p[j]); };
+            switch (e.op) {
+            case 3: case 6: case 7: case 10: case 11: case 12: case 21: case 23: case 41: case 62:
+                str(0); break;
+            case 13:
+                if (!p[2]) {
+                    str(1);
+                    if (p[0] == 1 && p[1] >= 0 && static_cast<std::size_t>(p[1]) + 1 < strings.size() && !strings[p[1] + 1]) {
+                        if (strings[p[1]] == L'0') line += L" | context=current";
+                        if (strings[p[1]] == L'1') line += L" | context=all";
+                    }
+                } else line += L" | restore saved flag";
+                break;
+            case 16: case 26: case 28: case 46: str(0); str(1); break;
+            case 17: case 18: case 19: case 20: case 22: case 24: case 27: case 56: case 69: str(1); break;
+            case 25: line += L" | destination=" + script_variable(static_cast<unsigned>(p[0])); str(1); str(2); str(3); break;
+            case 29: case 30: str(1); str(2); break;
+            case 31: if (!p[1] && !p[2]) str(0); break;
+            case 40: str(0); str(1); str(2); break;
+            case 42: case 43: case 61: str(2); break;
+            case 55: str(3); break;
+            case 44: str(0); str(1); break;
+            case 45: case 48: str(0); str(1); str(2); str(3); break;
+            case 49: case 52: case 53: str(2); str(3); if (e.op == 49) str(1); break;
+            case 50: str(2); if (!p[4]) str(3); break;
+            case 51: str(1); str(2); if (p[4] != 3) str(3); break;
+            default: break;
+            }
+            if ((e.op == 2 || e.op == 5) && p[0] > 0) line += L" | target=instruction " + std::to_wstring(p[0] - 1);
+            if (e.op == 23) line += (p[1] & 2) ? L" | recursive=true" : L" | recursive=false";
+            emit(line + L"\n");
+        }
+        emit(L"\n[raw string table: offset in code units/bytes]\n");
+        for (std::size_t i = 0; i < strings.size();) {
+            control::checkpoint();
+            auto line = std::to_wstring(i) + L": \"";
+            const auto end = (std::min)(strings.size(), i + 256);
+            do { const auto c = strings[i++]; line += script_escape(c); if (!c) break; } while (i < end);
+            emit(line + L"\"\n");
+        }
+        emit(L"\n[language string references: language-table index, entry index, string offset]\n");
+        for (std::size_t l = 0; l < languages.size(); ++l) for (std::size_t i = 0; i < languages[l].size(); ++i) {
+            control::checkpoint();
+            emit(std::to_wstring(l) + L" " + std::to_wstring(i) + L" " + std::to_wstring(languages[l][i]) + L"\n");
+        }
+    }
+
     fs::path extract(const fs::path& parent) {
-        io::Output output(parent.empty() ? input.path().parent_path() : parent, input.path().stem().wstring());
+        const auto destination = parent.empty() ? input.path().parent_path() : parent;
+        auto& script = *catalog.compiled_script;
+        script.text_size = 0;
+        // Count first, then stream bounded lines: no whole disassembly allocation.
+        script_listing([&](std::wstring_view line) { script.text_size = checked_size_sum(script.text_size, platform::utf8(line).size()); });
+        platform::ensure_disk_space(destination, checked_size_sum(catalog.total_size, checked_size_sum(script.text_size, header.size())));
+        io::Output output(destination, input.path().stem().wstring());
         std::array<std::byte, 65536> buffer{};
         for (std::size_t i = 0; i < catalog.files.size(); ++i) {
             auto& entry = catalog.files[i]; const auto& payload = payloads.at(file_offsets[i]);
@@ -772,6 +1062,32 @@ struct NsisPackage::Impl {
             log::verified(entry);
         }
         progress::Scope finalizing(progress::Phase::finalizing);
+        {
+            auto file = output.create_file(script.metadata_path);
+            for (std::size_t offset = 0; offset < header.size();) {
+                control::checkpoint();
+                const auto bytes = std::span(header).subspan(offset, (std::min)(buffer.size(), header.size() - offset));
+                platform::write_all(file.get(), bytes); offset += bytes.size();
+            }
+            if (!FlushFileBuffers(file.get())) platform::io_failure(L"保存 NSIS 编译元数据失败");
+        }
+        {
+            auto file = output.create_file(script.text_path);
+            std::string pending;
+            pending.reserve(buffer.size());
+            const auto flush = [&] {
+                platform::write_all(file.get(), std::as_bytes(std::span(pending)));
+                pending.clear();
+            };
+            script_listing([&](std::wstring_view line) {
+                const auto text = platform::utf8(line);
+                if (pending.size() + text.size() > buffer.size()) flush();
+                pending += text;
+            });
+            flush();
+            if (!FlushFileBuffers(file.get())) platform::io_failure(L"保存 NSIS 指令记录失败");
+        }
+        script.text_sha256 = platform::sha256(output.full_path(script.text_path));
         const auto report = platform::utf8(catalog_json(catalog, true));
         {
             auto file = output.create_file(L"_extract-report.json");

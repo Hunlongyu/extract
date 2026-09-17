@@ -54,7 +54,7 @@ def main():
         output = root / ('result-' + uuid.uuid4().hex)
         output.mkdir()
         before = hashlib.sha256(path.read_bytes()).digest()
-        process = subprocess.run([str(exe), '--quiet', '--output', str(output), str(path)], capture_output=True, timeout=120, env=environment)
+        process = subprocess.run([str(exe), '--quiet', '--layout', 'original', '--output', str(output), str(path)], capture_output=True, timeout=120, env=environment)
         check(process.returncode == code, f'{path.name}: expected {code}, got {process.returncode}: {process.stderr!r}')
         check(not list(cache.iterdir()), 'archive temporary cache residue')
         check(hashlib.sha256(path.read_bytes()).digest() == before, 'input modified')
