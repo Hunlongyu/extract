@@ -9,43 +9,71 @@
   <img src="https://img.shields.io/badge/Windows-10%20%2F%2011-0078D4?style=flat-square" alt="Windows 10 / 11">
   <img src="https://img.shields.io/badge/Arch-x86%20%7C%20x64%20%7C%20ARM64-64748B?style=flat-square" alt="架构：x86、x64、ARM64">
   <img src="https://img.shields.io/badge/Portable-Single%20EXE-16A34A?style=flat-square" alt="便携运行：单个 EXE">
-  <img src="https://img.shields.io/badge/Version-v0.8.1-7C3AED?style=flat-square" alt="版本 v0.8.1">
+  <a href="https://github.com/Hunlongyu/extract/releases/tag/v0.9.0"><img src="https://img.shields.io/badge/Version-v0.9.0-7C3AED?style=flat-square" alt="版本 v0.9.0"></a>
+  <a href="https://github.com/Hunlongyu/extract/releases"><img src="https://img.shields.io/github/downloads/Hunlongyu/extract/total?style=flat-square&amp;color=16A34A" alt="累计下载次数（全部发布附件）"></a>
 </p>
 <p align="center"><a href="README.md">English</a> | <strong>简体中文</strong></p>
 
 <p align="center">
-  <a href="https://github.com/Hunlongyu/extract/releases">下载程序</a> ·
+  <a href="#下载">下载程序</a> ·
   <a href="#如何使用">快速上手</a> ·
-  <a href="#支持的安装包格式">支持格式</a>
+  <a href="#支持的安装包格式">支持格式</a> ·
+  <a href="docs/releases/v0.9.0.md">版本更新</a>
 </p>
 
 ---
 
 Extract 是一款轻量的 Windows 安装包解包工具。将一个或多个安装包拖到程序图标上，即可提取文件，并通过系统通知查看结果。没有主界面，无需安装。
 
+## 下载
+
+根据 Windows 10 / 11 设备的架构选择独立 EXE，无需额外的解包程序或 VC++ 运行库。
+
+| 架构 | 适用设备 | 下载 v0.9.0 |
+| :--- | :--- | :--- |
+| **x64** | 大多数 Intel / AMD 64 位电脑 | [下载 x64](https://github.com/Hunlongyu/extract/releases/download/v0.9.0/Extract-v0.9.0-windows-x64.exe) |
+| **ARM64** | ARM 架构 Windows 设备 | [下载 ARM64](https://github.com/Hunlongyu/extract/releases/download/v0.9.0/Extract-v0.9.0-windows-arm64.exe) |
+| **x86** | 32 位 Windows | [下载 x86](https://github.com/Hunlongyu/extract/releases/download/v0.9.0/Extract-v0.9.0-windows-x86.exe) |
+
+[版本说明](docs/releases/v0.9.0.md) · [SHA-256 校验和](https://github.com/Hunlongyu/extract/releases/download/v0.9.0/SHA256SUMS.txt) · [全部版本](https://github.com/Hunlongyu/extract/releases)
+
+ARM64 构建已提供，ARM64 实机运行验证待完成。
+
 ## 功能特点
 
-| 📦 单文件运行 | 🛡️ 静态解包 |
-| :--- | :--- |
-| 不依赖额外的解包程序，无需安装 VC++ 运行库。 | 只读取和提取文件，不运行安装程序。 |
-| **🪆 自动展开内层包** | **🌐 Unicode 路径** |
-| 识别安装包里嵌套的安装器，继续提取应用文件。 | 支持中文、其他 Unicode 字符和空格路径。 |
+- **拖拽解包**：支持单包和批量处理，通过 Windows 通知查看进度和结果。
+- **静态提取**：只读取包内文件，不运行安装器、内嵌脚本或提取后的程序。
+- **自动展开内层包**：识别安装包里嵌套的安装器，继续提取其中的文件。
+- **精简目录**：将明确识别的应用提升到结果根目录，附加文件和不同架构分别保存。
+- **Unicode 路径**：支持中文、其他 Unicode 字符和空格路径。
 
 ## 如何使用
 
-1. 从 [Releases](https://github.com/Hunlongyu/extract/releases) 下载 EXE 并放到本地磁盘。Intel / AMD 64 位 Windows 选择 **x64**，ARM Windows 选择 **ARM64**，32 位 Windows 选择 **x86**。可重命名为 `Extract.exe`。
+1. [下载](#下载) EXE 并放到本地磁盘，可重命名为 `Extract.exe`。
 2. 选中一个或多个安装包，拖到 **`Extract.exe` 的图标上**。
 3. 在结果通知中，单个安装包成功时点击 **打开文件夹**；批量处理、部分完成或失败时点击 **查看结果**。点击通知正文也可打开同一位置。
 
 文件默认保存在**安装包旁边**，目录名为 `<安装包名称>_extracted`。已有同名目录时，自动添加 ` (2)`、` (3)` 等后缀，保留已有结果。默认使用**精简布局**：明确识别的应用提升到结果根目录，保留程序内部目录；附加文件归入 `_extra`，多个应用或架构分别保存。内层包及其文件都会保留。存在歧义时保留相对结构，独立 ZIP / 7z 和 MSIX / APPX 保持包内层级。详见[目录布局规则](docs/28-compact-layout.md)。
 
+使用 `--layout original` 可保留原始逻辑目录。精简布局整理期间需要同时容纳解码后的文件与最终副本。
+
+<details>
+<summary>进度、取消与部分完成</summary>
+
 耗时任务会显示当前包与处理阶段。进度条按当前包已写入的文件字节计数；准备等阶段显示活动状态和已处理字节，不估算百分比。内层包单独计数。结束后，同一条通知显示包名与结果，不再另弹完成提醒；短任务只显示结果。横幅收起后，可在通知中心继续查看。点击进度通知中的 **取消任务**，可停止当前包及批次中剩余的包，已完成的输出会保留。
 
 **部分完成**表示已保留提取出的文件，但仍有内容缺失、目录未能还原，或内层包处理失败，具体原因可查看任务记录。没有收到通知时，可运行 `Extract.exe --open-last-result` 打开最近结果。
 
+</details>
+
+<details>
+<summary>NSIS 目录、脚本与提取报告</summary>
+
 **文件提取完成**不代表已经还原原包的运行环境。NSIS 系统目录记录为 `AppData/Roaming`、`Public/Documents` 等逻辑位置，不写入本机实际位置；精简布局在报告中保存实际文件与原路径的对应关系，原始布局直接保留逻辑目录。无法确定用户上下文时保留到 `_unresolved` 并提示部分完成。原包的启动、等待和清理操作记录在提取报告中，不会执行。详见[目录与外壳行为说明](docs/27-nsis-shell-directories.md)。
 
 NSIS 解包还会保存 `_extract-script/nsis-script.txt`（全部编译指令、参数及原始字符串表）和同目录的 `nsis-header.bin`（原样保留的解压后元数据）。精简布局将内层包的脚本与报告集中到 `_extract-packages`。它们是静态记录，不是恢复出的原始 `.nsi` 源码，不会执行；路径和哈希记录在各层提取报告的 `compiledScript` 中。
+
+</details>
 
 > 依赖驱动、服务、注册表或额外运行库的应用，解包后仍可能需要安装才能运行。
 
@@ -82,15 +110,21 @@ MSIX / APPX 解包保留清单、资源和原始 `VFS` 目录，不执行部署�
 Start-Process .\Extract.exe -ArgumentList '--output "D:\Unpacked" "D:\Downloads\setup.exe"' -WindowStyle Hidden -Wait
 ```
 
-使用 `--layout original` 保留原始逻辑目录，或用 `--layout compact` 显式选择默认的精简布局。精简安装包目录时，暂存文件与最终副本会同时占用磁盘；原始布局可省去这一次复制。
+| 参数 | 用途 |
+| :--- | :--- |
+| `--layout original` | 保留原始逻辑目录，省去精简布局的额外复制。 |
+| `--layout compact` | 显式选择默认的精简布局。 |
+| `--quiet` | 关闭通知。 |
+| `--list <安装包>` | 只列出原始逻辑路径，不提取文件。 |
+| `--open-last-result` | 通知不可用时打开最近结果。 |
 
-使用 `--quiet` 关闭通知，或用 `--list <安装包>` 输出原始逻辑文件清单而不提取文件。最终精简路径在嵌套提取后确定，记录在 `_extract-report.json` 中。更多参数和退出码见[完整命令行说明](docs/05-build-and-development.md#使用与退出码)。
+最终精简路径在嵌套提取后确定，记录在 `_extract-report.json` 中。更多参数和退出码见[完整命令行说明](docs/05-build-and-development.md#使用与退出码)。
 
 ## 开发
 
 使用 **C++20 / C17、CMake 和 Win32** 开发，安装包解析由本项目实现，底层压缩库静态链接。
 
-v0.8.1 新增 Velopack / Squirrel、MSIX / APPX、Inno / CAB 分卷支持和任务取消，详见[版本说明](docs/releases/v0.8.1.md)。
+v0.9.0 新增精简输出目录、NSIS 目录处理改进和 NSIS 脚本记录，详见[版本说明与升级提示](docs/releases/v0.9.0.md)。
 
 - [构建与开发](docs/05-build-and-development.md)
 - [发布流程](docs/16-release.md)：仅版本标签触发构建，普通 push 不发布；ARM64 运行验证待完成。

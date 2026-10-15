@@ -9,43 +9,71 @@
   <img src="https://img.shields.io/badge/Windows-10%20%2F%2011-0078D4?style=flat-square" alt="Windows 10 / 11">
   <img src="https://img.shields.io/badge/Arch-x86%20%7C%20x64%20%7C%20ARM64-64748B?style=flat-square" alt="Architectures: x86, x64, ARM64">
   <img src="https://img.shields.io/badge/Portable-Single%20EXE-16A34A?style=flat-square" alt="Portable: single EXE">
-  <img src="https://img.shields.io/badge/Version-v0.8.1-7C3AED?style=flat-square" alt="Version v0.8.1">
+  <a href="https://github.com/Hunlongyu/extract/releases/tag/v0.9.0"><img src="https://img.shields.io/badge/Version-v0.9.0-7C3AED?style=flat-square" alt="Version v0.9.0"></a>
+  <a href="https://github.com/Hunlongyu/extract/releases"><img src="https://img.shields.io/github/downloads/Hunlongyu/extract/total?style=flat-square&amp;color=16A34A" alt="Total downloads of all release assets"></a>
 </p>
 <p align="center"><strong>English</strong> | <a href="README.zh-CN.md">简体中文</a></p>
 
 <p align="center">
-  <a href="https://github.com/Hunlongyu/extract/releases">Downloads</a> ·
+  <a href="#download">Download</a> ·
   <a href="#getting-started">Quick start</a> ·
-  <a href="#supported-formats">Supported formats</a>
+  <a href="#supported-formats">Supported formats</a> ·
+  <a href="docs/releases/v0.9.0.md">What's new</a>
 </p>
 
 ---
 
 Extract is a lightweight Windows installer extractor. Drop one or more packages onto the executable to retrieve their files, then view the results through a system notification. No main window or installation is required.
 
+## Download
+
+Choose the standalone EXE for your Windows 10 / 11 device. No external extraction tools or VC++ runtime installation are required.
+
+| Architecture | Choose this for | Download v0.9.0 |
+| :--- | :--- | :--- |
+| **x64** | Most Intel / AMD 64-bit PCs | [Download x64](https://github.com/Hunlongyu/extract/releases/download/v0.9.0/Extract-v0.9.0-windows-x64.exe) |
+| **ARM64** | Windows on ARM | [Download ARM64](https://github.com/Hunlongyu/extract/releases/download/v0.9.0/Extract-v0.9.0-windows-arm64.exe) |
+| **x86** | 32-bit Windows | [Download x86](https://github.com/Hunlongyu/extract/releases/download/v0.9.0/Extract-v0.9.0-windows-x86.exe) |
+
+[Release notes](docs/releases/v0.9.0.md) · [SHA-256 checksums](https://github.com/Hunlongyu/extract/releases/download/v0.9.0/SHA256SUMS.txt) · [All releases](https://github.com/Hunlongyu/extract/releases)
+
+ARM64 builds are available; runtime testing on ARM64 hardware is pending.
+
 ## Features
 
-| 📦 Standalone EXE | 🛡️ Static extraction |
-| :--- | :--- |
-| No external extraction tools or VC++ runtime installation required. | Inspect and extract files without running the installer. |
-| **🪆 Nested extraction** | **🌐 Unicode paths** |
-| Automatically unpack recognized installers inside a package. | Supports names containing Unicode characters and spaces. |
+- **Drag and drop** — extract one package or a batch, with progress and results in Windows notifications.
+- **Static extraction** — read package contents without running installers, embedded scripts, or extracted programs.
+- **Nested packages** — automatically unpack recognized installers inside a package.
+- **Compact folders** — bring a clearly identified application to the output root, with separate folders for additional files and architectures.
+- **Unicode paths** — support filenames containing Unicode characters and spaces.
 
 ## Getting started
 
-1. Download the EXE from [Releases](https://github.com/Hunlongyu/extract/releases) and save it on a local drive. Choose **x64** for Intel / AMD 64-bit Windows, **ARM64** for ARM Windows, or **x86** for 32-bit Windows. You may rename it to `Extract.exe`.
+1. [Download](#download) the EXE and save it on a local drive. You may rename it to `Extract.exe`.
 2. Select one or more installers and **drop them onto the `Extract.exe` icon**.
 3. Use **Open folder** in the result notification for a single successful extraction, or **View results** for batches, partial results, and failures. Clicking the notification itself opens the same destination. Button labels currently appear in Chinese.
 
 Files are saved **next to the input package** in `<package-name>_extracted`. Existing folders are preserved by adding ` (2)`, ` (3)`, and so on. The default **compact layout** brings a clearly identified application to the output root while preserving its internal folders. Additional files go under `_extra`; multiple applications or architectures stay in separate folders. Nested packages and their files are retained. Ambiguous layouts keep their relative structure, and standalone ZIP / 7z and MSIX / APPX keep their package hierarchy. See [layout rules](docs/28-compact-layout.md).
 
+Use `--layout original` to keep the original logical folder structure. Compact layout temporarily needs space for both the decoded files and the final copy.
+
+<details>
+<summary>Progress, cancellation, and partial results</summary>
+
 Longer tasks show the current package and stage. The progress bar tracks file bytes written for the current package; preparation and other stages show activity and processed bytes instead of an estimated percentage. Nested packages have their own progress. The same notification then shows the result and package name without another popup; short tasks show only the result. Check Notification Center if the banner closes. Use **Cancel task** in the progress notification to stop the current package and the remaining batch; already completed output is kept.
 
 A **partial result** means extracted files were retained, but some content is missing, paths could not be restored, or a nested package failed. The job record explains the issue. If no notification appears, run `Extract.exe --open-last-result` to open the latest result.
 
+</details>
+
+<details>
+<summary>NSIS paths, scripts, and extraction reports</summary>
+
 **File extraction complete** does not mean the original runtime environment has been recreated. NSIS system locations are recorded as logical paths such as `AppData/Roaming` and `Public/Documents`; Extract does not write to their real system locations. Compact layout records the mapping to the saved files, while original layout keeps those logical folders. Ambiguous user contexts are retained under `_unresolved` with a partial result. Launch, wait, and cleanup operations are recorded in the extraction report but never executed. See [directory and wrapper behavior](docs/27-nsis-shell-directories.md).
 
 NSIS extraction also saves `_extract-script/nsis-script.txt` (all compiled instructions, operands, and the raw string table) and `nsis-header.bin` (the unchanged decompressed metadata). In compact layout, inner packages' scripts and reports are grouped under `_extract-packages`. These are static records, not recovered original `.nsi` source, and are never executed. Their paths and hashes are recorded under `compiledScript` in each extraction report.
+
+</details>
 
 > Extracted applications may still require installation if they depend on drivers, services, registry settings, or additional runtimes.
 
@@ -82,15 +110,21 @@ To choose an existing output parent folder in PowerShell:
 Start-Process .\Extract.exe -ArgumentList '--output "D:\Unpacked" "D:\Downloads\setup.exe"' -WindowStyle Hidden -Wait
 ```
 
-Use `--layout original` to retain the original logical directory layout, or `--layout compact` to explicitly select the default. Compact installer extraction uses temporary space for both the decoded files and the final copy; original layout avoids that extra copy.
+| Option | Purpose |
+| :--- | :--- |
+| `--layout original` | Preserve the original logical folders and avoid the compact-layout copy. |
+| `--layout compact` | Explicitly select the default compact layout. |
+| `--quiet` | Suppress notifications. |
+| `--list <package>` | List original logical paths without extracting files. |
+| `--open-last-result` | Open the latest result when a notification is unavailable. |
 
-Use `--quiet` to suppress notifications or `--list <package>` to output the original logical file list without extracting files. Final compact paths are planned after nested extraction and recorded in `_extract-report.json`. See the [full command-line reference](docs/05-build-and-development.md#使用与退出码) for more options and exit codes.
+Final compact paths are planned after nested extraction and recorded in `_extract-report.json`. See the [full command-line reference](docs/05-build-and-development.md#使用与退出码) for more options and exit codes.
 
 ## Development
 
 Built with **C++20 / C17, CMake, and Win32**, with project-owned package parsers and statically linked compression libraries. Detailed developer documents are currently in Chinese.
 
-Version 0.8.1 adds Velopack / Squirrel, MSIX / APPX, Inno / CAB split packages, and task cancellation. See the [release notes](docs/releases/v0.8.1.md).
+Version 0.9.0 introduces compact output folders, improved NSIS directory handling, and preserved NSIS script records. See the [release notes and upgrade notes](docs/releases/v0.9.0.md).
 
 - [Build and development](docs/05-build-and-development.md)
 - [Release workflow](docs/16-release.md) — version tags trigger builds; ordinary pushes do not publish. ARM64 runtime testing is pending.
