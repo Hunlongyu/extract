@@ -13,7 +13,7 @@
 .\scripts\build.ps1 -Configuration Release -Test -Install
 ```
 
-脚本通过 `vswhere -prerelease` 发现包含目标架构 C++ 工具的 Visual Studio，以 `vcvarsall.bat` 初始化当前进程环境，优先使用 Visual Studio 的 CMake/Ninja。它不会修改用户或系统环境变量，也不固定 MSVC 版本目录。`-Architecture x86|x64|arm64` 选择架构，各架构使用独立的构建及安装目录，配置时核对编译器的真实架构。`-Test` 运行 CTest 并写入 `test-results.xml`；`-Install` 生成便携目录。ARM64 交叉编译需安装 MSVC ARM64 工具和 Windows SDK，使用 `-WithoutTests`，不在 x64 主机上运行 ARM64 测试。需要重建错误的 CMake 缓存时加 `-Fresh`；不要在未初始化 MSVC 的终端直接用预设重配已有缓存。详见 [发布流程](16-release.md)。
+脚本通过 `vswhere -prerelease` 发现包含目标架构 C++ 工具的 Visual Studio，以 `vcvarsall.bat` 初始化当前进程环境，优先使用 Visual Studio 的 CMake/Ninja。它不会修改用户或系统环境变量，也不固定 MSVC 版本目录。`-Architecture x86|x64|arm64` 选择架构，各架构使用独立的构建及安装目录，配置时核对编译器的真实架构。`-Test` 运行 CTest 并写入 `test-results.xml`；`-Install` 生成便携目录。ARM64 交叉编译需安装 MSVC ARM64 工具和 Windows SDK，使用 `-WithoutTests`，不在 x64 主机上运行 ARM64 测试。需要重建错误的 CMake 缓存时加 `-Fresh`；不要在未初始化 MSVC 的终端直接用预设重配已有缓存。详见 [发布流程](release.md)。
 
 链接保留 `/guard:cf`，并使用 `/INCREMENTAL:NO` 完整生成 CFG 目标表。本机 MSVC 预览工具链曾在增量链接后遗漏 CAB 析构跳板，触发 `0xC0000409 / FAST_FAIL_GUARD_ICALL_CHECK_FAILURE`；完整链接后同一回归包恢复预期的 299 部分完成，不关闭 CFG 来绕过检查。
 
@@ -52,7 +52,7 @@ python tests/inno_integration.py --executable out/build/win-x64-release/bin/Extr
     --work-root out/inno-tests --compiler "D:/Tools/InnoSetup/ISCC.exe"
 ```
 
-没有 Python 时 CMake 不添加 Python 格式测试；没有 ISCC 或 makensis 时相应测试以 77 标记为跳过，嵌套测试需要两者。跳过不等于通过。完整验收可分别指定官方 6.2.2、6.5.0、6.5.4、6.6.1、6.7.3、7.1.0 编译器，后者自动生成 x86/x64 两种安装器。测试不会下载或安装编译器，也不会运行生成的安装器。6.2.2 的开发工具来源及特殊加密反例见 [Textify 修复记录](08-textify-compatibility.md)。
+没有 Python 时 CMake 不添加 Python 格式测试；没有 ISCC 或 makensis 时相应测试以 77 标记为跳过，嵌套测试需要两者。跳过不等于通过。完整验收可分别指定官方 6.2.2、6.5.0、6.5.4、6.6.1、6.7.3、7.1.0 编译器，后者自动生成 x86/x64 两种安装器。测试不会下载或安装编译器，也不会运行生成的安装器；版本适配细节见 [Inno 兼容性说明](inno-compatibility.md)。
 
 | 路径 | 用途 |
 | --- | --- |
@@ -66,7 +66,7 @@ python tests/inno_integration.py --executable out/build/win-x64-release/bin/Extr
 
 ## 使用与退出码
 
-v0.8.1 增加 [工作进程、取消和超时](22-worker-cancellation.md)、[Velopack/Squirrel 完整包](24-update-packages.md)和 [MSIX/APPX/Bundle](25-msix-appx.md)，当时 CTest 共 14 项；本地开发版增加[精简布局](28-compact-layout.md)回归后共 15 项。`update_package_integration` 使用 Python 生成无入口点的惰性 PE/ZIP，不联网、不执行样本；官方固定摘要样本另做可选本地验证。
+v0.8.1 增加 [工作进程、取消和超时](worker-cancellation.md)、[Velopack/Squirrel 完整包](update-packages.md)和 [MSIX/APPX/Bundle](msix-appx.md)，当时 CTest 共 14 项；本地开发版增加[精简布局](compact-layout.md)回归后共 15 项。`update_package_integration` 使用 Python 生成无入口点的惰性 PE/ZIP，不联网、不执行样本；官方固定摘要样本另做可选本地验证。
 
 `msix_integration` 查找 Windows SDK 最新版本目录中的 `x64/MakeAppx.exe`，生成已知内容的单包、资源包和 Bundle；用 Python 独立 ZIP 读取及打包前内容核对提取结果，并运行损坏、缺失、路径与哈希反例。缺少 SDK 打包器返回 77，发布工作流要求 15 项均通过且无跳过。MakeAppx 仅为测试工具，不链接或附带到产品，不运行包内程序。
 
@@ -157,7 +157,7 @@ $process.ExitCode
 | `tests/verify-inno.ps1` | 官方 Inno 安装包、已提取文件与生产方源码文件对照 |
 | `tests/verify-textify.ps1` | 用户 Textify 样本与独立读取的包内 SHA-1 基准 |
 
-`volume_integration` 使用官方 ISCC 与 MakeCab 生成跨卷载荷，覆盖缺卷、错卷、损坏、卷链及 MSI Media 反例；`tests/make_spanned_msi.ps1` 仅构建惰性 MSI 数据库。可用 `--compiler` 切换 Inno 编译器、`--only inno|cab` 运行专项，具体见 [分卷说明](26-split-volumes.md)。
+`volume_integration` 使用官方 ISCC 与 MakeCab 生成跨卷载荷，覆盖缺卷、错卷、损坏、卷链及 MSI Media 反例；`tests/make_spanned_msi.ps1` 仅构建惰性 MSI 数据库。可用 `--compiler` 切换 Inno 编译器、`--only inno|cab` 运行专项，具体见 [分卷说明](split-volumes.md)。
 
 自动测试使用系统 `makecab.exe` 和 Windows Installer COM 接口生成开发样本；它们不是产品的外部解包依赖。每轮使用独立目录，不执行安装器或输出文件。测试保留结果以便检查，生成物不进入 Git。
 
@@ -172,6 +172,6 @@ Start-Process .\out\dist\win-x64-release\Extract.exe `
 
 探针通过 Windows Shell 启动已退出的程序，核对固定帮助协议成功及非法任务 ID 拒绝。它不等于实际点击通知的视觉验收。
 
-近期真实样本验证方法与结果、当前限制见 [MSI 实现与验证](06-msi-first-slice.md)和 [Inno 实现与验证](07-inno-implementation.md)。在干净 Windows 10/11、真实 Explorer 拖拽及通知横幅点击上的人工验收仍需补充。
+各格式真实样本验证方法与当前限制见 [Inno 兼容性说明](inno-compatibility.md) 与 [文档总览](README.md)。在干净 Windows 10/11、真实 Explorer 拖拽及通知横幅点击上的人工验收仍需补充。
 
-阶段划分、进度精度及通知更新行为见[解包进度通知](18-progress-notifications.md)。
+阶段划分、进度精度及通知更新行为见[解包进度通知](progress-notifications.md)。

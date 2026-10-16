@@ -14,7 +14,7 @@
 | 差分包 | 根据 `-delta.nupkg` 和应用目录中的 `.diff`、`.bsdiff`、`.zsdiff` 标记拒绝 | 不应用补丁、不寻找或下载旧版本；改名后仍带补丁标记的内嵌包也会被拒绝 |
 | 无内嵌载荷的已识别外壳 | 提示需要离线安装包或完整 nupkg | 不联网取得内容；不能识别所有厂商自定义在线启动器 |
 
-这不是“所有 Electron 包”的统一实现。NSIS/Electron 与这两个更新框架仍走各自解析器。MSIX/APPX/Bundle 后续已由[独立模块](25-msix-appx.md)实现；差分合成或任意定制外壳仍不支持。
+这不是“所有 Electron 包”的统一实现。NSIS/Electron 与这两个更新框架仍走各自解析器。MSIX/APPX/Bundle 后续已由[独立模块](msix-appx.md)实现；差分合成或任意定制外壳仍不支持。
 
 ## 输出目录
 
@@ -31,7 +31,7 @@
 
 ZIP 读取与通用归档共用同一个实现，检查中央目录、本地头、描述符、范围重叠、路径、CRC-32 和输出 SHA-256。新增有界 ZIP 视图接口，不启动外部解包工具。
 
-Squirrel 内嵌完整包先流式解码到受控临时文件，检查 `RELEASES` 的大小和 SHA-1，再映射其 ZIP。缓存纳入 worker 的创建记录与取消清理；大载荷不累计到内存 vector。映射仍需要连续地址空间，x86 限制见 [大包处理](17-large-packages.md)。
+Squirrel 内嵌完整包先流式解码到受控临时文件，检查 `RELEASES` 的大小和 SHA-1，再映射其 ZIP。缓存纳入 worker 的创建记录与取消清理；大载荷不累计到内存 vector。映射仍需要连续地址空间，x86 限制见 [大包处理](large-packages.md)。
 
 nuspec / RELEASES 元数据各限 4 MiB；XML 禁用 DTD，限制深度、字段长度，并拒绝重复关键字段和非 Windows 目标。声明主程序但包里缺文件时返回损坏。ZIP 原有路径、元数据及整数保护继续生效；不新增通用输入、输出体积或文件数上限。
 
@@ -61,4 +61,4 @@ python tests/update_package_integration.py `
 
 本轮 x64 / x86 的全量 CTest 各 12 项通过，无失败、无跳过，分别约 264 / 268 秒。最后仅更新帮助和版本输出的格式名称后，两个最终 EXE 再次各通过 45 个专项用例，并检查了帮助输出、内置版本、`/MT`、系统 DLL 依赖与 PE 保护标志。版本维持 0.7.0，没有创建发布标签或 Release。
 
-本次运行数据与产物摘要见 [验证记录](data/validation-update-packages.json)。本机缺少 ARM64 MSVC 组件，本轮未构建或运行 ARM64。测试覆盖特定格式布局，不据此宣称全部近期软件兼容、干净 Windows 10/11 桌面验证或提取程序可运行。后续 MSIX/APPX/Bundle 的专用清单与块校验见 [实现记录](25-msix-appx.md)。
+本次运行数据与产物摘要见 [验证记录](data/validation-update-packages.json)。本机缺少 ARM64 MSVC 组件，本轮未构建或运行 ARM64。测试覆盖特定格式布局，不据此宣称全部近期软件兼容、干净 Windows 10/11 桌面验证或提取程序可运行。后续 MSIX/APPX/Bundle 的专用清单与块校验见 [实现记录](msix-appx.md)。

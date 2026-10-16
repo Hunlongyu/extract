@@ -10,7 +10,7 @@
 #include <numeric>
 
 // 磁盘布局依据：jrsoftware/issrc 的 Struct / Shared.Struct、Shared.SetupEntFunc、
-// Compression.Base 和 Setup.FileExtractor；固定版本与验证矩阵见 docs/20-inno-compatibility.md。
+// Compression.Base 和 Setup.FileExtractor；固定版本与验证矩阵见 docs/inno-compatibility.md。
 // 此处按字节读取磁盘记录，不映射 Delphi 内存结构，也不执行安装脚本。
 namespace extract::formats {
 namespace {

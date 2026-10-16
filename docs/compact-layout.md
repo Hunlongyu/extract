@@ -57,7 +57,7 @@ ReNamerPro_7.10.0.0_extracted/
 
 根包 NSIS 脚本位于 `_extract-script`。每个内层包的报告位于 `_extract-packages/pN/report.json`，NSIS 脚本在其旁边的 `_extract-script`；其 `files[].path` 和 `compiledScript` 路径同样以整个结果根目录为基准。复用同一内层包时指向同一报告。原始布局保持各层报告及原文件标识，`pathBase` 为 `report-directory`。
 
-脚本指令、元数据及载荷内容不改写，复制前后校验大小和 SHA-256。NSIS 保存范围详见[系统目录与外壳行为](27-nsis-shell-directories.md)。
+脚本指令、元数据及载荷内容不改写，复制前后校验大小和 SHA-256。NSIS 保存范围详见[系统目录与外壳行为](nsis-shell-directories.md)。
 
 ## 暂存、空间和失败
 
@@ -65,7 +65,7 @@ ReNamerPro_7.10.0.0_extracted/
 
 内层解析失败时，可将已解出的文件按保守布局提交为部分完成。最终整理阶段取消、磁盘不足或校验失败时，未提交结果回滚。清理仅处理本任务登记且文件身份、创建时间仍一致的项目，不递归删除未知文件；被替换或无法验证的项目保留。进程异常时由现有工作进程恢复逻辑清理登记的临时文件。
 
-磁盘紧张或需要逐层原貌时使用 `--layout original`，可避免整理副本，保留原来的逐层提交方式。没有新增统一输入/输出体积限制，资源约束仍见[大包处理](17-large-packages.md)。
+磁盘紧张或需要逐层原貌时使用 `--layout original`，可避免整理副本，保留原来的逐层提交方式。没有新增统一输入/输出体积限制，资源约束仍见[大包处理](large-packages.md)。
 
 ## 验证
 

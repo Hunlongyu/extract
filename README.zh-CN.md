@@ -55,9 +55,9 @@ Extract 是一款轻量、免安装的 Windows 安装包解包工具。只需将
 
 ### 使用说明
 
-- **目录布局**：默认采用**精简布局**，核心主程序直接置于根目录，附属文件归入 `_extra`；如需完整还原原始逻辑层级，可使用 `--layout original`（详见[布局规则](docs/28-compact-layout.md)）。
+- **目录布局**：默认采用**精简布局**，核心主程序直接置于根目录，附属文件归入 `_extra`；如需完整还原原始逻辑层级，可使用 `--layout original`（详见[布局规则](docs/compact-layout.md)）。
 - **进度与取消**：耗时任务会实时更新进度条并支持中途取消（已解压文件会保留）；若未弹出通知，可运行 `Extract.exe --open-last-result` 打开最近结果。
-- **脚本与分析**：NSIS 等安装程序的编译脚本与指令会导出为 `_extract-script/nsis-script.txt` 静态文本，仅作逆向分析记录，不执行任何代码（详见 [NSIS 说明](docs/27-nsis-shell-directories.md)）。
+- **脚本与分析**：NSIS 等安装程序的编译脚本与指令会导出为 `_extract-script/nsis-script.txt` 静态文本，仅作逆向分析记录，不执行任何代码（详见 [NSIS 说明](docs/nsis-shell-directories.md)）。
 
 > [!NOTE]
 > 解包工具仅提取程序文件。若目标软件依赖系统驱动、服务或注册表项，提取后可能仍需正常安装才能使用。
@@ -66,12 +66,12 @@ Extract 是一款轻量、免安装的 Windows 安装包解包工具。只需将
 
 | 格式 | 扩展名 | 支持范围 |
 | :--- | :--- | :--- |
-| **Inno Setup** | `.exe`, `.bin` | 支持 6.0–6.7、7.1 标准布局与[外置分卷](docs/26-split-volumes.md)（[详情](docs/20-inno-compatibility.md)） |
-| **NSIS** | `.exe` | Unicode 3.x 与部分 [ANSI 2.x](docs/21-nsis-ansi-compatibility.md)，普通/固实压缩，Electron/Tauri 封装与架构分支识别 |
+| **Inno Setup** | `.exe`, `.bin` | 支持 6.0–6.7、7.1 标准布局与[外置分卷](docs/split-volumes.md)（[详情](docs/inno-compatibility.md)） |
+| **NSIS** | `.exe` | Unicode 3.x 与部分 [ANSI 2.x](docs/nsis-ansi-compatibility.md)，普通/固实压缩，Electron/Tauri 封装与架构分支识别 |
 | **Windows Installer** | `.msi` | 内嵌/外置/混合 CAB 卷链、跨卷文件及松散文件源布局 |
 | **WiX Burn** | `.exe` | 布局 2 CAB 容器，支持 v3/v4 清单及内嵌/本地载荷 |
-| **Velopack / Squirrel** | `.exe`, `*.nupkg` | [离线更新包](docs/24-update-packages.md)，自动归集应用本体与分架构目录 |
-| **MSIX / APPX / Bundle** | `.msix`, `.appx`, `.msixbundle`... | [未加密离线包](docs/25-msix-appx.md)，块哈希校验，分架构与资源包展开 |
+| **Velopack / Squirrel** | `.exe`, `*.nupkg` | [离线更新包](docs/update-packages.md)，自动归集应用本体与分架构目录 |
+| **MSIX / APPX / Bundle** | `.msix`, `.appx`, `.msixbundle`... | [未加密离线包](docs/msix-appx.md)，块哈希校验，分架构与资源包展开 |
 | **CAB** | `.cab` | 标准 Microsoft CAB 1.3：无压缩、MSZIP、LZX，支持跨卷续接 |
 | **ZIP / ZIP64** | `.zip` | 存储（Stored）、Deflate 与 bzip2 |
 | **7z** | `.7z` | LZMA、LZMA2、Copy，支持固实块与 BCJ/BCJ2 过滤器 |
@@ -80,7 +80,7 @@ Extract 是一款轻量、免安装的 Windows 安装包解包工具。只需将
 ### 说明与限制
 
 - **分卷安装包**：请将所有分卷置于同一目录并保持原名，直接拖入主 EXE、MSI 或任一 CAB 卷即可。
-- **大包支持**：无统一包体积或文件数量上限，按实际系统资源流式处理；处理超大安装包建议优先使用 64 位版本（详见[资源处理说明](docs/17-large-packages.md)）。
+- **大包支持**：无统一包体积或文件数量上限，按实际系统资源流式处理；处理超大安装包建议优先使用 64 位版本（详见[资源处理说明](docs/large-packages.md)）。
 - **暂不支持**：RAR 格式、密码加密、分卷 ZIP/7z、InstallShield 私有 CAB、MST/MSP 补丁以及需联网下载的在线安装器。
 
 ## 命令行用法
@@ -101,14 +101,15 @@ Start-Process .\Extract.exe -ArgumentList '--output "D:\Unpacked" "D:\Downloads\
 | `--quiet` | 静默模式，不弹出系统通知 |
 | `--open-last-result` | 打开最近一次的解包输出目录 |
 
-完整参数与退出码说明见[开发与命令行文档](docs/05-build-and-development.md#使用与退出码)。
+完整参数与退出码说明见[开发与命令行文档](docs/build-and-development.md#使用与退出码)。
 
 ## 开发
 
 基于 **C++20 / C17、CMake 与 Win32 API**，自主实现格式解析，底层压缩库静态链接（无外部运行库依赖）。
 
-- [构建与开发指南](docs/05-build-and-development.md)
+- [技术文档总览](docs/README.md)
+- [构建与开发指南](docs/build-and-development.md)
 - [版本发布说明](docs/releases/v0.9.0.md)
-- [项目路线图](docs/04-roadmap-and-acceptance.md)
-- [工作进程与异常隔离机制](docs/22-worker-cancellation.md)
+- [项目路线图](docs/roadmap-and-acceptance.md)
+- [工作进程与异常隔离机制](docs/worker-cancellation.md)
 - [第三方库与开源许可](third_party/README.md)

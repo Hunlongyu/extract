@@ -1,6 +1,6 @@
 # Inno compatibility / Inno 兼容性
 
-Standard embedded packages are supported for the exact data layouts below. Compiler versions and data layout identifiers are different. Modified repacks, encrypted payloads and downloaded files are not covered by this table. External split volumes are now implemented locally; their separate verification matrix and limitations are documented in [split packages](26-split-volumes.md).
+Standard embedded packages are supported for the exact data layouts below. Compiler versions and data layout identifiers are different. Modified repacks, encrypted payloads and downloaded files are not covered by this table. External split volumes are now implemented locally; their separate verification matrix and limitations are documented in [split packages](split-volumes.md).
 
 ## 精确布局与验证范围
 
@@ -14,12 +14,12 @@ Standard embedded packages are supported for the exact data layouts below. Compi
 | `6.4.0.1` | 6.4.1 | 本轮新增、x86 / x64 Release |
 | `6.4.2` | 6.4.2 | 本轮新增、x86 / x64 Release |
 | `6.4.3` | 6.4.3 | 本轮新增、x86 / x64 Release |
-| `6.5.0` | 6.5.0 | [嵌套提取阶段](10-nested-extraction.md) |
-| `6.5.2` | 6.5.4 | [初始验证](07-inno-implementation.md) |
-| `6.6.0` | 6.6.0 | 本轮新增、x86 / x64 Release |
-| `6.6.1` | 6.6.1 | [初始验证](07-inno-implementation.md) |
-| `6.7.0` | 6.7.3 | 原有支持，本轮回归 |
-| `7.0.0.3` | 7.1.0 | [初始验证](07-inno-implementation.md)，含 x64 安装器 |
+| `6.5.0` | 6.5.0 | 已验证、嵌套提取支持 |
+| `6.5.2` | 6.5.4 | 已验证、x86 / x64 Release |
+| `6.6.0` | 6.6.0 | 已验证、x86 / x64 Release |
+| `6.6.1` | 6.6.1 | 已验证、x86 / x64 Release |
+| `6.7.0` | 6.7.3 | 已验证、x86 / x64 Release |
+| `7.0.0.3` | 7.1.0 | 已验证，含 x64 安装器 |
 
 同一编译器系列可能改变数据布局；此表不承诺全部 6.x / 7.x、ANSI 或第三方修改版兼容。表中 x86 / x64 Release 表示 Extract 的运行架构。
 
