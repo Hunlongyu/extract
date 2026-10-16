@@ -4,7 +4,7 @@
 
 <h1 align="center">Extract</h1>
 
-<p align="center">拖入安装包，直接提取其中的文件。</p>
+<p align="center">拖入安装包，直接提取文件。</p>
 <p align="center">
   <img src="https://img.shields.io/badge/Windows-10%20%2F%2011-0078D4?style=flat-square" alt="Windows 10 / 11">
   <img src="https://img.shields.io/badge/Arch-x86%20%7C%20x64%20%7C%20ARM64-64748B?style=flat-square" alt="架构：x86、x64、ARM64">
@@ -17,117 +17,98 @@
 <p align="center">
   <a href="#下载">下载程序</a> ·
   <a href="#如何使用">快速上手</a> ·
-  <a href="#支持的安装包格式">支持格式</a> ·
+  <a href="#支持的格式">支持格式</a> ·
   <a href="docs/releases/v0.9.0.md">版本更新</a>
 </p>
 
 ---
 
-Extract 是一款轻量的 Windows 安装包解包工具。将一个或多个安装包拖到程序图标上，即可提取文件，并通过系统通知查看结果。没有主界面，无需安装。
+Extract 是一款轻量、免安装的 Windows 安装包解包工具。只需将一个或多个安装包拖到程序图标上，即可自动提取全部文件并通过系统通知展示结果，无需主界面与繁琐配置。
 
 ## 下载
 
-根据 Windows 10 / 11 设备的架构选择独立 EXE，无需额外的解包程序或 VC++ 运行库。
+单文件绿色版，无需安装，无外部依赖或运行库要求：
 
-| 架构 | 适用设备 | 下载 v0.9.0 |
+| 架构 | 适用平台 | 下载 v0.9.0 |
 | :--- | :--- | :--- |
-| **x64** | 大多数 Intel / AMD 64 位电脑 | [下载 x64](https://github.com/Hunlongyu/extract/releases/download/v0.9.0/Extract-v0.9.0-windows-x64.exe) |
-| **ARM64** | ARM 架构 Windows 设备 | [下载 ARM64](https://github.com/Hunlongyu/extract/releases/download/v0.9.0/Extract-v0.9.0-windows-arm64.exe) |
+| **x64** | 大多数 64 位 PC（推荐） | [下载 x64](https://github.com/Hunlongyu/extract/releases/download/v0.9.0/Extract-v0.9.0-windows-x64.exe) |
+| **ARM64** | Windows on ARM 设备 | [下载 ARM64](https://github.com/Hunlongyu/extract/releases/download/v0.9.0/Extract-v0.9.0-windows-arm64.exe) |
 | **x86** | 32 位 Windows | [下载 x86](https://github.com/Hunlongyu/extract/releases/download/v0.9.0/Extract-v0.9.0-windows-x86.exe) |
 
 [版本说明](docs/releases/v0.9.0.md) · [SHA-256 校验和](https://github.com/Hunlongyu/extract/releases/download/v0.9.0/SHA256SUMS.txt) · [全部版本](https://github.com/Hunlongyu/extract/releases)
 
-ARM64 构建已提供，ARM64 实机运行验证待完成。
-
 ## 功能特点
 
-- **拖拽解包**：支持单包和批量处理，通过 Windows 通知查看进度和结果。
-- **静态提取**：只读取包内文件，不运行安装器、内嵌脚本或提取后的程序。
-- **自动展开内层包**：识别安装包里嵌套的安装器，继续提取其中的文件。
-- **精简目录**：将明确识别的应用提升到结果根目录，附加文件和不同架构分别保存。
-- **Unicode 路径**：支持中文、其他 Unicode 字符和空格路径。
+- **拖拽即解**：支持单个或批量安装包拖入，通过原生系统通知实时反馈进度和结果。
+- **安全纯静态**：纯解析读取，绝不执行安装器本身、内嵌脚本或释放出的程序。
+- **智能嵌套解包**：自动识别并递归解包嵌套在内的其他安装包与归档。
+- **精简目录布局**：自动提取核心程序至根目录，附加组件与架构分支有序归类。
+- **完善路径支持**：原生支持中文、空格、特殊 Unicode 字符及长路径。
 
 ## 如何使用
 
-1. [下载](#下载) EXE 并放到本地磁盘，可重命名为 `Extract.exe`。
-2. 选中一个或多个安装包，拖到 **`Extract.exe` 的图标上**。
-3. 在结果通知中，单个安装包成功时点击 **打开文件夹**；批量处理、部分完成或失败时点击 **查看结果**。点击通知正文也可打开同一位置。
+1. [下载](#下载)对应架构的 EXE（可重命名为 `Extract.exe`）放到本地。
+2. 选中一个或多个安装包，**拖拽到 `Extract.exe` 图标上**。
+3. 提取完成后，点击通知上的 **打开文件夹**（或 **查看结果**）即可浏览提取出的文件。
 
-文件默认保存在**安装包旁边**，目录名为 `<安装包名称>_extracted`。已有同名目录时，自动添加 ` (2)`、` (3)` 等后缀，保留已有结果。默认使用**精简布局**：明确识别的应用提升到结果根目录，保留程序内部目录；附加文件归入 `_extra`，多个应用或架构分别保存。内层包及其文件都会保留。存在歧义时保留相对结构，独立 ZIP / 7z 和 MSIX / APPX 保持包内层级。详见[目录布局规则](docs/28-compact-layout.md)。
+默认解压到安装包同级目录下的 `<安装包名>_extracted`。遇到同名文件夹会自动递增后缀（如 ` (2)`），保护已有数据。
 
-使用 `--layout original` 可保留原始逻辑目录。精简布局整理期间需要同时容纳解码后的文件与最终副本。
+### 使用说明
 
-<details>
-<summary>进度、取消与部分完成</summary>
+- **目录布局**：默认采用**精简布局**，核心主程序直接置于根目录，附属文件归入 `_extra`；如需完整还原原始逻辑层级，可使用 `--layout original`（详见[布局规则](docs/28-compact-layout.md)）。
+- **进度与取消**：耗时任务会实时更新进度条并支持中途取消（已解压文件会保留）；若未弹出通知，可运行 `Extract.exe --open-last-result` 打开最近结果。
+- **脚本与分析**：NSIS 等安装程序的编译脚本与指令会导出为 `_extract-script/nsis-script.txt` 静态文本，仅作逆向分析记录，不执行任何代码（详见 [NSIS 说明](docs/27-nsis-shell-directories.md)）。
 
-耗时任务会显示当前包与处理阶段。进度条按当前包已写入的文件字节计数；准备等阶段显示活动状态和已处理字节，不估算百分比。内层包单独计数。结束后，同一条通知显示包名与结果，不再另弹完成提醒；短任务只显示结果。横幅收起后，可在通知中心继续查看。点击进度通知中的 **取消任务**，可停止当前包及批次中剩余的包，已完成的输出会保留。
+> [!NOTE]
+> 解包工具仅提取程序文件。若目标软件依赖系统驱动、服务或注册表项，提取后可能仍需正常安装才能使用。
 
-**部分完成**表示已保留提取出的文件，但仍有内容缺失、目录未能还原，或内层包处理失败，具体原因可查看任务记录。没有收到通知时，可运行 `Extract.exe --open-last-result` 打开最近结果。
+## 支持的格式
 
-</details>
-
-<details>
-<summary>NSIS 目录、脚本与提取报告</summary>
-
-**文件提取完成**不代表已经还原原包的运行环境。NSIS 系统目录记录为 `AppData/Roaming`、`Public/Documents` 等逻辑位置，不写入本机实际位置；精简布局在报告中保存实际文件与原路径的对应关系，原始布局直接保留逻辑目录。无法确定用户上下文时保留到 `_unresolved` 并提示部分完成。原包的启动、等待和清理操作记录在提取报告中，不会执行。详见[目录与外壳行为说明](docs/27-nsis-shell-directories.md)。
-
-NSIS 解包还会保存 `_extract-script/nsis-script.txt`（全部编译指令、参数及原始字符串表）和同目录的 `nsis-header.bin`（原样保留的解压后元数据）。精简布局将内层包的脚本与报告集中到 `_extract-packages`。它们是静态记录，不是恢复出的原始 `.nsi` 源码，不会执行；路径和哈希记录在各层提取报告的 `compiledScript` 中。
-
-</details>
-
-> 依赖驱动、服务、注册表或额外运行库的应用，解包后仍可能需要安装才能运行。
-
-## 支持的安装包格式
-
-| 格式 | 常见文件 | 当前支持范围 |
+| 格式 | 扩展名 | 支持范围 |
 | :--- | :--- | :--- |
-| **Inno Setup** | `.exe`、配套 `.bin` | 支持 6.0–6.7 和 7.1 的部分标准布局及[外置分卷](docs/26-split-volumes.md)，详见[兼容性说明](docs/20-inno-compatibility.md) |
-| **NSIS** | `.exe` | 已验证的 Unicode 3.x 与部分 [ANSI 2.x 布局](docs/21-nsis-ansi-compatibility.md)、普通与固实压缩、部分 Electron / Tauri 封装；已识别的架构分支按目录分别保留 |
-| **Windows Installer** | `.msi` | 内嵌、外置或混合 CAB 卷链及跨卷文件、松散文件及混合源布局 |
-| **WiX Burn** | `.exe` | 布局 2 的 CAB 容器，支持 v3 / v4 清单及内嵌或本地外置载荷 |
-| **Velopack / Squirrel.Windows** | `.exe`、`*-full.nupkg` | [已验证的离线布局](docs/24-update-packages.md)，已识别应用文件集中保存；多个目标分别保留目录 |
-| **MSIX / APPX / Bundle** | `.msix`、`.appx`、`.msixbundle`、`.appxbundle` | [未加密离线包](docs/25-msix-appx.md)，校验块哈希，内嵌架构与资源包分目录展开 |
+| **Inno Setup** | `.exe`, `.bin` | 支持 6.0–6.7、7.1 标准布局与[外置分卷](docs/26-split-volumes.md)（[详情](docs/20-inno-compatibility.md)） |
+| **NSIS** | `.exe` | Unicode 3.x 与部分 [ANSI 2.x](docs/21-nsis-ansi-compatibility.md)，普通/固实压缩，Electron/Tauri 封装与架构分支识别 |
+| **Windows Installer** | `.msi` | 内嵌/外置/混合 CAB 卷链、跨卷文件及松散文件源布局 |
+| **WiX Burn** | `.exe` | 布局 2 CAB 容器，支持 v3/v4 清单及内嵌/本地载荷 |
+| **Velopack / Squirrel** | `.exe`, `*.nupkg` | [离线更新包](docs/24-update-packages.md)，自动归集应用本体与分架构目录 |
+| **MSIX / APPX / Bundle** | `.msix`, `.appx`, `.msixbundle`... | [未加密离线包](docs/25-msix-appx.md)，块哈希校验，分架构与资源包展开 |
 | **CAB** | `.cab` | 标准 Microsoft CAB 1.3：无压缩、MSZIP、LZX，支持跨卷续接 |
-| **ZIP / ZIP64** | `.zip` | 无压缩、Deflate、bzip2 |
-| **7z** | `.7z` | Copy、LZMA、LZMA2，支持普通与固实块、BCJ / BCJ2 |
-| **自解压封装（SFX）** | `.exe` | 可识别的 PE 附加区 ZIP、7z、CAB 归档 |
+| **ZIP / ZIP64** | `.zip` | 存储（Stored）、Deflate 与 bzip2 |
+| **7z** | `.7z` | LZMA、LZMA2、Copy，支持固实块与 BCJ/BCJ2 过滤器 |
+| **自解压封装 (SFX)** | `.exe` | 识别 PE 附加区内的 ZIP、7z 及 CAB 归档 |
 
-能否解包取决于内部格式，而非 `.exe` 后缀。定制封装和未验证的版本可能不受支持。差分更新包缺少基础版本时无法还原。
+### 说明与限制
 
-MSIX / APPX 解包保留清单、资源和原始 `VFS` 目录，不执行部署或恢复安装身份，提取的应用仍可能需要安装。Bundle 保留全部内嵌架构和资源包；缺少外置成员时显示部分完成。
-
-分卷包请将所有卷放在同一目录，保留原始文件名。拖入 Inno 的 EXE、MSI，或标准 CAB 卷链中的任意一卷即可；缺卷时会提示具体文件名。MSI 松散文件需保留原始源目录布局。
-
-暂不支持 RAR、加密包、分卷 ZIP / 7z、InstallShield 私有 CAB、MST / MSP，以及需要联网下载才能取得的内容。Burn 内部 CAB 容器的跨卷续接尚未支持。
-
-当前仅处理本地普通文件，不设置统一的安装包大小、输出总量或文件总数上限，但仍受磁盘空间、内存和格式限制。处理大包时，优先选择 x64 或 ARM64，详见[资源处理说明](docs/17-large-packages.md)。
+- **分卷安装包**：请将所有分卷置于同一目录并保持原名，直接拖入主 EXE、MSI 或任一 CAB 卷即可。
+- **大包支持**：无统一包体积或文件数量上限，按实际系统资源流式处理；处理超大安装包建议优先使用 64 位版本（详见[资源处理说明](docs/17-large-packages.md)）。
+- **暂不支持**：RAR 格式、密码加密、分卷 ZIP/7z、InstallShield 私有 CAB、MST/MSP 补丁以及需联网下载的在线安装器。
 
 ## 命令行用法
 
-在 PowerShell 中指定已有的输出父目录：
+除拖拽外，也可通过命令行静默调用或集成到脚本中：
 
 ```powershell
+# 指定输出目录解包
 Start-Process .\Extract.exe -ArgumentList '--output "D:\Unpacked" "D:\Downloads\setup.exe"' -WindowStyle Hidden -Wait
 ```
 
-| 参数 | 用途 |
+| 参数 | 说明 |
 | :--- | :--- |
-| `--layout original` | 保留原始逻辑目录，省去精简布局的额外复制。 |
-| `--layout compact` | 显式选择默认的精简布局。 |
-| `--quiet` | 关闭通知。 |
-| `--list <安装包>` | 只列出原始逻辑路径，不提取文件。 |
-| `--open-last-result` | 通知不可用时打开最近结果。 |
+| `--output <目录>` | 指定提取结果的目标父目录 |
+| `--layout compact` | 使用默认的智能精简布局 |
+| `--layout original` | 保留原始逻辑层级，跳过精简布局整理 |
+| `--list <安装包>` | 仅列出包内文件路径，不执行提取 |
+| `--quiet` | 静默模式，不弹出系统通知 |
+| `--open-last-result` | 打开最近一次的解包输出目录 |
 
-最终精简路径在嵌套提取后确定，记录在 `_extract-report.json` 中。更多参数和退出码见[完整命令行说明](docs/05-build-and-development.md#使用与退出码)。
+完整参数与退出码说明见[开发与命令行文档](docs/05-build-and-development.md#使用与退出码)。
 
 ## 开发
 
-使用 **C++20 / C17、CMake 和 Win32** 开发，安装包解析由本项目实现，底层压缩库静态链接。
+基于 **C++20 / C17、CMake 与 Win32 API**，自主实现格式解析，底层压缩库静态链接（无外部运行库依赖）。
 
-v0.9.0 新增精简输出目录、NSIS 目录处理改进和 NSIS 脚本记录，详见[版本说明与升级提示](docs/releases/v0.9.0.md)。
-
-- [构建与开发](docs/05-build-and-development.md)
-- [发布流程](docs/16-release.md)：仅版本标签触发构建，普通 push 不发布；ARM64 运行验证待完成。
-- [开发计划](docs/04-roadmap-and-acceptance.md)
-- [工作进程与取消](docs/22-worker-cancellation.md)：取消任务、可选超时及工作进程异常恢复。
-- [第三方基础库与许可](third_party/README.md)：转发程序时请保留许可文件。
+- [构建与开发指南](docs/05-build-and-development.md)
+- [版本发布说明](docs/releases/v0.9.0.md)
+- [项目路线图](docs/04-roadmap-and-acceptance.md)
+- [工作进程与异常隔离机制](docs/22-worker-cancellation.md)
+- [第三方库与开源许可](third_party/README.md)

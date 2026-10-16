@@ -23,111 +23,92 @@
 
 ---
 
-Extract is a lightweight Windows installer extractor. Drop one or more packages onto the executable to retrieve their files, then view the results through a system notification. No main window or installation is required.
+Extract is a lightweight, zero-configuration Windows installer unpacker. Simply drag and drop one or more packages onto the executable to extract their files—no installation or GUI required.
 
 ## Download
 
-Choose the standalone EXE for your Windows 10 / 11 device. No external extraction tools or VC++ runtime installation are required.
+Standalone portable executable. No external extraction tools or VC++ runtime installation required:
 
-| Architecture | Choose this for | Download v0.9.0 |
+| Architecture | Platform | Download v0.9.0 |
 | :--- | :--- | :--- |
-| **x64** | Most Intel / AMD 64-bit PCs | [Download x64](https://github.com/Hunlongyu/extract/releases/download/v0.9.0/Extract-v0.9.0-windows-x64.exe) |
-| **ARM64** | Windows on ARM | [Download ARM64](https://github.com/Hunlongyu/extract/releases/download/v0.9.0/Extract-v0.9.0-windows-arm64.exe) |
+| **x64** | Most 64-bit PCs (Recommended) | [Download x64](https://github.com/Hunlongyu/extract/releases/download/v0.9.0/Extract-v0.9.0-windows-x64.exe) |
+| **ARM64** | Windows on ARM devices | [Download ARM64](https://github.com/Hunlongyu/extract/releases/download/v0.9.0/Extract-v0.9.0-windows-arm64.exe) |
 | **x86** | 32-bit Windows | [Download x86](https://github.com/Hunlongyu/extract/releases/download/v0.9.0/Extract-v0.9.0-windows-x86.exe) |
 
 [Release notes](docs/releases/v0.9.0.md) · [SHA-256 checksums](https://github.com/Hunlongyu/extract/releases/download/v0.9.0/SHA256SUMS.txt) · [All releases](https://github.com/Hunlongyu/extract/releases)
 
-ARM64 builds are available; runtime testing on ARM64 hardware is pending.
-
 ## Features
 
-- **Drag and drop** — extract one package or a batch, with progress and results in Windows notifications.
-- **Static extraction** — read package contents without running installers, embedded scripts, or extracted programs.
-- **Nested packages** — automatically unpack recognized installers inside a package.
-- **Compact folders** — bring a clearly identified application to the output root, with separate folders for additional files and architectures.
-- **Unicode paths** — support filenames containing Unicode characters and spaces.
+- **Drag & drop** — unpack single or batched installers with native Windows notification updates.
+- **Pure static extraction** — safe parsing without running any installer, embedded script, or unpacked executable.
+- **Nested archive support** — automatically unpacks recognized inner installers and archives recursively.
+- **Smart compact layout** — elevates main application files to the output root while neatly organizing extra files and architectures.
+- **Full Unicode support** — handles Chinese, special characters, spaces, and long paths seamlessly.
 
 ## Getting started
 
-1. [Download](#download) the EXE and save it on a local drive. You may rename it to `Extract.exe`.
-2. Select one or more installers and **drop them onto the `Extract.exe` icon**.
-3. Use **Open folder** in the result notification for a single successful extraction, or **View results** for batches, partial results, and failures. Clicking the notification itself opens the same destination. Button labels currently appear in Chinese.
+1. [Download](#download) the executable for your architecture (optionally rename it to `Extract.exe`).
+2. Drag and drop one or more installer packages **onto the `Extract.exe` icon**.
+3. Once completed, click **Open folder** (or **View results**) on the notification to view the extracted files.
 
-Files are saved **next to the input package** in `<package-name>_extracted`. Existing folders are preserved by adding ` (2)`, ` (3)`, and so on. The default **compact layout** brings a clearly identified application to the output root while preserving its internal folders. Additional files go under `_extra`; multiple applications or architectures stay in separate folders. Nested packages and their files are retained. Ambiguous layouts keep their relative structure, and standalone ZIP / 7z and MSIX / APPX keep their package hierarchy. See [layout rules](docs/28-compact-layout.md).
+Files are extracted next to the installer under `<package_name>_extracted`. Existing folders are protected by appending ` (2)`, ` (3)`, etc.
 
-Use `--layout original` to keep the original logical folder structure. Compact layout temporarily needs space for both the decoded files and the final copy.
+### Notes
 
-<details>
-<summary>Progress, cancellation, and partial results</summary>
+- **Output layout**: Uses **compact layout** by default, placing the primary application at the root and extra files in `_extra`. To preserve raw logical paths, pass `--layout original` (see [layout rules](docs/28-compact-layout.md)).
+- **Progress & cancellation**: Long-running tasks show a progress notification with a cancel option (partial output is kept). If no notification appears, run `Extract.exe --open-last-result`.
+- **Scripts & analysis**: Decompiled installation logic (such as NSIS scripts) is exported as static text to `_extract-script/nsis-script.txt` for inspection, never executed (see [NSIS notes](docs/27-nsis-shell-directories.md)).
 
-Longer tasks show the current package and stage. The progress bar tracks file bytes written for the current package; preparation and other stages show activity and processed bytes instead of an estimated percentage. Nested packages have their own progress. The same notification then shows the result and package name without another popup; short tasks show only the result. Check Notification Center if the banner closes. Use **Cancel task** in the progress notification to stop the current package and the remaining batch; already completed output is kept.
-
-A **partial result** means extracted files were retained, but some content is missing, paths could not be restored, or a nested package failed. The job record explains the issue. If no notification appears, run `Extract.exe --open-last-result` to open the latest result.
-
-</details>
-
-<details>
-<summary>NSIS paths, scripts, and extraction reports</summary>
-
-**File extraction complete** does not mean the original runtime environment has been recreated. NSIS system locations are recorded as logical paths such as `AppData/Roaming` and `Public/Documents`; Extract does not write to their real system locations. Compact layout records the mapping to the saved files, while original layout keeps those logical folders. Ambiguous user contexts are retained under `_unresolved` with a partial result. Launch, wait, and cleanup operations are recorded in the extraction report but never executed. See [directory and wrapper behavior](docs/27-nsis-shell-directories.md).
-
-NSIS extraction also saves `_extract-script/nsis-script.txt` (all compiled instructions, operands, and the raw string table) and `nsis-header.bin` (the unchanged decompressed metadata). In compact layout, inner packages' scripts and reports are grouped under `_extract-packages`. These are static records, not recovered original `.nsi` source, and are never executed. Their paths and hashes are recorded under `compiledScript` in each extraction report.
-
-</details>
-
-> Extracted applications may still require installation if they depend on drivers, services, registry settings, or additional runtimes.
+> [!NOTE]
+> Extract retrieves files only. If the application depends on device drivers, services, or registry keys, it may still require standard installation to run.
 
 ## Supported formats
 
-| Format | Typical files | Current support |
+| Format | Extension | Support Details |
 | :--- | :--- | :--- |
-| **Inno Setup** | `.exe`, accompanying `.bin` | Selected standard layouts from 6.0–6.7 and 7.1, including [external volumes](docs/26-split-volumes.md); see [compatibility notes](docs/20-inno-compatibility.md) |
-| **NSIS** | `.exe` | Tested Unicode 3.x and selected [ANSI 2.x layouts](docs/21-nsis-ansi-compatibility.md), ordinary and solid compression, selected Electron / Tauri wrappers, and separate folders for recognized architecture branches |
-| **Windows Installer** | `.msi` | Embedded, external, or mixed CAB sets including spanning files; loose files and mixed source layouts |
-| **WiX Burn** | `.exe` | Layout 2 CAB containers with v3 / v4 manifests; embedded or local external payloads |
-| **Velopack / Squirrel.Windows** | `.exe`, `*-full.nupkg` | [Tested offline layouts](docs/24-update-packages.md); recognized application files grouped together, with separate target folders when needed |
-| **MSIX / APPX / Bundle** | `.msix`, `.appx`, `.msixbundle`, `.appxbundle` | [Unencrypted offline packages](docs/25-msix-appx.md), block hash verification, and separate folders for embedded architectures and resource packages |
-| **CAB** | `.cab` | Standard Microsoft CAB 1.3: stored, MSZIP, and LZX, including spanning sets |
+| **Inno Setup** | `.exe`, `.bin` | Inno Setup 6.0–6.7 & 7.1 standard layouts and [external volumes](docs/26-split-volumes.md) ([details](docs/20-inno-compatibility.md)) |
+| **NSIS** | `.exe` | Unicode 3.x and selected [ANSI 2.x](docs/21-nsis-ansi-compatibility.md), solid compression, Electron / Tauri wrappers, multi-architecture splitting |
+| **Windows Installer** | `.msi` | Embedded, external, or mixed CAB sets, spanning files, loose files, and mixed source trees |
+| **WiX Burn** | `.exe` | Layout 2 CAB containers with v3 / v4 manifests, embedded or local external payloads |
+| **Velopack / Squirrel** | `.exe`, `*.nupkg` | [Offline update packages](docs/24-update-packages.md); automatically groups application files |
+| **MSIX / APPX / Bundle** | `.msix`, `.appx`, `.msixbundle`... | [Unencrypted offline packages](docs/25-msix-appx.md), block hash verification, architecture & resource splitting |
+| **CAB** | `.cab` | Microsoft CAB 1.3: stored, MSZIP, LZX, including multi-part spanning sets |
 | **ZIP / ZIP64** | `.zip` | Stored, Deflate, and bzip2 |
-| **7z** | `.7z` | Copy, LZMA, and LZMA2; ordinary and solid blocks, BCJ / BCJ2 |
-| **Self-extracting wrappers (SFX)** | `.exe` | Recognized ZIP, 7z, and CAB archives in PE overlays |
+| **7z** | `.7z` | LZMA, LZMA2, Copy; solid blocks and BCJ / BCJ2 filters |
+| **Self-extracting (SFX)** | `.exe` | Recognized ZIP, 7z, and CAB payloads embedded in PE overlays |
 
-Compatibility depends on the package's internal format, not its `.exe` extension. Customized packages and untested versions may be unsupported. Delta update packages cannot be restored without their base version.
+### Notes & Limitations
 
-MSIX / APPX extraction preserves manifests, resources, and the original `VFS` layout. It does not deploy the app or restore its installation identity; extracted apps may still need installation. Bundles keep all embedded architectures and resources; missing external members produce a partial result.
-
-For split packages, keep all volumes together with their original names. Drag the Inno EXE, the MSI, or any CAB in a standard CAB set. Missing volumes are reported by name. MSI loose files must retain their original source directory layout.
-
-Currently unsupported: RAR, encrypted packages, split ZIP / 7z archives, InstallShield private CABs, MST / MSP, and content that must be downloaded. Spanning CAB containers inside Burn are not yet supported.
-
-Only regular files on local drives are supported. There is no fixed package-size, output-size, or file-count ceiling, but available disk space, memory, and format limits still apply. Prefer x64 or ARM64 over x86 for large packages; see [resource handling](docs/17-large-packages.md) for details.
+- **Split volumes**: Place all volumes in the same folder with original filenames. Drag the main Inno EXE, MSI, or any CAB volume in a set.
+- **Large packages**: No arbitrary size or file-count caps; files are processed based on available system resources. 64-bit builds are recommended for massive files (see [resource handling](docs/17-large-packages.md)).
+- **Unsupported**: Encrypted archives, RAR, split ZIP/7z archives, InstallShield proprietary CABs, MST/MSP patches, and web/online download stubs.
 
 ## Command-line usage
 
-To choose an existing output parent folder in PowerShell:
+In addition to drag-and-drop, you can run Extract from scripts or the command line:
 
 ```powershell
+# Extract to a custom output directory
 Start-Process .\Extract.exe -ArgumentList '--output "D:\Unpacked" "D:\Downloads\setup.exe"' -WindowStyle Hidden -Wait
 ```
 
 | Option | Purpose |
 | :--- | :--- |
-| `--layout original` | Preserve the original logical folders and avoid the compact-layout copy. |
-| `--layout compact` | Explicitly select the default compact layout. |
-| `--quiet` | Suppress notifications. |
-| `--list <package>` | List original logical paths without extracting files. |
-| `--open-last-result` | Open the latest result when a notification is unavailable. |
+| `--output <path>` | Specify a destination parent directory |
+| `--layout compact` | Use the default smart compact layout |
+| `--layout original` | Preserve original logical folders without compact reorganizing |
+| `--list <package>` | List logical paths within the package without extracting |
+| `--quiet` | Run silently without desktop notifications |
+| `--open-last-result` | Open the output folder of the most recent task |
 
-Final compact paths are planned after nested extraction and recorded in `_extract-report.json`. See the [full command-line reference](docs/05-build-and-development.md#使用与退出码) for more options and exit codes.
+For complete options and exit codes, see the [command-line reference](docs/05-build-and-development.md#使用与退出码).
 
 ## Development
 
-Built with **C++20 / C17, CMake, and Win32**, with project-owned package parsers and statically linked compression libraries. Detailed developer documents are currently in Chinese.
-
-Version 0.9.0 introduces compact output folders, improved NSIS directory handling, and preserved NSIS script records. See the [release notes and upgrade notes](docs/releases/v0.9.0.md).
+Built with **C++20 / C17, CMake, and Win32 APIs**, featuring self-contained parsers and statically linked compression libraries.
 
 - [Build and development](docs/05-build-and-development.md)
-- [Release workflow](docs/16-release.md) — version tags trigger builds; ordinary pushes do not publish. ARM64 runtime testing is pending.
+- [Release notes](docs/releases/v0.9.0.md)
 - [Roadmap](docs/04-roadmap-and-acceptance.md)
-- [Worker isolation and cancellation](docs/22-worker-cancellation.md) — cancellation, optional timeouts, and recovery from worker failures.
-- [Third-party libraries and licenses](third_party/README.md) — retain the notices when redistributing the program.
+- [Worker isolation & cancellation](docs/22-worker-cancellation.md)
+- [Third-party libraries & licenses](third_party/README.md)
