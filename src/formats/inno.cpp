@@ -15,6 +15,7 @@
 namespace extract::formats {
 namespace {
 constexpr std::size_t metadata_limit = 64 * 1024 * 1024;
+constexpr std::array<unsigned char, 12> loader_signature{'r','D','l','P','t','S',0xcd,0xe6,0xd7,0x7b,0x0b,0x2a};
 
 std::wstring hex_string(io::Bytes bytes) {
     constexpr wchar_t digits[] = L"0123456789abcdef";
@@ -145,9 +146,8 @@ struct InnoPackage::Impl {
         catalog.input = input.path(); catalog.format = L"Inno Setup";
         const auto table_bytes = pe_rcdata(input.bytes(), 11111);
         require(table_bytes.size() >= 16, Status::unsupported, L"PE 资源不是 Inno 偏移表。");
-        constexpr std::array<unsigned char, 12> signature{'r','D','l','P','t','S',0xcd,0xe6,0xd7,0x7b,0x0b,0x2a};
-        for (std::size_t i = 0; i < signature.size(); ++i)
-            require(std::to_integer<unsigned char>(table_bytes[i]) == signature[i], Status::unsupported, L"PE 资源不是 Inno 偏移表。");
+        for (std::size_t i = 0; i < loader_signature.size(); ++i)
+            require(std::to_integer<unsigned char>(table_bytes[i]) == loader_signature[i], Status::unsupported, L"PE 资源不是 Inno 偏移表。");
         io::Reader table(table_bytes); table.skip(12);
         const auto loader_version = table.u32();
         require(loader_version == 1 || loader_version == 2, Status::unsupported,
@@ -468,6 +468,18 @@ struct InnoPackage::Impl {
         return output.commit();
     }
 };
+bool inno_probe(io::Bytes input) {
+    try {
+        const auto resource = pe_rcdata(input, 11111);
+        return resource.size() >= loader_signature.size() &&
+            std::equal(loader_signature.begin(), loader_signature.end(), resource.begin(),
+                [](unsigned char expected, std::byte actual) { return expected == std::to_integer<unsigned char>(actual); });
+    } catch (const Failure& failure) {
+        // 缺少资源表示未识别到 Inno；结构损坏等错误仍保留具体原因。
+        if (failure.status != Status::unsupported) throw;
+        return false;
+    }
+}
 InnoPackage::InnoPackage(const fs::path& input) : impl_(std::make_unique<Impl>(input)) {}
 InnoPackage::~InnoPackage() = default;
 const Catalog& InnoPackage::catalog() const { return impl_->catalog; }

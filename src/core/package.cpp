@@ -61,7 +61,8 @@ std::unique_ptr<Package> open_package(const fs::path& path) {
         if (formats::nsis_probe(bytes)) return parse<formats::NsisPackage>(input, L"NSIS");
         if (formats::archive_probe(bytes)) return parse_archive(input);
         if (formats::cab_probe(bytes)) return parse<formats::CabPackage>(input, L"CAB");
-        return parse<formats::InnoPackage>(input, L"Inno Setup (PE fallback probe)");
+        if (formats::inno_probe(bytes)) return parse<formats::InnoPackage>(input, L"Inno Setup");
+        throw Failure(Status::unsupported, L"该文件是应用程序，未发现可解包的安装包内容");
     }
     if (formats::cab_probe(bytes)) return parse<formats::CabPackage>(input, L"CAB");
     if (formats::archive_probe(bytes)) return parse_archive(input);

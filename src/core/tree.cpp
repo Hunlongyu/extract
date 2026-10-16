@@ -1,6 +1,6 @@
 #include "core/tree.h"
 #include "formats/nsis.h"
-#include "formats/pe.h"
+#include "formats/inno.h"
 #include "formats/archive.h"
 #include "formats/cab.h"
 #include "formats/burn.h"
@@ -40,9 +40,7 @@ Kind probe(io::Bytes bytes, bool archives) {
         if (const auto archive = formats::archive_probe(bytes))
             return archive->kind == formats::ArchiveKind::zip ? Kind::zip : Kind::seven_zip;
         if (formats::cab_probe(bytes)) return Kind::cab;
-        const auto resource = formats::pe_rcdata(bytes, 11111);
-        if (starts(resource, std::array<unsigned char, 12>{'r','D','l','P','t','S',0xcd,0xe6,0xd7,0x7b,0x0b,0x2a}))
-            return Kind::inno;
+        if (formats::inno_probe(bytes)) return Kind::inno;
     } catch (const Failure& failure) {
         // 普通应用 EXE 不是内层包。只有实际安装器标记才触发自动展开。
         if (failure.status != Status::corrupt && failure.status != Status::unsupported && failure.status != Status::limit_exceeded) throw;
